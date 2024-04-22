@@ -23,15 +23,25 @@ loadMelanoma <- function(){
   return(se)
 }
 
+
+loadMyocardialInfarction <- function(){
+  library(Matrix)
+  se=readRDS("data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds")
+}
+
 loadExp1 <- function(){
   requite(Matrix)
   require(dplyr)
+  require(monocle3)
   clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
   normed_count <- Matrix::readMM("data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx")
-  metadata <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt",header=TRUE,sep = "\t" )
+  cell_metadata <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt",header=TRUE,sep = "\t" )
   gene_names <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
-  neutrophil_monocyte_trajectory <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt",header=TRUE)
-  neutrophil_pseudotime <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt",header=TRUE)
+  neutrophil_monocyte_trajectory <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt",header=TRUE,sep="\t")
+  neutrophil_pseudotime <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt",header=TRUE, sep="\t")
+  
+  # TODO create Seurat / Monocle3 + SueratWrapper
+  # as in https://cole-trapnell-lab.github.io/monocle3/docs/getting_started/
+  cds <- new_cell_data_set(normed_count, cell_metadata = metadata, gene_metadata = gene_names)
+  
 }
-
-se=loadMelanoma()
