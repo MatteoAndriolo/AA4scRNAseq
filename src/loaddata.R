@@ -13,7 +13,7 @@ loadMelanoma <- function(){
   metadata <- t(metadata)%>% 
     data.frame() %>% 
     mutate(across(where(is.character), as.numeric)) 
-    
+  
   ge=a[4:nrow(a),]
   ge <- ge %>% 
     data.frame() %>% 
@@ -29,6 +29,14 @@ loadMelanoma <- function(){
 loadMyocardialInfarction <- function(){
   library(Matrix)
   se=readRDS("data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds")
+  return(se)
+}
+
+# SMALL TIMESERIES
+loadMouseCortex <- function(){
+  load("data/MouseCortex/MouseCortex.RData")
+  MouseCortex=MouseCortex
+  return(MouseCortex)
 }
 
 # LARGE TIMESERIES
@@ -45,6 +53,18 @@ loadExp1 <- function(){
   
   # TODO create Seurat / Monocle3 + SueratWrapper
   # as in https://cole-trapnell-lab.github.io/monocle3/docs/getting_started/
-  cds <- new_cell_data_set(normed_count, cell_metadata = metadata, gene_metadata = gene_names)
+}
+
+loadExp2 <- function(){
+  clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_clone_matrix.mtx")
+  gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
+  metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
+  normed_counts <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
   
+}
+loadExp3 <- function(){
+  clone_matrix = Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_clone_matrix.mtx")
+  gene_names <- read.table( "data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_gene_names.txt")
+  metadata <- read.table("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt", sep="\t")
+  normed_counts <- Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_normed_counts.mtx")
 }

@@ -11,8 +11,8 @@ echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 
 # Execute the Rscript inside the Docker container
 Rscript $SCRIPT_PATH &
-
-PID=$(pgrep -f R) 
+PID=$!
+#PID=$(pgrep -f R) 
 echo "PID is $PID"
 
 while kill -0 $PID; do
