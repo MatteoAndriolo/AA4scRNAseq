@@ -1,0 +1,12 @@
+FROM rocker/cuda
+
+COPY .Rprofile /home/rstudio/.Rprofile
+COPY containers/installation.sh /app/installation.sh
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt update; \
+    apt upgrade; 
+
+RUN /app/installationRpkg.sh
+

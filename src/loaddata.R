@@ -1,3 +1,4 @@
+# SMALL SNAPSHOT
 loadMelanoma <- function(){
   library(dplyr)
   library(Matrix)
@@ -24,11 +25,13 @@ loadMelanoma <- function(){
 }
 
 
+# LARGE SNAPSHOT
 loadMyocardialInfarction <- function(){
   library(Matrix)
   se=readRDS("data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds")
 }
 
+# LARGE TIMESERIES
 loadExp1 <- function(){
   requite(Matrix)
   require(dplyr)

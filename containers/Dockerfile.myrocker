@@ -1,5 +1,4 @@
-FROM rocker/cuda
-#FROM rocker/rstudio
+FROM rocker/rstudio
 
 COPY .Rprofile /home/rstudio/.Rprofile
 
@@ -13,10 +12,11 @@ RUN apt update; \
 #RUN R -e 'usethis::gitcreds_set(url = "https://github.com")'
 
 RUN R -e "update.packages(ask = FALSE, checkBuilt = TRUE)"
-RUN R -e "install.packages(c('usethis','rhdf5','remotes','devtools','BiocManager'))"
-RUN R -e 'BiocManager::install("SingleCellExperiment")'
+RUN R -e "install.packages(c('usethis','rhdf5','remotes','devtools','BiocManager','units','sf','spdep'))"
+RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'HDF5Array', 'terra', 'ggrastr'))"
 
 RUN R -e "install.packages('archetypes')"
+
 # Install Seurat 
 RUN R -e 'remotes::install_github("satijalab/seurat", "seurat5", quiet = TRUE);'
 RUN R -e 'remotes::install_github("satijalab/seurat-data", "seurat5", quiet = TRUE);'
@@ -26,6 +26,5 @@ RUN R -e 'remotes::install_github("bnprks/BPCells", quiet = TRUE);'
 # RUN R -e 'remotes::install_github("stuart-lab/signac", "seurat5", quiet = TRUE);'
 # RUN R -e 'setRepositories(ind=1:3) ; install.packages("Signac") '
 
-RUN R -e "install.packages(c('units','sf','spdep'))"
-RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'HDF5Array', 'terra', 'ggrastr'))"
+# Install monocle3
 RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"

@@ -1,4 +1,12 @@
+if(getwd()!="/app"){
+  setwd("/app")
+}
+getwd()
 source("src/loaddata.R")
+
+con <- file("test.log")
+sink(con, append=TRUE)
+sink(con, append=TRUE, type="message")
 
 archetypesMelanoma <- function(){
   se = loadMelanoma()
@@ -12,3 +20,5 @@ archetypesMelanoma <- function(){
 
 
 se=archetypesMelanoma()
+
+
