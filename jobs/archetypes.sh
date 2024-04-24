@@ -1,18 +1,22 @@
 #!/bin/bash
 
-# Define the container name and the script to execute
-# CONTAINER_NAME="agitated_nobel"
-WORKDIR="/app"
-SCRIPT_PATH="$WORKDIR/src/archetypes.R"
+ANALYSIS=$1
+DATASET=$2
+NUM_ARCHETYPES=$3
 
-LOG_FILE="$WORKDIR/stats.log"
+if [ -z NUM_ARCHETYPES ]; then 
+    NUM_ARCHETYPES=0
+fi
+
+WORKDIR="/app"
+SCRIPT_PATH="$WORKDIR/src/main.R"
+
+LOG_FILE="$WORKDIR/out/$DATASET/stats.log"
 touch $LOG_FILE
 echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 
-# Execute the Rscript inside the Docker container
-Rscript $SCRIPT_PATH &
+Rscript $SCRIPT_PATH $ANALYSIS $DATASET $NUM_ARCHETYPES &
 PID=$!
-#PID=$(pgrep -f R) 
 echo "PID is $PID"
 
 while kill -0 $PID; do

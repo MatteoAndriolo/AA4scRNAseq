@@ -3,7 +3,7 @@ loadMelanoma <- function(){
   library(dplyr)
   library(Matrix)
   
-  a <- read.table("data/MelanomaSomethingPiccolo/GSE72056_melanoma_single_cell_revised_v2.txt", header = TRUE)
+  a <- read.table("data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt", header = TRUE)
   a=a[!duplicated(a[,1]),]
   
   rownames(a)=a[,1]

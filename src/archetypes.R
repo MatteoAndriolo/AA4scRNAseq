@@ -1,66 +1,59 @@
 source("src/loaddata.R")
 
+IF_ARCHETYPES <- function(matrix, k, maxiter=1){
+  return(
+}
 # ------------------------------------------------------------------------------
-archetypesMelanoma <- function(k, test=FALSE){
-  namefile = paste("out/Myocardite/Archetypes_",k,sep="")
-  con <- file(paste(namefile,".Rlog",sep = ""))
-  sink(con, append=TRUE)
-  sink(con, appent)
-  
-              
-
+archetypesMelanoma <- function(k){
   se = loadMelanoma()
   m=as.matrix(se@assays$scRNA@layers$counts)
+
   s=timestamp()
-  a=archetypes::archetypes(m,k=k,maxIterations = 1)
+  a=archetypes::archetypes(matrix, k=k, verbose=TRUE, maxIterations=1)
   e=timestamp()
-  # archetypes::xyplot(a,m)
-  save(a,file=paste(namefile,".rds",sep=""))
-  
+
+  save(a,file=paste("/app/out/Melanoma/Archetypes_",k,".rds",sep=""))
 }
 
-archetypesMyocardialInfarction <- function(k, test=FALSE){
-  namefile = paste("/app/out/MyocardialInfarction/Archetypes_",k,sep="")
-  con=file(paste(namefile,".Rlog",sep=""))
-  sink(con, append=TRUE)
-  sink(con, append=TRUE, type="message")
-  cat("Writing into sinkfile?",namefile,"\n")
-  message("Writing message to output\n")
-  #se=loadMyocardialInfarction()
-  #m=as.matrix(se@assays$RNA@data )
-  cat("MyocardialInfarction\n")
+archetypesMyocardialInfarction <- function(k){
+  se=loadMyocardialInfarction()
+  m=as.matrix(se@assays$RNA@data)
+  rm(se)
+  gc()
+
   s=timestamp()
-  #a=archetypes::archetypes(m, k)
+  a=archetypes::archetypes(matrix, k=k, verbose=TRUE, maxIterations=1)
   e=timestamp()
-  sink()
+
+  save(a,file=paste("/app/out/MyocardialInfarction/Archetypes_",k,".rds",sep=""))
 }
 
-archetypesMouseCortex <- function(k, test=FALSE){
-  namefile = paste("out/MouseCortex/Archetypes_",k,sep="")
-  sinkToFile(paste(namefile,".log",sep=""))
+archetypesMouseCortex <- function(k){
+#  namefile = paste("out/MouseCortex/Archetypes_",k,sep="")
+#  sinkToFile(paste(namefile,".log",sep=""))
   cat("Not Implemented")
-  sinkDefault()
+#  sinkDefault()
 }
 
-archetypesExp1 <- function(k, test=FALSE){
-  namefile = paste("out/AllonKleinLab/Exp1/Archetypes_",k,sep="")
-  sinkToFile(paste(namefile,".log",sep=""))
+archetypesExp1 <- function(k){
+#  namefile = paste("out/AllonKleinLab/Exp1/Archetypes_",k,sep="")
+#  sinkToFile(paste(namefile,".log",sep=""))
   cat("Not Implemented")
-  sinkDefault()
+#  sinkDefault()
 }
 
-archetypesExp2 <- function(k, test=FALSE){
-  namefile = paste("out/AllonKleinLab/Exp2/Archetypes_",k,sep="")
-  sinkToFile(paste(namefile,".log",sep=""))
+archetypesExp2 <- function(k){
+#  namefile = paste("out/AllonKleinLab/Exp2/Archetypes_",k,sep="")
+#  sinkToFile(paste(namefile,".log",sep=""))
   cat("Not Implemented")
-  sinkDefault()
+#  sinkDefault()
 }
 
-archetypesExp3 <- function(k, test=FALSE){
-  namefile = paste("out/AllonKleinLab/Exp3/Archetypes_",k,sep="")
-  sinkToFile(paste(namefile,".log",sep=""))
+archetypesExp3 <- function(k){
+#  namefile = paste("out/AllonKleinLab/Exp3/Archetypes_",k,sep="")
+#  sinkToFile(paste(namefile,".log",sep=""))
   cat("Not Implemented")
-  sinkDefault()
+#  sinkDefault()
 }
 
 # Function to run Archetype analysis
@@ -69,7 +62,7 @@ runArchetypeAnalysis <- function(dataset, numArchetypes) {
 
   if(dataset=="Melanoma"){
     archetypesMelanoma(numArchetypes)
-  }else if(dataset=="Myocardial"){
+  }else if(dataset=="MyocardialInfarction"){
     archetypesMyocardialInfarction(numArchetypes)
   }else if(dataset=="MouseCortex"){
     archetypesMouseCortex(numArchetypes)

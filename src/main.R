@@ -30,7 +30,7 @@ mainAnalysisFunction <-
       # "AllonKleinLab-Exp3",
       "Melanoma",
       # "MouseCortex",
-      "Myocardial"
+      "MyocardialInfarction"
     )) {
       stop("Invalid dataset name.")
     }
