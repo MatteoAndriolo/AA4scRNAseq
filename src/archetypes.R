@@ -1,15 +1,12 @@
 source("src/loaddata.R")
 
-IF_ARCHETYPES <- function(matrix, k, maxiter=1){
-  return(
-}
 # ------------------------------------------------------------------------------
 archetypesMelanoma <- function(k){
   se = loadMelanoma()
   m=as.matrix(se@assays$scRNA@layers$counts)
 
   s=timestamp()
-  a=archetypes::archetypes(matrix, k=k, verbose=TRUE, maxIterations=1)
+  a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
   e=timestamp()
 
   save(a,file=paste("/app/out/Melanoma/Archetypes_",k,".rds",sep=""))
@@ -22,7 +19,7 @@ archetypesMyocardialInfarction <- function(k){
   gc()
 
   s=timestamp()
-  a=archetypes::archetypes(matrix, k=k, verbose=TRUE, maxIterations=1)
+  a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
   e=timestamp()
 
   save(a,file=paste("/app/out/MyocardialInfarction/Archetypes_",k,".rds",sep=""))
@@ -75,6 +72,5 @@ runArchetypeAnalysis <- function(dataset, numArchetypes) {
   }else{
     cat("Dataset is Wrong")
   }
-
 }
 

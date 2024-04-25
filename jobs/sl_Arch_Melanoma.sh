@@ -9,8 +9,8 @@
 
 #SBATCH --partition allgroups
 #SBATCH --ntasks 1
-#SBATCH --cpus-per-task 10
-#SBATCH --time 40:00
+#SBATCH --cpus-per-task 14
+#SBATCH --time 8:00:00
 #SBATCH --mem 30G
 
 ANALYSIS=Archetypes

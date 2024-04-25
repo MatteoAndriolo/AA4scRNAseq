@@ -10,8 +10,8 @@
 #SBATCH --partition allgroups
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 20
-#SBATCH --time 2:00:00
-#SBATCH --mem 250G
+#SBATCH --time 32:00:00
+#SBATCH --mem 280G
 
 ANALYSIS=Archetypes
 DATASET=MyocardialInfarction
