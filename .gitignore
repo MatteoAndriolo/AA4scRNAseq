@@ -3,3 +3,5 @@ data/**/*.txt
 data/**/*.rds
 data/**/*.RData
 *.tar
+out/
+jobs/factory

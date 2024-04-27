@@ -55,11 +55,20 @@ archetypesExp1 <- function(k){
 # ------------------------------------------------------------------------------
 archetypesExp2 <- function(k){
   se=loadExp2()
+  s=timestamp()
+  a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
+  e=timestamp()
+  save(a,file=paste("/app/out/AllonKleinLab/Experiment2/Archetypes_",k,".rds",sep=""))
 }
 
 # ------------------------------------------------------------------------------
 archetypesExp3 <- function(k){
   se=loadExp3()
+  m=as.matrix(se)
+  s=timestamp()
+  a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=1)
+  e=timestamp()
+  save(a,file=paste("/app/out/AllonKleinLab/Experiment3/Archetypes_",k,".rds",sep=""))
 }
 
 # ------------------------------------------------------------------------------
@@ -74,11 +83,11 @@ runArchetypeAnalysis <- function(dataset, numArchetypes) {
     archetypesMyocardialInfarction(numArchetypes)
   }else if(dataset=="MouseCortex"){
     archetypesMouseCortex(numArchetypes)
-  }else if(dataset=="Exp1"){
+  }else if(dataset=="AllonKleinLab/Experiment1"){
     archetypesExp1(numArchetypes)
-  }else if(dataset=="Exp2"){
+  }else if(dataset=="AllonKleinLab/Experiment2"){
     archetypesExp2(numArchetypes)
-  }else if(dataset=="Exp3"){
+  }else if(dataset=="AllonKleinLab/Experiment3"){
     archetypesExp3(numArchetypes)
   }else{
     cat("Dataset is Wrong")

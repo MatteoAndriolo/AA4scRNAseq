@@ -25,11 +25,11 @@ mainAnalysisFunction <-
     }
     
     if (!dataset %in% c(
-      # "AllonKleinLab-Exp1",
-      # "AllonKleinLab-Exp2",
-      # "AllonKleinLab-Exp3",
+      "AllonKleinLab/Experiment1",
+      "AllonKleinLab/Experiment2",
+      "AllonKleinLab/Experiment3",
       "Melanoma",
-      # "MouseCortex",
+      "MouseCortex",
       "MyocardialInfarction"
     )) {
       stop("Invalid dataset name.")

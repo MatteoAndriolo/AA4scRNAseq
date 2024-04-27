@@ -1,6 +1,6 @@
 require(Matrix)
 require(dplyr)
-require(monocle3)
+# require(monocle3)
   
 # SMALL SNAPSHOT
 loadMelanoma <- function(){
