@@ -108,6 +108,6 @@ build_slurm "Melanoma" "Archetypes" 13 "5:00:00" "150G" 15
 build_slurm "MyocardialInfarction" "Archetypes" 13 "32:00:00" "280G" 20  
 build_slurm "MouseCortex" "Archetypes" 13 "5:00:00" "150G" 15 
 
-build_slurm "AllonKleinLab/Experiment1" "Archetypes" 13 "5:00:00" "150G"  15
-# build_slurm "AllonKleinLab/Experiment2" "Archetypes" 13 "5:00:00" "150G" 20 
-# build_slurm "AllonKleinLab/Experiment3" "Archetypes" 13 "5:00:00" "150G" 20 
+build_slurm "AllonKleinLab/Experiment1" "Archetypes" 13 "20:00:00" "220G"  15
+build_slurm "AllonKleinLab/Experiment2" "Archetypes" 13 "32:00:00" "280G" 20 
+build_slurm "AllonKleinLab/Experiment3" "Archetypes" 13 "10:00:00" "150G" 20 

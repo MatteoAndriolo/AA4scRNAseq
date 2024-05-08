@@ -1,23 +1,29 @@
+# rstudioapi::filesPaneNavigate("/app")
+# setwd("/app")
 source("src/loaddata.R")
-
 # ------------------------------------------------------------------------------
-archetypesMelanoma <- function(k){
+archetypesMelanoma <- function(k, sall=TRUE){
   se = loadMelanoma()
-  m=as.matrix(se@assays$scRNA@layers$counts)
-
+  
+  if(small){
+    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
+  }else{
+    m=se@assays$scRNA@layers$counts
+  }
+  m=as.matrix(m)
+  
   s=timestamp()
   a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
   e=timestamp()
-
+  
+  
   save(a,file=paste("/app/out/Melanoma/Archetypes_",k,".rds",sep=""))
 }
 
 # ------------------------------------------------------------------------------
-archetypesMyocardialInfarction <- function(k){
+archetypesMyocardialInfarction <- function(k, small=TRUE){
   se=loadMyocardialInfarction()
   m=as.matrix(se@assays$RNA@data)
-  rm(se)
-  gc()
 
   s=timestamp()
   a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
@@ -27,24 +33,31 @@ archetypesMyocardialInfarction <- function(k){
 }
 
 # ------------------------------------------------------------------------------
-archetypesMouseCortex <- function(k){
+archetypesMouseCortex <- function(k, small=TRUE){
   se=loadMouseCortex()
   # se is Seurat4 object
-  m=as.matrix(se@data)
-  
-  s=timestamp()
-  a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
-  e=timestamp()
-  
-  cat("Not Implemented")
+  warning("Error problem with negative data")
+  stop()
+#  m=as.matrix(se@data)
+#  
+#  s=timestamp()
+#  a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
+#  e=timestamp()
+#  
+#  cat("Not Implemented")
 #  sinkDefault()
 }
 
 # ------------------------------------------------------------------------------
-archetypesExp1 <- function(k){
-  m=loadExp1()
-  m=as.matrix(m)
+archetypesExp1 <- function(k,small=TRUE){
+  se=loadExp1()
   
+  if(small){
+    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
+  }else{
+    m = se@assays$RNA@layers$counts
+  }
+  m=as.matrix(m)
   s=timestamp()
   a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
   e=timestamp()
@@ -53,8 +66,16 @@ archetypesExp1 <- function(k){
 }
 
 # ------------------------------------------------------------------------------
-archetypesExp2 <- function(k){
+archetypesExp2 <- function(k, small=TRUE){
   se=loadExp2()
+  
+  if(small){
+    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
+  }else{
+    m = se@assays$RNA@layers$counts
+  }
+  m=as.matrix(m)
+  
   s=timestamp()
   a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
   e=timestamp()
@@ -62,9 +83,15 @@ archetypesExp2 <- function(k){
 }
 
 # ------------------------------------------------------------------------------
-archetypesExp3 <- function(k){
+archetypesExp3 <- function(k,small=TRUE){
   se=loadExp3()
+  if(small){
+    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
+  }else{
+    m = se@assays$RNA@layers$counts
+  }
   m=as.matrix(se)
+  
   s=timestamp()
   a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=1)
   e=timestamp()

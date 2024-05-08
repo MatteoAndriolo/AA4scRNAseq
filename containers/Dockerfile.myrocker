@@ -13,7 +13,9 @@ RUN apt update; \
 
 RUN R -e "update.packages(ask = FALSE, checkBuilt = TRUE)"
 RUN R -e "install.packages(c('usethis','rhdf5','remotes','devtools','BiocManager','units','sf','spdep'))"
-RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'HDF5Array', 'terra', 'ggrastr'))"
+RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'HDF5Array', 'terra', 'ggrastr','glmGamPoi'))"
+# packages required by Seurat
+# 'glmGamPoi' for faster SCtransform (seurat sc normalization QC and hvg selection)
 
 RUN R -e "install.packages('archetypes')"
 

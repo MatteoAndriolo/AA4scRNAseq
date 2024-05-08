@@ -5,3 +5,4 @@ data/**/*.RData
 *.tar
 out/
 jobs/factory
+*cpython*

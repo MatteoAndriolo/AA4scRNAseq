@@ -1,0 +1,10 @@
+FROM continuumio/miniconda3
+
+RUN apt update; apt upgrade -y; 
+
+# install python packages
+RUN python -m pip install archetypes
+RUN conda install -c conda-forge scanpy python-igraph leidenalg 
+RUN python -m pip install ipykernel ipywidgets
+
+WORKDIR /app

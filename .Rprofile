@@ -32,3 +32,5 @@ local({
   r["CRAN"] <- "https://cloud.r-project.org/"
   options(repos = r)
 })
+
+rstudioapi::filePaneNavigate('/app')
