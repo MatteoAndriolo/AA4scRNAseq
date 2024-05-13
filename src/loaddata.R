@@ -67,7 +67,8 @@ loadExp1 <- function(hvf.nfeatures = 2000){
   #clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
   
   # Number of transcripts for each gene in each cell
-  se <- Matrix::readMM("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
+  se <- Matrix::readMM("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx")
+  # se <- as(se, "CSparseMatrix")
   se <- CreateSeuratObject(counts=se)
   se=ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
   se=FindVariableFeatures(se)
@@ -92,7 +93,7 @@ loadExp2 <- function(hvf.nfeatures=2000){
   # metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
   
   se <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
-  se <- as(se,"CsparseMatrix")
+  #se <- as(se,"CsparseMatrix")
   se <- CreateSeuratObject(counts=se)
   se=FindVariableFeatures(se)
   
@@ -105,9 +106,10 @@ loadExp3 <- function(hvf.nfeatures = 2000){
   # metadata <- read.table("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt", sep="\t")
   
   se <- Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_normed_counts.mtx")
+  #se <- as(se, "CSparseMatrix")
   se <- CreateSeuratObject(counts=se)
-  se=Seurat::ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
-  se=FindVariableFeatures(se)
+  se = Seurat::ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
+  se = FindVariableFeatures(se)
   
   return(se)
 }
