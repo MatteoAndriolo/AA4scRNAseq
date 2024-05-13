@@ -68,6 +68,7 @@ loadExp1 <- function(hvf.nfeatures = 2000){
   
   # Number of transcripts for each gene in each cell
   se <- Matrix::readMM("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
+  se <- as(se, "CSparseMatrix")
   se <- CreateSeuratObject(counts=se)
   se=ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
   se=FindVariableFeatures(se)

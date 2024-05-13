@@ -1,8 +1,14 @@
 data/**/*.mtx
 data/**/*.txt
 data/**/*.rds
+data/**/*.tsv
+
 data/**/*.RData
-*.tar
 out/
 jobs/factory
 *cpython*
+
+*.gz
+*.tar
+*.png
+*.sif

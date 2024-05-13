@@ -1,0 +1,29 @@
+FROM ubuntu
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG GITHUB_PAT
+# Configure Git to use the PAT
+RUN apt-get update;\
+    apt-get upgrade;\
+    apt-get install -y r-base r-recommended libhdf5-dev libglpk-dev build-essential git;
+RUN  git config --global credential.helper \
+    '!f() { echo username=author; echo "password=$GITHUB_PAT"; };f'
+
+# make no interaction
+
+# update and upgrade
+RUN apt-get update;\
+    apt-get upgrade;\
+    apt-get install -y r-base r-recommended libhdf5-dev libglpk-dev build-essential;
+
+
+RUN R -e 'install.packages(c("usethis", "rhdf5", "remotes", "devtools", "BiocManager", "units", "sf", "spdep", "archetypes"), Ncpus = parallel::detectCores(), make.args = c("-j", parallel::detectCores()))'
+RUN R -e 'BiocManager::install(c("BiocGenerics", "DelayedArray", "DelayedMatrixStats", "limma", "lme4", "S4Vectors", "SingleCellExperiment", "SummarizedExperiment", "batchelor", "HDF5Array", "terra", "ggrastr", "glmGamPoi"), Ncpus = parallel::detectCores(), make.args = c("-j7", parallel::detectCores()))'
+
+RUN R -e 'remotes::install_github("satijalab/seurat-data", "seurat5", quiet = TRUE)'
+RUN R -e 'remotes::install_github("satijalab/seurat-wrappers", "seurat5", quiet = TRUE)'
+RUN R -e 'remotes::install_github("bnprks/BPCells", quiet = TRUE)'
+# RUN R -e 'remotes::install_github("satijalab/azimuth", "seurat5", quiet = TRUE)'
+# RUN R -e 'install.packages("devtools");devtools::install_github("cole-trapnell-lab/monocle3")'
+
+WORKDIR /app
