@@ -23,16 +23,16 @@ loadMelanoma <- function(hvf.nfeatures = 2000){
   # -------- END BASIC SETUP
   
   # -------- SEURAT
-  se=SeuratObject::CreateSeuratObject(ge,project="MelanomaSC",meta.data=metadata)
+  se <- SeuratObject::CreateSeuratObject(ge,project="MelanomaSC",meta.data=metadata)
   # Skip normalization since data is already normalized
-  se=Seurat::ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
-  se=Seurat::FindVariableFeatures(se, hvf.nfeatures = hvf.nfeatures)
+  se <- Seurat::ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
+  se <- Seurat::FindVariableFeatures(se, hvf.nfeatures = hvf.nfeatures)
   
-  #se=Seurat::RunPCA(se, features = Seurat::VariableFeatures(se))
+  #se <- Seurat::RunPCA(se, features = Seurat::VariableFeatures(se))
   #se = RunUMAP(se, features = Seurat::VariableFeatures(se))
   #Seurat::UMAPPlot(se)
   
-  # se=Seurat::RunUMAP(se, dims=9:15)
+  # se <- Seurat::RunUMAP(se, dims=9:15)
   # Seurat::DimPlot(se, reduction="pca")
   # Seurat::DimHeatmap(se, dims=1, cells=1000, balanced=TRUE)
   # Seurat::DimHeatmap(se, dims = 1:15, cells = 1000, balanced = TRUE)
@@ -44,8 +44,8 @@ loadMelanoma <- function(hvf.nfeatures = 2000){
 
 # LARGE SNAPSHOT
 loadMyocardialInfarction <- function(hvf.nfeatures = 2000){
-  se=readRDS("data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds")
-  se=FindVariableFeatures(se)
+  se <- readRDS("data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds")
+  se <- FindVariableFeatures(se)
   warning("Implementation Not completed due to problem with data")
   stop()
   return(se)
@@ -68,10 +68,10 @@ loadExp1 <- function(hvf.nfeatures = 2000){
   
   # Number of transcripts for each gene in each cell
   se <- Matrix::readMM("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
-  se <- as(se, "CSparseMatrix")
+  # se <- as(se, "CSparseMatrix")
   se <- CreateSeuratObject(counts=se)
-  se=ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
-  se=FindVariableFeatures(se)
+  se <- ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
+  se <- FindVariableFeatures(se)
   
   # # cell metadata : cell type annotation
   # cell_metadata <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt",header=TRUE,sep = "\t" )
@@ -93,9 +93,10 @@ loadExp2 <- function(hvf.nfeatures=2000){
   # metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
   
   se <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
-  se <- as(se,"CsparseMatrix")
+  #se <- as(se,"CsparseMatrix")
   se <- CreateSeuratObject(counts=se)
-  se=FindVariableFeatures(se)
+  se <- ScaleData(se, layer="counts")
+  se <- FindVariableFeatures(se)
   
   return(se) 
 }
@@ -107,8 +108,8 @@ loadExp3 <- function(hvf.nfeatures = 2000){
   
   se <- Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_normed_counts.mtx")
   se <- CreateSeuratObject(counts=se)
-  se=Seurat::ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
-  se=FindVariableFeatures(se)
+  se <- Seurat::ScaleData(se, layer= "counts") #,check.for.norm=FALSE)
+  se <- FindVariableFeatures(se)
   
   return(se)
 }

@@ -61,7 +61,7 @@ build_slurm() {
     local output_dir="./out/${folder}"
     local slurm_output="${output_dir}/slurm_output.txt"
     local slurm_error="${output_dir}/slurm_error.txt"
-    local singularity_log="${output_dir}/${job_name}.sing.log"
+    local singularity_log="${output_dir}/singularity.log"
     local script_path="jobs/factory/${job_name}.sh"
 
     # mkdir -p "$output_dir"
@@ -83,15 +83,15 @@ build_slurm() {
 
 # Command
 singularity exec \\
-  --env DISABLE_AUTH=true \\
-  --env PASSWORD=psw \\
   --bind .:/app \\
-  containers/singularityArchetypes.sif \\
-  /app/jobs/archetypes.sh \\
+  containers/img/ubuntuArchetypes.sif \\
+  /app/jobs/AA.sh \\
     $analysis \\
     $folder \\
     $num_archetypes \\
   &> $singularity_log
+#  --env DISABLE_AUTH=true \\
+#  --env PASSWORD=psw \\
 EOF
 
     # Submit the job
@@ -104,6 +104,7 @@ EOF
 # local job_time=$4
 # local job_mem=$5
 # local job_cpus=$6
+
 build_slurm "Melanoma" "Archetypes" 13 "5:00:00" "150G" 15
 build_slurm "MyocardialInfarction" "Archetypes" 13 "32:00:00" "280G" 20  
 build_slurm "MouseCortex" "Archetypes" 13 "5:00:00" "150G" 15 
