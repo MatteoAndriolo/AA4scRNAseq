@@ -2,8 +2,8 @@ data/**/*.mtx
 data/**/*.txt
 data/**/*.rds
 data/**/*.tsv
-
 data/**/*.RData
+
 out/
 jobs/factory
 *cpython*

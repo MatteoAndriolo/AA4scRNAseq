@@ -1,0 +1,37 @@
+# Use the official R image as the base image
+FROM ubuntu
+
+# Install necessary dependencies for RStudio Server
+RUN apt-get update 
+RUN apt-get install -y --no-install-recommends \
+    sudo \
+    gdebi-core \
+    pandoc \
+    libcurl4-gnutls-dev \
+    libcairo2-dev \
+    libxt-dev \
+    libssl-dev \
+    libssh2-1-dev \
+    libxml2-dev \
+    libsqlite3-dev \
+    libpq-dev \
+    r-base \
+    wget \
+    unixodbc-dev
+#RUN unixodbc-dev
+RUN apt-get clean
+# RUN rm -rf /var/lib/apt/lists/*
+
+# Download and install RStudio Server
+RUN wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2024.04.1-748-amd64.deb && \
+    sudo gdebi rstudio-server-2024.04.1-748-amd64.deb && \
+    rm rstudio-server-2024.04.1-748-amd64.deb
+
+# Expose port 8787 for RStudio Server
+EXPOSE 8787
+
+# Set root password
+RUN echo "root:root" | chpasswd
+
+# Start RStudio Server
+CMD ["/usr/lib/rstudio-server/bin/rserver", "--server-daemonize", "0"]
