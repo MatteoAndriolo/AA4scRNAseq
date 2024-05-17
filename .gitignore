@@ -1,10 +1,10 @@
-data/**/*.mtx
-data/**/*.txt
-data/**/*.rds
-data/**/*.tsv
-data/**/*.RData
+*.mtx
+*.txt
+!slurm*.txt
+*.rds
+*.tsv
+*.RData
 
-out/
 jobs/factory
 *cpython*
 

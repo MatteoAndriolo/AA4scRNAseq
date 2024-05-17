@@ -58,11 +58,15 @@ build_slurm() {
     parse_parameters $folder $analysis $num_archetypes $job_time $job_mem $job_cpus
 
     local job_name="arch_$(basename $folder)"
+    local script_path="singularity/factory/${job_name}.sh"
+
     local output_dir="./out/${folder}"
     local slurm_output="${output_dir}/slurm_output.txt"
     local slurm_error="${output_dir}/slurm_error.txt"
     local singularity_log="${output_dir}/singularity.log"
-    local script_path="jobs/factory/${job_name}.sh"
+    
+    local container="containers/img/ubuntuArchetypes.sif"
+    local script="/app/singularity/AA.sh"
 
     # mkdir -p "$output_dir"
 
@@ -84,8 +88,8 @@ build_slurm() {
 # Command
 singularity exec \\
   --bind .:/app \\
-  containers/img/ubuntuArchetypes.sif \\
-  /app/jobs/AA.sh \\
+  $container \\
+  $script \\
     $analysis \\
     $folder \\
     $num_archetypes \\
@@ -105,10 +109,10 @@ EOF
 # local job_mem=$5
 # local job_cpus=$6
 
-build_slurm "Melanoma" "Archetypes" 13 "5:00:00" "150G" 15
-build_slurm "MyocardialInfarction" "Archetypes" 13 "32:00:00" "280G" 20  
-build_slurm "MouseCortex" "Archetypes" 13 "5:00:00" "150G" 15 
+build_slurm "Melanoma" "Archetypes" 15 "5:00:00" "150G" 15
+#build_slurm "MyocardialInfarction" "Archetypes" 13 "32:00:00" "280G" 20  
+#build_slurm "MouseCortex" "Archetypes" 13 "5:00:00" "150G" 15 
 
-build_slurm "AllonKleinLab/Experiment1" "Archetypes" 13 "20:00:00" "220G"  15
-build_slurm "AllonKleinLab/Experiment2" "Archetypes" 13 "32:00:00" "280G" 20 
-build_slurm "AllonKleinLab/Experiment3" "Archetypes" 13 "10:00:00" "150G" 20 
+build_slurm "AllonKleinLab/Experiment1" "Archetypes" 8 "20:00:00" "220G"  15
+build_slurm "AllonKleinLab/Experiment2" "Archetypes" 9 "32:00:00" "280G" 20 
+build_slurm "AllonKleinLab/Experiment3" "Archetypes" 10 "10:00:00" "150G" 20 

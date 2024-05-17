@@ -2,7 +2,7 @@
 # setwd("/app")
 source("src/loaddata.R")
 # ------------------------------------------------------------------------------
-archetypesMelanoma <- function(k, sall=TRUE){
+archetypesMelanoma <- function(k, small=TRUE){
   se = loadMelanoma()
   
   if(small){
@@ -90,7 +90,7 @@ archetypesExp3 <- function(k,small=TRUE){
   }else{
     m = se@assays$RNA@layers$counts
   }
-  m=as.matrix(se)
+  m=as.matrix(m)
   
   s=timestamp()
   a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=1)
