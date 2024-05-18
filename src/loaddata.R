@@ -3,9 +3,9 @@ require(dplyr)
 require(Seurat)
 # require(monocle3)
 
-TESTING=FALSE
-TESTING_genes=3000
-TESTING_samples=5000
+TEST=FALSE
+TEST_genes=3000
+TEST_samples=5000
 
 # SMALL SNAPSHOT
 loadMelanoma <- function(hvf.nfeatures = 2000 ){
@@ -26,9 +26,9 @@ loadMelanoma <- function(hvf.nfeatures = 2000 ){
 		mutate(across(where(is.character), as.numeric)) 
 	# -------- END BASIC SETUP
 
-	if(TESTING){
-		tgenes=min(TESTING_genes, nrow(ge))
-		tsamples=min(TESTING_samples, ncol(ge))
+	if(TEST){
+		tgenes=min(TEST_genes, nrow(ge))
+		tsamples=min(TEST_samples, ncol(ge))
 		metadata=metadata[1:tsamples,]
 		ge=ge[1:tgenes,1:tsamples]
 		rm(tgenes,tsamples)
@@ -90,9 +90,9 @@ loadExp1 <- function(hvf.nfeatures = 2000){
 	#  Number of transcripts for each gene in each cell
 	se <- Matrix::readMM("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
 
-	if(TESTING){
-		tgenes=min(TESTING_genes, nrow(se))
-		tsamples=min(TESTING_samples, ncol(se))
+	if(TEST){
+		tgenes=min(TEST_genes, nrow(se))
+		tsamples=min(TEST_samples, ncol(se))
 		se=se[1:tgenes,1:tsamples]
 		rm(tgenes,tsamples)
 	}
@@ -114,9 +114,9 @@ loadExp2 <- function(hvf.nfeatures=2000){
 
 	se <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
 
-	if(TESTING){
-		tgenes=min(TESTING_genes, nrow(se))
-		tsamples=min(TESTING_samples, ncol(se))
+	if(TEST){
+		tgenes=min(TEST_genes, nrow(se))
+		tsamples=min(TEST_samples, ncol(se))
 		se=se[1:tgenes,1:tsamples]
 		rm(tgenes,tsamples)
 	}
@@ -138,9 +138,9 @@ loadExp3 <- function(hvf.nfeatures = 2000){
 
 	se <- Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_normed_counts.mtx")
 
-	if(TESTING){
-		tgenes=min(TESTING_genes, nrow(se))
-		tsamples=min(TESTING_samples, ncol(se))
+	if(TEST){
+		tgenes=min(TEST_genes, nrow(se))
+		tsamples=min(TEST_samples, ncol(se))
 		se=se[1:tgenes,1:tsamples]
 		rm(tgenes,tsamples)
 	}

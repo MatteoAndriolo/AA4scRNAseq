@@ -1,0 +1,103 @@
+---
+title: "Exp3"
+author: "MatteoAndriolo"
+output: 
+  html_document: 
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+# Load necessary libraries and set global options
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# libraries
+library(Seurat)
+library(ggplot2)
+library(here)
+library(archetypes)
+
+# Setup all paths
+out_path="../out/AllonKleinLab/Experiment2"
+
+# Setup testing phase
+TEST=TRUE
+TEST_genes=300
+TEST_samples=500
+
+# Archetypes
+k= 15
+```
+
+# Load Dataset
+```{r Load Exp3 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+#_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_clone_matrix.mtx")
+#_ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
+#_ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
+
+se <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
+
+if(TEST){
+	tgenes=min(TEST_genes, nrow(se))
+	tsamples=min(TEST_samples, ncol(se))
+	se=se[1:tgenes,1:tsamples]
+	rm(tgenes,tsamples)
+}
+
+se <- CreateSeuratObject(counts=se)
+se <- ScaleData(se, layer="counts")
+se <- FindVariableFeatures(se)
+
+se = RunPCA(se, features = VariableFeatures(se))
+se = RunUMAP(se, features = VariableFeatures(se))
+```
+
+# Visualize data
+```{r Elbowplot and Visualization, message=TRUE, warning=TRUE, paged.print=FALSE}
+imgname=sprintf("%s/PCA.png", out_path)
+message(sprintf("Saving Imagine --- %s",imgname))
+pcaplot=PCAPlot(se)
+# ggsave(imgname, plot=pcaplot)
+pcaplot
+```
+
+```{r UMAP, message=TRUE, warning=TRUE, paged.print=TRUE}
+imgname=sprintf("%s/UMAP.png", out_path)
+message(sprintf("Saving Imagine --- %s",imgname))
+umapplot = UMAPPlot(se)
+# ggsave(imgname, plot=umapplot)
+umapplot
+```
+
+```{r Elbowplot, message=TRUE, paged.print=TRUE}
+imgname=sprintf("%s/elbow.pdf", out_path)
+message(sprintf("Saving Imagine --- %s",imgname))
+elbowplot=ElbowPlot(se)
+# ggsave(imgname, plot=elbowplot)
+elbowplot
+```
+
+# Archetypes
+```{r AA, message=TRUE, warning=TRUE, paged.print=TRUE}
+if(TEST){
+    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
+}else{
+    m = se@assays$RNA@layers$counts
+}
+m=as.matrix(m)
+
+s=timestamp()
+a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
+e=timestamp()
+
+save(a,file=sprintf("%s/Archetypes_%k.rds",out_path,k))
+```
+
+## Visualize Archetypes
+```{r Visualize AA, message=TRUE, warning=TRUE, paged.print=TRUE}
+imgname=sprintf("%s/Archetypes_%d.png", out_path,k)
+plotarchetyps = xyplot(a,m)
+# ggsave(imgname, plot=plotarchetyps)
+plotarchetyps
+```
