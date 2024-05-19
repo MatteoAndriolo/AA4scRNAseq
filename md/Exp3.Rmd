@@ -39,7 +39,7 @@ k= 15
 #_ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
 #_ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
 
-se <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
+se <- Matrix::readMM("../data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
 
 if(TEST){
 	tgenes=min(TEST_genes, nrow(se))

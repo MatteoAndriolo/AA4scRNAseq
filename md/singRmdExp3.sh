@@ -9,8 +9,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=15
 #SBATCH --time=5:00:00
-#SBATCH --mem=150G
-
+#SBATCH --mem=250G
+container="containers/img/ubuntuArchetypesPandas.sif"
 singularity exec \
   --env DISABLE_AUTH=true \
   --env PASSWORD=psw \

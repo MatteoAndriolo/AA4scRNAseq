@@ -50,7 +50,7 @@ k= 15
 #_  neutrophil_pseudotime <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt",header=TRUE, sep="\t")
 
 #  Number of transcripts for each gene in each cell
-se <- Matrix::readMM("./data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
+se <- Matrix::readMM("../data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
 
 if(TEST){
     tgenes=min(TEST_genes, nrow(se))
