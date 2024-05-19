@@ -12,8 +12,9 @@
 #SBATCH --mem=50G
 
 #
-container=containers/img/ubuntuArchetypes.sif 
-markdown=$1
+#container=containers/img/ubuntuArchetypesPandas.sif 
+container=$1
+markdown=$2
 # Rscript -e "rmarkdown::render()"
 echo $markdown
 singularity exec \
@@ -21,5 +22,5 @@ singularity exec \
   --env PASSWORD=psw \
   --bind .:/app \
     $container \
-    Rscript -e "rmarkdown::render($markdown)" \
+    Rscript -e "rmarkdown::render('$markdown')" \
   &> ./out/Melanoma/RMDsingularity.log

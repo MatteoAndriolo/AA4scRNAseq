@@ -13,7 +13,7 @@
 
 command="Rscript src/VisualizeData.R"
 #container="containers/img/singularityArchetypes.sif"
-container="containers/img/ubuntuArchetypes.sif"
+container="containers/img/ubuntuArchetypesPandas.sif"
 
 # Command
 #singularity exec --env DISABLE_AUTH=true --env PASSWORD=psw --fakeroot --bind /home/andrioloma/MasterThesis:/app $container $command &> /home/andrioloma/MasterThesis/createImgOut.sing

@@ -25,8 +25,8 @@ data_path="../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
 out_path="../out/Melanoma"
 
 # Setup testing phase
-#TEST=FALSE
-TEST=TRUE
+#TEST=TRUE
+TEST=FALSE
 TEST_ngenes=300
 TEST_nsamples=500
 

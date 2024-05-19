@@ -24,7 +24,8 @@ library(dplyr)
 out_path="../out/AllonKleinLab/Experiment1"
 
 # Setup testing phase
-TEST=TRUE
+#TEST=TRUE
+TEST=FALSE
 TEST_genes=300
 TEST_samples=500
 
