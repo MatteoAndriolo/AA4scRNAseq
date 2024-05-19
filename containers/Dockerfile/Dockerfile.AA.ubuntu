@@ -26,4 +26,6 @@ RUN R -e 'remotes::install_github("bnprks/BPCells", quiet = TRUE)'
 # RUN R -e 'remotes::install_github("satijalab/azimuth", "seurat5", quiet = TRUE)'
 # RUN R -e 'install.packages("devtools");devtools::install_github("cole-trapnell-lab/monocle3")'
 
+RUN apt-get install pandoc
+
 WORKDIR /app
