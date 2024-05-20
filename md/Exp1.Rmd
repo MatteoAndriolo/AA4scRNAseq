@@ -34,7 +34,7 @@ k= 15
 ```
 
 # Load Dataset
-```{r Load Melanoma dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+```{r Load Exp1 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
 #_ # Binary matrix indicating clonal membership of each cell
 #_ # The rows of this file represent cells and correspond to the rows of _counts_matrix_in_vitro_ (above).
 #_ # The columns represent clones. Not every cell belongs to a clone. 
@@ -100,6 +100,10 @@ if(TEST){
     m = se@assays$RNA@layers$counts
 }
 m=as.matrix(m)
+
+if (any(is.na(m)) || any(is.infinite(m))) {
+  stop("The data matrix still contains NA or infinite values after cleaning.")
+}
 
 s=timestamp()
 a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
