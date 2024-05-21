@@ -24,10 +24,11 @@ library(dplyr)
 out_path="../out/AllonKleinLab/Experiment1"
 
 # Setup testing phase
-#TEST=TRUE
-TEST=FALSE
+TEST=TRUE
+#TEST=FALSE
 TEST_genes=300
 TEST_samples=500
+
 
 # Archetypes
 k= 15
@@ -51,6 +52,7 @@ k= 15
 
 #  Number of transcripts for each gene in each cell
 se <- Matrix::readMM("../data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
+se=se[Matrix::rowSums(se)>0,Matrix::colSums(se)>0]
 
 if(TEST){
     tgenes=min(TEST_genes, nrow(se))
@@ -92,6 +94,7 @@ elbowplot=ElbowPlot(se)
 elbowplot
 ```
 
+
 # Archetypes
 ```{r AA, message=TRUE, warning=TRUE, paged.print=TRUE}
 if(TEST){
@@ -100,10 +103,7 @@ if(TEST){
     m = se@assays$RNA@layers$counts
 }
 m=as.matrix(m)
-
-if (any(is.na(m)) || any(is.infinite(m))) {
-  stop("The data matrix still contains NA or infinite values after cleaning.")
-}
+m=m[Matrix::rowSums(m)>0,Matrix::colSums(m)>0]
 
 s=timestamp()
 a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)

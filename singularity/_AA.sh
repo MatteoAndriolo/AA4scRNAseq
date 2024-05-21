@@ -15,6 +15,9 @@ LOG_FILE="$WORKDIR/out/$DATASET/stats.log"
 touch $LOG_FILE
 echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 
+# -----------------------------------------------------------------
+# Run Rscript with the given parameters
+
 Rscript $SCRIPT_PATH $ANALYSIS $DATASET $NUM_ARCHETYPES &
 PID=$!
 echo "PID is $PID"

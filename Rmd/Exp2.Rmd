@@ -1,5 +1,5 @@
 ---
-title: "Melanoma"
+title: "Exp2"
 author: "MatteoAndriolo"
 output: 
   html_document: 
@@ -21,49 +21,37 @@ library(tidyr)
 library(dplyr)
 
 # Setup all paths
-data_path="../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
-out_path="../out/Melanoma"
+out_path="../out/AllonKleinLab/Experiment2"
 
 # Setup testing phase
 #TEST=TRUE
-TEST=FALSE
-TEST_ngenes=300
-TEST_nsamples=500
+TEST=TRUE
+TEST_genes=300
+TEST_samples=500
 
 # Archetypes
 k= 15
 ```
 
 # Load Dataset
-```{r Load Melanoma dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-ge <- read.table(data_path, header = TRUE)
-ge=ge[!duplicated(ge[,1]),] # remove duplicated genes
-rownames(ge)=ge[,1]         # extract from matrix rownames
-ge=ge[,2:ncol(ge)]          # elide rownames from gene expression matrix
+```{r Load Exp2 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+#_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_clone_matrix.mtx")
+#_ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
+#_ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
 
-metadata=ge[1:3,]          # extract metadata
-metadata <- t(metadata) %>%
-    data.frame() %>% 
-    mutate(across(where(is.character), as.numeric)) 
+se <- Matrix::readMM("../data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
+se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 
-ge=ge[4:nrow(ge),]
-ge <- ge %>% 
-    data.frame() %>% 
-    mutate(across(where(is.character), as.numeric)) 
-# -------- END BASIC SETUP
 if(TEST){
-    tgenes=min(TEST_ngenes, nrow(ge))
-    tsamples=min(TEST_nsamples, ncol(ge))
-    metadata=metadata[1:tsamples,]
-    ge=ge[1:tgenes,1:tsamples]
-    rm(tgenes,tsamples)
+	tgenes=min(TEST_genes, nrow(se))
+	tsamples=min(TEST_samples, ncol(se))
+	se=se[1:tgenes,1:tsamples]
+	rm(tgenes,tsamples)
 }
 
-# -------- SEURAT
-se <- CreateSeuratObject(ge,project="MelanomaSC",meta.data=metadata)
-# Skip normalization since data is already normalized
-se <- ScaleData(se, layer= "counts") 
-se <- FindVariableFeatures(se, hvf.nfeatures = hvf.nfeatures)
+se <- CreateSeuratObject(counts=se)
+se <- ScaleData(se, layer="counts")
+se <- FindVariableFeatures(se)
 
 se = RunPCA(se, features = VariableFeatures(se))
 se = RunUMAP(se, features = VariableFeatures(se))

@@ -1,3 +1,6 @@
+container="containers/img/ubuntuArchetypes.sif"
+script="/app/singularity/_AA.sh"
+
 parse_parameters() {
     if [ "$#" -ne 6 ]; then
         echo "Illegal number of parameters"
@@ -65,8 +68,6 @@ build_slurm() {
     local slurm_error="${output_dir}/slurm_error.txt"
     local singularity_log="${output_dir}/singularity.log"
     
-    local container="containers/img/ubuntuArchetypes.sif"
-    local script="/app/singularity/AA.sh"
 
     # mkdir -p "$output_dir"
 

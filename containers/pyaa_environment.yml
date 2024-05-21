@@ -1,0 +1,25 @@
+name: pyaa
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - ipykernel=6.28.0=py312h06a4308_0
+  - ipython=8.20.0=py312h06a4308_0
+  - ipywidgets=8.1.2=py312h06a4308_0
+  - pip=23.3.1=py312h06a4308_0
+  - python=3.12.3=h996f2a0_0
+  - wheel=0.41.2=py312h06a4308_0
+  - pip:
+      - anndata==0.10.7
+      - archetypes==0.6.2
+      - matplotlib==3.8.4
+      - networkx==3.3
+      - numpy==1.26.4
+      - pandas==2.2.2
+      - pillow==10.3.0
+      - pip-autoremove==0.10.0
+      - scanpy==1.10.1
+      - scikit-learn==1.4.2
+      - scipy==1.13.0
+      - seaborn==0.13.2
+      - torch==2.3.0

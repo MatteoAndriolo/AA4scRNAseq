@@ -29,4 +29,3 @@ t0 = time()
 mod0.fit_transform(data)
 t1 = time()
 print(f"mod0: {t1 - t0:.4f} s | RSS: {mod0.rss_:.2f}")
-# %%

@@ -1,5 +1,5 @@
 ---
-title: "Exp2"
+title: "Exp3"
 author: "MatteoAndriolo"
 output: 
   html_document: 
@@ -25,7 +25,7 @@ out_path="../out/AllonKleinLab/Experiment2"
 
 # Setup testing phase
 #TEST=TRUE
-TEST=FALSE
+TEST=TRUE
 TEST_genes=300
 TEST_samples=500
 
@@ -34,7 +34,7 @@ k= 15
 ```
 
 # Load Dataset
-```{r Load Exp2 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+```{r Load Exp3 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
 #_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_clone_matrix.mtx")
 #_ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
 #_ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
@@ -47,6 +47,7 @@ if(TEST){
 	se=se[1:tgenes,1:tsamples]
 	rm(tgenes,tsamples)
 }
+se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 
 se <- CreateSeuratObject(counts=se)
 se <- ScaleData(se, layer="counts")

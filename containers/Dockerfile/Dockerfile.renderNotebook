@@ -1,0 +1,13 @@
+FROM continuumio/miniconda3
+
+WORKDIR /app
+
+COPY pyaa_environment.yml .
+COPY render_notebook.sh /usr/local/bin/
+
+#RUN conda env create -f pyaa_environment.yml
+RUN conda create -n pyaa -y python
+
+SHELL ["conda", "run", "-n", "pyaa", "/bin/bash", "-c"]
+
+ENTRYPOINT ["/usr/local/bin/render_notebook.sh"]
