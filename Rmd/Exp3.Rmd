@@ -24,8 +24,9 @@ library(dplyr)
 out_path="../out/AllonKleinLab/Experiment2"
 
 # Setup testing phase
+HVF=TRUE
+TEST=FALSE
 #TEST=TRUE
-TEST=TRUE
 TEST_genes=300
 TEST_samples=500
 
@@ -84,11 +85,12 @@ elbowplot
 
 # Archetypes
 ```{r AA, message=TRUE, warning=TRUE, paged.print=TRUE}
-if(TEST){
+if(HVF){
     m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
 }else{
     m = se@assays$RNA@layers$counts
 }
+m=m[Matrix::rowSums(m)>0,Matrix::colSums(m)>0]
 m=as.matrix(m)
 
 s=timestamp()

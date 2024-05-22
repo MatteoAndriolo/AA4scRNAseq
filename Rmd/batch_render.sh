@@ -1,7 +1,22 @@
 #!/bin/bash
-command="singularity/singRmd.sh"
-container="containers/img/ubuntuArchetypesPandas.sif"
-sbatch $command $container md/Exp1.Rmd 
-sbatch $command $container md/Exp2.Rmd 
-sbatch $command $container md/Exp3.Rmd
-sbatch $command $container md/Melanoma.Rmd
+
+# Directory containing the files to be sbatch'ed
+DIRECTORY="./Rmd/factory"
+
+# Check if the directory exists
+if [ ! -d "$DIRECTORY" ]; then
+  echo "Directory $DIRECTORY does not exist."
+  exit 1
+fi
+
+# Loop over each file in the directory
+for FILE in "$DIRECTORY"/*; 
+do
+  # Check if it is a file
+  if [ -f "$FILE" ]; then
+    echo "Submitting $FILE"
+    sbatch "$FILE"
+  else
+    echo "$FILE is not a file, skipping."
+  fi
+done

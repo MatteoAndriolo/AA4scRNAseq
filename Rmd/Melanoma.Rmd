@@ -21,50 +21,50 @@ library(tidyr)
 library(dplyr)
 
 # Setup all paths
-out_path="../out/AllonKleinLab/Experiment1"
+data_path="../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
+out_path="../out/Melanoma"
 
 # Setup testing phase
 HVF=TRUE
-#TEST=TRUE
 TEST=FALSE
-TEST_genes=300
-TEST_samples=500
-
+TEST_ngenes=300
+TEST_nsamples=500
 
 # Archetypes
 k= 15
 ```
 
 # Load Dataset
-```{r Load Exp1 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-#_ # Binary matrix indicating clonal membership of each cell
-#_ # The rows of this file represent cells and correspond to the rows of _counts_matrix_in_vitro_ (above).
-#_ # The columns represent clones. Not every cell belongs to a clone. 
-#_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
-#_  # cell metadata : cell type annotation
-#_  cell_metadata <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt",header=TRUE,sep = "\t" )
-#_  
-#_  gene_names <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
-#_  
-#_  # List of cells belonging to the neutrophil/monocyte trajectory that were used in becnmark analysis
-#_  neutrophil_monocyte_trajectory <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt",header=TRUE,sep="\t")
-#_  # pseudotime for neutrophil trajectory cells
-#_  neutrophil_pseudotime <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt",header=TRUE, sep="\t")
+```{r Load Melanoma dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+se <- read.table(data_path, header = TRUE)
+se=se[!duplicated(se[,1]),] # remove duplicated genes
+rownames(se)=se[,1]         # extract from matrix rownames
+se=se[,2:ncol(se)]          # elide rownames from gene expression matrix
 
-#  Number of transcripts for each gene in each cell
-se <- Matrix::readMM("../data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx" )
-se=se[Matrix::rowSums(se)>0,Matrix::colSums(se)>0]
+metadata=se[1:3,]          # extract metadata
+metadata <- t(metadata) %>%
+    data.frame() %>% 
+    mutate(across(where(is.character), as.numeric)) 
 
+se=se[4:nrow(se),]
+se <- se %>% 
+    data.frame() %>% 
+    mutate(across(where(is.character), as.numeric)) 
+# -------- END BASIC SETUP
 if(TEST){
-    tgenes=min(TEST_genes, nrow(se))
-    tsamples=min(TEST_samples, ncol(se))
+    tgenes=min(TEST_ngenes, nrow(se))
+    tsamples=min(TEST_nsamples, ncol(se))
+    metadata=metadata[1:tsamples,]
     se=se[1:tgenes,1:tsamples]
     rm(tgenes,tsamples)
 }
 
-se <- CreateSeuratObject(counts=se)
+# -------- SEURAT
+se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
+se <- CreateSeuratObject(se,project="MelanomaSC",meta.data=metadata)
+# Skip normalization since data is already normalized
 se <- ScaleData(se, layer= "counts") 
-se <- FindVariableFeatures(se)
+se <- FindVariableFeatures(se, hvf.nfeatures = hvf.nfeatures)
 
 se = RunPCA(se, features = VariableFeatures(se))
 se = RunUMAP(se, features = VariableFeatures(se))
@@ -103,8 +103,8 @@ if(HVF){
 }else{
     m = se@assays$RNA@layers$counts
 }
-m=as.matrix(m)
 m=m[Matrix::rowSums(m)>0,Matrix::colSums(m)>0]
+m=as.matrix(m)
 
 s=timestamp()
 a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)

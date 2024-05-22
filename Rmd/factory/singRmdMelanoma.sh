@@ -8,13 +8,18 @@
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=15
-#SBATCH --time=5:00:00
+#SBATCH --time=10:00:00
 #SBATCH --mem=150G
+
 container="containers/img/ubuntuArchetypesPandas.sif"
+
+# command="Rscript -e \"rmarkdown::render('Rmd/Melanoma.Rmd')\""
+command="/app/Rmd/_main.sh /app/Rmd/Melanoma.Rmd"
+
 singularity exec \
   --env DISABLE_AUTH=true \
   --env PASSWORD=psw \
   --bind .:/app \
     $container \
-    Rscript -e "rmarkdown::render('md/Melanoma.Rmd')" \
+    $command \
   &> ./out/Melanoma/RMDsingularity.log

@@ -10,11 +10,16 @@
 #SBATCH --cpus-per-task=15
 #SBATCH --time=5:00:00
 #SBATCH --mem=300G
+
 container="containers/img/ubuntuArchetypesPandas.sif"
+
+#command="Rscript -e \"rmarkdown::render('Rmd/Exp2.Rmd')\"" 
+command="/app/Rmd/_main.sh /app/Rmd/Exp2.Rmd"
+
 singularity exec \
   --env DISABLE_AUTH=true \
   --env PASSWORD=psw \
   --bind .:/app \
     $container \
-    Rscript -e "rmarkdown::render('md/Exp2.Rmd')" \
+    $command \
   &> ./out/AllonKleinLab/Experiment2/RMDsingularity.log
