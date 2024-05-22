@@ -19,7 +19,7 @@ case $dataset in
         output="out/AllonKleinLab/Experiment3"
         ;;
     Melanoma)
-        output="out/AllonKleinLab/Melanoma"
+        output="out/Melanoma"
         ;;
     *)
         echo "Unknown filename: $dataset"

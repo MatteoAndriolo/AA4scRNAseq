@@ -32,11 +32,11 @@ k= 15
 
 # Load Dataset
 ```{r Load Exp3 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-#_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_inVivo_clone_matrix.mtx")
-#_ gene_names <- read.table("data/AllonKleinLab/Experiment3/stateFate_inVivo_gene_names.txt",sep="\t")
-#_ metadata <- read.table("data/AllonKleinLab/Experiment3/stateFate_inVivo_metadata.txt",sep="\t")
+#_ data_clone_matrix <- Matrix::readMM("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_clone_matrix.mtx")
+#_ data_gene_names <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_gene_names.txt",sep="\t")
+#_ data_metadata <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt",sep="\t")
 
-data_path="../data/AllonKleinLab/Experiment3/stateFate_inVivo_normed_counts.mtx"
+data_path="../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_normed_counts.mtx"
 out_path="../out/AllonKleinLab/Experiment3"
 
 se <- Matrix::readMM(data_path)
