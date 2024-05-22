@@ -8,11 +8,11 @@ output:
     number_sections: true
 ---
 
-```{r setup, include=FALSE}
-# Load necessary libraries and set global options
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
 
-# libraries
+```{r setup}
 library(Seurat)
 library(ggplot2)
 library(here)
@@ -20,22 +20,20 @@ library(archetypes)
 library(tidyr)
 library(dplyr)
 
-# Setup all paths
-data_path="../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
-out_path="../out/Melanoma"
-
-# Setup testing phase
 HVF=TRUE
 TEST=FALSE
+
 TEST_ngenes=300
 TEST_nsamples=500
 
-# Archetypes
 k= 15
 ```
 
 # Load Dataset
 ```{r Load Melanoma dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+data_path="../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
+out_path="../out/Melanoma"
+
 se <- read.table(data_path, header = TRUE)
 se=se[!duplicated(se[,1]),] # remove duplicated genes
 rownames(se)=se[,1]         # extract from matrix rownames
@@ -51,18 +49,18 @@ se <- se %>%
     data.frame() %>% 
     mutate(across(where(is.character), as.numeric)) 
 # -------- END BASIC SETUP
+se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 if(TEST){
     tgenes=min(TEST_ngenes, nrow(se))
     tsamples=min(TEST_nsamples, ncol(se))
     metadata=metadata[1:tsamples,]
     se=se[1:tgenes,1:tsamples]
     rm(tgenes,tsamples)
+    se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 }
 
 # -------- SEURAT
-se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 se <- CreateSeuratObject(se,project="MelanomaSC",meta.data=metadata)
-# Skip normalization since data is already normalized
 se <- ScaleData(se, layer= "counts") 
 se <- FindVariableFeatures(se, hvf.nfeatures = hvf.nfeatures)
 

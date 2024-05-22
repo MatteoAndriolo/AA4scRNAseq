@@ -8,11 +8,12 @@ output:
     number_sections: true
 ---
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 # Load necessary libraries and set global options
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
 
-# libraries
+```{r setup}
 library(Seurat)
 library(ggplot2)
 library(here)
@@ -20,35 +21,34 @@ library(archetypes)
 library(tidyr)
 library(dplyr)
 
-# Setup all paths
-out_path="../out/AllonKleinLab/Experiment2"
-
-# Setup testing phase
 HVF=TRUE
 TEST=FALSE
-#TEST=TRUE
+
 TEST_genes=300
 TEST_samples=500
 
-# Archetypes
 k= 15
 ```
 
 # Load Dataset
 ```{r Load Exp3 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-#_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_clone_matrix.mtx")
-#_ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
-#_ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
+#_ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment3/stateFate_inVivo_clone_matrix.mtx")
+#_ gene_names <- read.table("data/AllonKleinLab/Experiment3/stateFate_inVivo_gene_names.txt",sep="\t")
+#_ metadata <- read.table("data/AllonKleinLab/Experiment3/stateFate_inVivo_metadata.txt",sep="\t")
 
-se <- Matrix::readMM("../data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
+data_path="../data/AllonKleinLab/Experiment3/stateFate_inVivo_normed_counts.mtx"
+out_path="../out/AllonKleinLab/Experiment3"
+
+se <- Matrix::readMM(data_path)
+se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 
 if(TEST){
-	tgenes=min(TEST_genes, nrow(se))
-	tsamples=min(TEST_samples, ncol(se))
-	se=se[1:tgenes,1:tsamples]
-	rm(tgenes,tsamples)
+  tgenes=min(TEST_genes, nrow(se))
+  tsamples=min(TEST_samples, ncol(se))
+  se=se[1:tgenes,1:tsamples]
+  rm(tgenes,tsamples)
+  se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 }
-se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 
 se <- CreateSeuratObject(counts=se)
 se <- ScaleData(se, layer="counts")
@@ -86,9 +86,9 @@ elbowplot
 # Archetypes
 ```{r AA, message=TRUE, warning=TRUE, paged.print=TRUE}
 if(HVF){
-    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
+  m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
 }else{
-    m = se@assays$RNA@layers$counts
+  m = se@assays$RNA@layers$counts
 }
 m=m[Matrix::rowSums(m)>0,Matrix::colSums(m)>0]
 m=as.matrix(m)

@@ -8,11 +8,11 @@ output:
     number_sections: true
 ---
 
-```{r setup, include=FALSE}
-# Load necessary libraries and set global options
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
 
-# libraries
+```{r setup}
 library(Seurat)
 library(ggplot2)
 library(here)
@@ -20,17 +20,12 @@ library(archetypes)
 library(tidyr)
 library(dplyr)
 
-# Setup all paths
-out_path="../out/AllonKleinLab/Experiment2"
-
-# Setup testing phase
 HVF=TRUE
 TEST=FALSE
-#TEST=TRUE
+
 TEST_genes=300
 TEST_samples=500
 
-# Archetypes
 k= 15
 ```
 
@@ -40,7 +35,10 @@ k= 15
 #_ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
 #_ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
 
-se <- Matrix::readMM("../data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx")
+data_path="../data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx"
+out_path="../out/AllonKleinLab/Experiment2"
+
+se <- Matrix::readMM(data_path)
 se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 
 if(TEST){
@@ -48,6 +46,7 @@ if(TEST){
 	tsamples=min(TEST_samples, ncol(se))
 	se=se[1:tgenes,1:tsamples]
 	rm(tgenes,tsamples)
+  se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
 }
 
 se <- CreateSeuratObject(counts=se)

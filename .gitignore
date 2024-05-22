@@ -12,3 +12,5 @@ jobs/factory
 *.tar
 *.png
 *.sif
+
+out/
