@@ -8,7 +8,10 @@ n_archetypes = (2, 2)
 shape = (10, 10)
 
 data = make_archetypal_dataset(
-    archetypes=np.array([[0.75, 0.1], [0.0, 0.9]]), shape=shape, alpha=1, random_state=random_state
+    archetypes=np.array([[0.75, 0.1], [0.0, 0.9]]),
+    shape=shape,
+    alpha=1,
+    random_state=random_state,
 )
 
 # data = make_checkerboard(

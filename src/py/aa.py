@@ -1,4 +1,4 @@
-#%%
+# %%
 from time import time
 
 import numpy as np
@@ -15,7 +15,7 @@ aa_kwargs = {
     "tol": 1e-4,
 }
 
-#%%
+# %%
 mod1 = arch.AA(**aa_kwargs, algorithm_init="furthest_sum")
 t0 = time()
 mod1.fit_transform(data)
@@ -23,7 +23,7 @@ t1 = time()
 print(f"mod1: {t1 - t0:.4f} s | RSS: {mod1.rss_:.2f}")
 
 
-#%%
+# %%
 mod0 = arch.AA(**aa_kwargs, algorithm_init="random")
 t0 = time()
 mod0.fit_transform(data)

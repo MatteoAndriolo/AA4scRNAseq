@@ -6,9 +6,9 @@ source("src/archetypes.R")
 displayHelp <- function() {
   cat("Help Information:\n")
   cat("Valid Analysis Types:\n")
-  cat(paste("  -", paste(validAnalysisTypes, collapse="\n  -")), "\n\n")
+  cat(paste("  -", paste(validAnalysisTypes, collapse = "\n  -")), "\n\n")
   cat("Valid Datasets:\n")
-  cat(paste("  -", paste(validDatasets, collapse="\n  -")), "\n\n")
+  cat(paste("  -", paste(validDatasets, collapse = "\n  -")), "\n\n")
   cat("Usage:\n")
   cat("  Rscript file.R <analysisType> <dataset> [<numArchetypes>]\n")
   cat("Example:\n")
@@ -19,11 +19,11 @@ displayHelp <- function() {
 # Main function to decide which analysis to run
 mainAnalysisFunction <-
   function(analysisType, dataset, numArchetypes = NULL) {
-    validAnalysis = c("Seurat", "Archetypes")
+    validAnalysis <- c("Seurat", "Archetypes")
     if (!analysisType %in% validAnalysis) {
       stop("Invalid analysis type. Choose either 'Seurat' or 'Archetypes'.")
     }
-    
+
     if (!dataset %in% c(
       "AllonKleinLab/Experiment1",
       "AllonKleinLab/Experiment2",
@@ -34,8 +34,8 @@ mainAnalysisFunction <-
     )) {
       stop("Invalid dataset name.")
     }
-    
-    
+
+
     if (getwd() != "/app") {
       setwd("/app")
     }
@@ -58,4 +58,3 @@ numArchetypes <-
 
 # Call main function with the provided arguments
 mainAnalysisFunction(analysisType, dataset, numArchetypes)
-

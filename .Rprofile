@@ -1,7 +1,7 @@
 # The .First function is called after everything else in .Rprofile is executed
 .First <- function() {
   # Print a welcome message
-  message("Welcome back ", Sys.getenv("USER"),"!\n","Working directory is: ", getwd())
+  message("Welcome back ", Sys.getenv("USER"), "!\n", "Working directory is: ", getwd())
   message(.libPaths())
 }
 
@@ -14,14 +14,14 @@ options(scipen = 2)
 # Do not show stars indicating statistical significance in model outputs
 # options(show.signif.stars = FALSE)
 local({
-    # Detect the number of cores available for use in parallelisation
-    n <- max(parallel::detectCores() - 2L, 1L)
-    # Compile the different sources of a single package in parallel
-    Sys.setenv(MAKEFLAGS = paste0("-j",n))
-    # Install different packages passed to a single install.packages() call in parallel
-    options(Ncpus = n)
-    # Parallel apply-type functions via 'parallel' package
-    options(mc.cores =  n)
+  # Detect the number of cores available for use in parallelisation
+  n <- max(parallel::detectCores() - 2L, 1L)
+  # Compile the different sources of a single package in parallel
+  Sys.setenv(MAKEFLAGS = paste0("-j", n))
+  # Install different packages passed to a single install.packages() call in parallel
+  options(Ncpus = n)
+  # Parallel apply-type functions via 'parallel' package
+  options(mc.cores = n)
 })
 # Post-mortem debugging facilities
 error <- quote(dump.frames("${R_HOME_USER}/testdump", TRUE))
