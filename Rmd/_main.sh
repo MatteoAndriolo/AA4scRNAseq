@@ -34,7 +34,10 @@ echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 
 # -----------------------------------------------------------------
 # Run Rscript with the given parameters
-
+#R -e "rmarkdown::render('path/to/your_file.Rmd', 
+#                        params = list(experiment = 'Exp2', 
+#                                      TEST = TRUE, 
+#                                      HVF = FALSE))"
 Rscript -e "rmarkdown::render('$RMDFILE')" &
 PID=$!
 echo "PID is $PID"

@@ -34,26 +34,8 @@ TEST_samples <- 500
 
 # Load Dataset
 ```{r Load Exp1 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-# _ # Binary matrix indicating clonal membership of each cell
-# _ # The rows of this file represent cells and correspond to the rows of _counts_matrix_in_vitro_ (above).
-# _ # The columns represent clones. Not every cell belongs to a clone.
-# _ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
-# _  # cell metadata : cell type annotation
-# _  cell_metadata <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt",header=TRUE,sep = "\t" )
-# _
-# _  gene_names <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
-# _
-# _  # List of cells belonging to the neutrophil/monocyte trajectory that were used in becnmark analysis
-# _  neutrophil_monocyte_trajectory <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt",header=TRUE,sep="\t")
-# _  # pseudotime for neutrophil trajectory cells
-# _  neutrophil_pseudotime <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt",header=TRUE, sep="\t")
-
-data_path <- "../data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx"
-out_path <- "../out/AllonKleinLab/Experiment1"
-
-se <- Matrix::readMM(data_path)
-se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-
+out_path <- "../out/MyocardialInfarction"
+se <- readRDS("../data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds")
 if (TEST) {
   tgenes <- min(TEST_genes, nrow(se))
   tsamples <- min(TEST_samples, ncol(se))
@@ -62,11 +44,10 @@ if (TEST) {
   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
 }
 
-se <- CreateSeuratObject(counts = se)
 se <- ScaleData(se)
 se <- FindVariableFeatures(se)
 
-se <- RunPCA(se, features = VariableFeatures(se))
+se <- RunPCA(se) # , features = VariableFeatures(se))
 se <- RunUMAP(se, features = VariableFeatures(se))
 ```
 
@@ -102,7 +83,7 @@ k <- 5
 k <- kneedle(elbowplot$data$dims, elbowplot$data$stdev)[1]
 
 if (HVF) {
-  m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+  m <- se@assays$RNA@counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
 } else {
   m <- se@assays$RNA@layers$counts
 }

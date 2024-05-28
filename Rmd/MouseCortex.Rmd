@@ -19,6 +19,11 @@ library(here)
 library(archetypes)
 library(tidyr)
 library(dplyr)
+if (!require(gdata)) {
+  install.packages("gdata")
+}
+library("gdata")
+
 if (!require(kneedle)) {
   install.packages("quantmod")
 }
@@ -34,25 +39,31 @@ TEST_samples <- 500
 
 # Load Dataset
 ```{r Load Exp1 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-# _ # Binary matrix indicating clonal membership of each cell
-# _ # The rows of this file represent cells and correspond to the rows of _counts_matrix_in_vitro_ (above).
-# _ # The columns represent clones. Not every cell belongs to a clone.
-# _ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
-# _  # cell metadata : cell type annotation
-# _  cell_metadata <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt",header=TRUE,sep = "\t" )
-# _
-# _  gene_names <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
-# _
-# _  # List of cells belonging to the neutrophil/monocyte trajectory that were used in becnmark analysis
-# _  neutrophil_monocyte_trajectory <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt",header=TRUE,sep="\t")
-# _  # pseudotime for neutrophil trajectory cells
-# _  neutrophil_pseudotime <- read.table("data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt",header=TRUE, sep="\t")
+# Data definitions and loading
+out_path <- "../out/MouseCortex"
+load("../data/MouseCortex/MouseCortex.RData")
+MouseCortex <- MouseCortex
+mv("MouseCortex", "se")
 
-data_path <- "../data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx"
-out_path <- "../out/AllonKleinLab/Experiment1"
+# Manually generate Seurat Object S5
+raw_counts <- se@raw.data
+normalized_data <- se@data
+scaled_data <- se@scale.data
+var_genes <- se@var.genes
+meta_data <- se@meta.data
+se.ident <- se@ident
+rm(se)
 
-se <- Matrix::readMM(data_path)
-se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+se <- CreateSeuratObject(counts = raw_counts, meta.data = meta_data)
+rm(raw_counts, meta_data)
+se[["RNA"]] <- SetAssayData(se[["RNA"]], layer = "data", new.data = normalized_data)
+rm(normalized_data)
+se[["RNA"]] <- SetAssayData(se[["RNA"]], layer = "scale.data", new.data = scaled_data)
+rm(scaled_data)
+VariableFeatures(se) <- var_genes
+rm(var_genes)
+Idents(se) <- se.ident
+rm(se.ident)
 
 if (TEST) {
   tgenes <- min(TEST_genes, nrow(se))
@@ -62,11 +73,10 @@ if (TEST) {
   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
 }
 
-se <- CreateSeuratObject(counts = se)
-se <- ScaleData(se)
 se <- FindVariableFeatures(se)
-
+# se <- RunPCA(se)
 se <- RunPCA(se, features = VariableFeatures(se))
+se <- RunTSNE(se)
 se <- RunUMAP(se, features = VariableFeatures(se))
 ```
 
@@ -127,7 +137,7 @@ plotarchetyps
 # Seurat
 ```{r}
 DimPlot(se, reduction = "umap")
-DimPlot(se, reduction = "umap", group.by = "cell_type")
+# DimPlot(se, reduction = "umap", group.by = "Time_points")
 ```
 
 ```{r}

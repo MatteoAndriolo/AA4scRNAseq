@@ -12,83 +12,86 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-```{r setup}
+```{r setup, results= 'hide'}
 library(Seurat)
 library(ggplot2)
 library(here)
 library(archetypes)
 library(tidyr)
 library(dplyr)
+if (!require(kneedle)) {
+  install.packages("quantmod")
+}
+devtools::install_github("etam4260/kneedle")
+library(kneedle)
 
-HVF=TRUE
-TEST=FALSE
+HVF <- TRUE
+TEST <- FALSE
 
-TEST_ngenes=300
-TEST_nsamples=500
-
-k= 15
+TEST_genes <- 300
+TEST_samples <- 500
 ```
 
 # Load Dataset
-```{r Load Melanoma dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
-data_path="../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
-out_path="../out/Melanoma"
+```{r Load Melanoma dataset, warning=FALSE, error=FALSE, message=FALSE,results='hide'}
+data_path <- "../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
+out_path <- "../out/Melanoma"
 
 se <- read.table(data_path, header = TRUE)
-se=se[!duplicated(se[,1]),] # remove duplicated genes
-rownames(se)=se[,1]         # extract from matrix rownames
-se=se[,2:ncol(se)]          # elide rownames from gene expression matrix
+se <- se[!duplicated(se[, 1]), ] # remove duplicated genes
+rownames(se) <- se[, 1] # extract from matrix rownames
+se <- se[, 2:ncol(se)] # elide rownames from gene expression matrix
 
-metadata=se[1:3,]          # extract metadata
+metadata <- se[1:3, ] # extract metadata
 metadata <- t(metadata) %>%
-    data.frame() %>% 
-    mutate(across(where(is.character), as.numeric)) 
+  data.frame() %>%
+  mutate(across(where(is.character), as.numeric))
 
-se=se[4:nrow(se),]
-se <- se %>% 
-    data.frame() %>% 
-    mutate(across(where(is.character), as.numeric)) 
+se <- se[4:nrow(se), ]
+se <- se %>%
+  data.frame() %>%
+  mutate(across(where(is.character), as.numeric))
 # -------- END BASIC SETUP
-se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
-if(TEST){
-    tgenes=min(TEST_ngenes, nrow(se))
-    tsamples=min(TEST_nsamples, ncol(se))
-    metadata=metadata[1:tsamples,]
-    se=se[1:tgenes,1:tsamples]
-    rm(tgenes,tsamples)
-    se <- se[Matrix::rowSums(se)>0, Matrix::colSums(se)>0]
+se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+
+if (TEST) {
+  tgenes <- min(TEST_genes, nrow(se))
+  tsamples <- min(TEST_samples, ncol(se))
+  metadata <- metadata[1:tsamples, ]
+  se <- se[1:tgenes, 1:tsamples]
+  rm(tgenes, tsamples)
+  se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
 }
 
-# -------- SEURAT
-se <- CreateSeuratObject(se,project="MelanomaSC",meta.data=metadata)
-se <- ScaleData(se, layer= "counts") 
-se <- FindVariableFeatures(se, hvf.nfeatures = hvf.nfeatures)
+se <- CreateSeuratObject(counts = se, meta.data = metadata)
+se <- ScaleData(se, layer = "counts")
+se <- FindVariableFeatures(se)
 
-se = RunPCA(se, features = VariableFeatures(se))
-se = RunUMAP(se, features = VariableFeatures(se))
+se <- RunPCA(se, features = VariableFeatures(se))
+se <- RunUMAP(se, features = VariableFeatures(se))
 ```
 
 # Visualize data
 ```{r Elbowplot and Visualization, message=TRUE, warning=TRUE, paged.print=FALSE}
-imgname=sprintf("%s/PCA.png", out_path)
-message(sprintf("Saving Imagine --- %s",imgname))
-pcaplot=PCAPlot(se)
+imgname <- sprintf("%s/PCA.png", out_path)
+message(sprintf("Saving Imagine --- %s", imgname))
+pcaplot <- PCAPlot(se)
 # ggsave(imgname, plot=pcaplot)
 pcaplot
 ```
 
 ```{r UMAP, message=TRUE, warning=TRUE, paged.print=TRUE}
-imgname=sprintf("%s/UMAP.png", out_path)
-message(sprintf("Saving Imagine --- %s",imgname))
-umapplot = UMAPPlot(se)
+imgname <- sprintf("%s/UMAP.png", out_path)
+message(sprintf("Saving Imagine --- %s", imgname))
+umapplot <- UMAPPlot(se)
 # ggsave(imgname, plot=umapplot)
 umapplot
 ```
 
 ```{r Elbowplot, message=TRUE, paged.print=TRUE}
-imgname=sprintf("%s/elbow.pdf", out_path)
-message(sprintf("Saving Imagine --- %s",imgname))
-elbowplot=ElbowPlot(se)
+imgname <- sprintf("%s/elbow.pdf", out_path)
+message(sprintf("Saving Imagine --- %s", imgname))
+elbowplot <- ElbowPlot(se)
 # ggsave(imgname, plot=elbowplot)
 elbowplot
 ```
@@ -96,25 +99,39 @@ elbowplot
 
 # Archetypes
 ```{r AA, message=TRUE, warning=TRUE, paged.print=TRUE}
-if(HVF){
-    m = se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank>0),]
-}else{
-    m = se@assays$RNA@layers$counts
+k <- 5
+k <- kneedle(elbowplot$data$dims, elbowplot$data$stdev)[1]
+
+if (HVF) {
+  m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+} else {
+  m <- se@assays$RNA@layers$counts
 }
-m=m[Matrix::rowSums(m)>0,Matrix::colSums(m)>0]
-m=as.matrix(m)
+m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+m <- as.matrix(m)
 
-s=timestamp()
-a=archetypes::archetypes(m, k=k, verbose=TRUE, maxIterations=10)
-e=timestamp()
+s <- timestamp()
+a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = 10)
+e <- timestamp()
 
-save(a,file=sprintf("%s/Archetypes_%2d.rds",out_path,k))
+save(a, file = sprintf("%s/Archetypes_%2d.rds", out_path, k))
 ```
 
 ## Visualize Archetypes
 ```{r Visualize AA, message=TRUE, warning=TRUE, paged.print=TRUE}
-imgname=sprintf("%s/Archetypes_%2d.png", out_path,k)
-plotarchetyps = xyplot(a,m)
+imgname <- sprintf("%s/Archetypes_%2d.png", out_path, k)
+plotarchetyps <- xyplot(a, m)
 # ggsave(imgname, plot=plotarchetyps)
 plotarchetyps
+```
+
+# Seurat
+```{r}
+DimPlot(se, reduction = "umap")
+DimPlot(se, reduction = "umap", group.by = "cell_type")
+```
+
+```{r}
+se <- FindNeighbors(se, dims = 6:15)
+se <- FindClusters(se, resolution = 0.5)
 ```
