@@ -38,7 +38,7 @@ TEST_samples <- 500
 ```
 
 # Load Dataset
-```{r Load Exp1 dataset, message=TRUE, warning=TRUE, paged.print=FALSE}
+```{r Load Exp1 dataset, message=TRUE, warning=TRUE}
 # Data definitions and loading
 out_path <- "../out/MouseCortex"
 load("../data/MouseCortex/MouseCortex.RData")
@@ -81,7 +81,7 @@ se <- RunUMAP(se, features = VariableFeatures(se))
 ```
 
 # Visualize data
-```{r Elbowplot and Visualization, message=TRUE, warning=TRUE, paged.print=FALSE}
+```{r Elbowplot and Visualization, message=TRUE, warning=TRUE}
 imgname <- sprintf("%s/PCA.png", out_path)
 message(sprintf("Saving Imagine --- %s", imgname))
 pcaplot <- PCAPlot(se)
@@ -89,7 +89,7 @@ pcaplot <- PCAPlot(se)
 pcaplot
 ```
 
-```{r UMAP, message=TRUE, warning=TRUE, paged.print=TRUE}
+```{r UMAP, message=TRUE, warning=TRUE}
 imgname <- sprintf("%s/UMAP.png", out_path)
 message(sprintf("Saving Imagine --- %s", imgname))
 umapplot <- UMAPPlot(se)
@@ -97,7 +97,7 @@ umapplot <- UMAPPlot(se)
 umapplot
 ```
 
-```{r Elbowplot, message=TRUE, paged.print=TRUE}
+```{r Elbowplot, message=TRUE}
 imgname <- sprintf("%s/elbow.pdf", out_path)
 message(sprintf("Saving Imagine --- %s", imgname))
 elbowplot <- ElbowPlot(se)
@@ -107,7 +107,7 @@ elbowplot
 
 
 # Archetypes
-```{r AA, message=TRUE, warning=TRUE, paged.print=TRUE}
+```{r AA, message=TRUE, warning=TRUE}
 k <- 5
 k <- kneedle(elbowplot$data$dims, elbowplot$data$stdev)[1]
 
@@ -127,7 +127,7 @@ save(a, file = sprintf("%s/Archetypes_%2d.rds", out_path, k))
 ```
 
 ## Visualize Archetypes
-```{r Visualize AA, message=TRUE, warning=TRUE, paged.print=TRUE}
+```{r Visualize AA, message=TRUE, warning=TRUE}
 imgname <- sprintf("%s/Archetypes_%2d.png", out_path, k)
 plotarchetyps <- xyplot(a, m)
 # ggsave(imgname, plot=plotarchetyps)
