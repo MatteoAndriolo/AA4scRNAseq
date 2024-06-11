@@ -1,0 +1,126 @@
+---
+title: "Exp3"
+author: "MatteoAndriolo"
+output: 
+  html_document: 
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r setup}
+library(Seurat)
+library(ggplot2)
+library(here)
+library(archetypes)
+library(tidyr)
+library(dplyr)
+if (!require(kneedle)) {
+  install.packages("quantmod")
+}
+devtools::install_github("etam4260/kneedle")
+library(kneedle)
+
+HVF <- TRUE
+TEST <- FALSE
+
+TEST_genes <- 300
+TEST_samples <- 500
+```
+
+# Load Dataset
+```{r Load Exp3 dataset, message=TRUE, warning=TRUE}
+# _ data_clone_matrix <- Matrix::readMM("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_clone_matrix.mtx")
+# _ data_gene_names <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_gene_names.txt",sep="\t")
+# _ data_metadata <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt",sep="\t")
+
+data_path <- "../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_normed_counts.mtx"
+out_path <- "../out/AllonKleinLab/Experiment3"
+
+se <- Matrix::readMM(data_path)
+se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+
+if (TEST) {
+  tgenes <- min(TEST_genes, nrow(se))
+  tsamples <- min(TEST_samples, ncol(se))
+  se <- se[1:tgenes, 1:tsamples]
+  rm(tgenes, tsamples)
+  se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+}
+
+se <- CreateSeuratObject(counts = se)
+se <- ScaleData(se)
+se <- FindVariableFeatures(se)
+
+se <- RunPCA(se, features = VariableFeatures(se))
+se <- RunUMAP(se, features = VariableFeatures(se))
+```
+
+# Visualize data
+```{r Elbowplot and Visualization, message=TRUE, warning=TRUE}
+imgname <- sprintf("%s/PCA.png", out_path)
+message(sprintf("Saving Imagine --- %s", imgname))
+pcaplot <- PCAPlot(se)
+# ggsave(imgname, plot=pcaplot)
+pcaplot
+```
+
+```{r UMAP, message=TRUE, warning=TRUE}
+imgname <- sprintf("%s/UMAP.png", out_path)
+message(sprintf("Saving Imagine --- %s", imgname))
+umapplot <- UMAPPlot(se)
+# ggsave(imgname, plot=umapplot)
+umapplot
+```
+
+```{r Elbowplot, message=TRUE}
+imgname <- sprintf("%s/elbow.pdf", out_path)
+message(sprintf("Saving Imagine --- %s", imgname))
+elbowplot <- ElbowPlot(se)
+# ggsave(imgname, plot=elbowplot)
+elbowplot
+```
+
+
+# Archetypes
+```{r AA, message=TRUE, warning=TRUE}
+k <- 5
+k <- kneedle(elbowplot$data$dims, elbowplot$data$stdev)[1]
+
+if (HVF) {
+  m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+} else {
+  m <- se@assays$RNA@layers$counts
+}
+m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+m <- as.matrix(m)
+
+s <- timestamp()
+a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = 10)
+e <- timestamp()
+
+save(a, file = sprintf("%s/Archetypes_%2d.rds", out_path, k))
+```
+
+## Visualize Archetypes
+```{r Visualize AA, message=TRUE, warning=TRUE}
+imgname <- sprintf("%s/Archetypes_%2d.png", out_path, k)
+plotarchetyps <- xyplot(a, m)
+# ggsave(imgname, plot=plotarchetyps)
+plotarchetyps
+```
+
+# Seurat
+```{r}
+DimPlot(se, reduction = "umap")
+DimPlot(se, reduction = "umap", group.by = "cell_type")
+```
+
+```{r}
+se <- FindNeighbors(se, dims = 6:15)
+se <- FindClusters(se, resolution = 0.5)
+```
