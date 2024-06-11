@@ -1,0 +1,73 @@
+---
+title: "obj"
+author: "MatteoAndriolo"
+output: 
+  html_document: 
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = TRUE)
+```
+
+```{r setup}
+source("../src/R/imports.R")
+source("../src/R/classes.R")
+HVF <- TRUE
+TEST <- TRUE 
+
+TEST_genes <- 300
+TEST_samples <- 500
+
+out_path <- "../out/AllonKleinLab/Experiment2"
+```
+
+# Load Dataset
+```{r Load obj dataset}
+obj=new("Exp2")
+obj = obj_loadData(obj, test=test);
+```
+# Visualize data
+
+```{r}
+obj_visualizeData(obj, out_path)
+```
+
+
+# Archetypes
+```{r AA, message=TRUE, warning=TRUE}
+
+obj=obj_performArchetypes(obj)
+
+#save(a, file = sprintf("%s/Archetypes_%2d.rds", out_path, k))
+```
+
+## Visualize Archetypes
+```{r Visualize AA, message=TRUE, warning=TRUE}
+obj_visualizeArchetypes(obj, out_path)
+```
+
+```{r}
+simplexplot(obj@a)
+```
+
+
+## Plot Umap Archetypes
+
+```{r}
+obj_umapArchetypes(obj,out_path)
+```
+
+
+# Seurat
+```{r}
+DimPlot(obj@se, reduction = "umap")
+#DimPlot(obj@se, reduction = "umap", group.by = "cell_type")
+```
+
+```{r}
+se <- FindNeighbors(obj@se, dims = 6:15)
+se <- FindClusters(obj@se, resolution = 0.5)
+```
