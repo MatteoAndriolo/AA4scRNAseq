@@ -1,31 +1,42 @@
 #!/bin/bash
 
 # Read RMD file as first parameter and extract name
-RMDFILE=$1
-echo $RMDFILE
-dataset=$(basename $RMDFILE .Rmd)
-echo $dataset
-dataset=${dataset#singRmd}
-echo $dataset
+classname=$1
+echo $classname
 
-case $dataset in
+case $classname in
     Exp1)
+        RMDFILE="/app/Rmd/Exp1.Rmd"
         output="out/AllonKleinLab/Experiment1"
+        #classname="Exp1"
         ;;
     Exp2)
+        RMDFILE="/app/Rmd/Exp2.Rmd"
         output="out/AllonKleinLab/Experiment2"
+        #classname="Exp2"
         ;;
     Exp3)
+        RMDFILE="/app/Rmd/Exp3.Rmd"
         output="out/AllonKleinLab/Experiment3"
+        #classname="Exp3"
         ;;
     Melanoma)
+        RMDFILE="/app/Rmd/Melanoma.Rmd"
         output="out/Melanoma"
+        #classname="Melanoma"
         ;;
     *)
-        echo "Unknown filename: $dataset"
+        echo "Unknown classname: $classname"
         exit 1
         ;;
 esac
+
+test=FALSE
+hvf=TRUE
+test_genes=300
+test_samples=500
+genes=NULL
+out_path=NULL
 
 # create log gile
 LOG_FILE="/app/$output/RMSstat.log"
@@ -38,7 +49,11 @@ echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 #                        params = list(experiment = 'Exp2', 
 #                                      TEST = TRUE, 
 #                                      HVF = FALSE))"
-Rscript -e "rmarkdown::render('$RMDFILE')" &
+#params:
+Rscript -e "rmarkdown::render('$RMDFILE', \
+            params=list(TEST=$test, HVF=$hvf, TEST_genes=$test_genes \
+            TEST_sample=$test_sample, CLASS.NAME=$classname, GENES=$genes, \
+            out_path=$outpat ))" &
 PID=$!
 echo "PID is $PID"
 
