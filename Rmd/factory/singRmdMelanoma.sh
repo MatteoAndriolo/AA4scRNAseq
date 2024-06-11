@@ -14,7 +14,7 @@
 container="containers/img/ubuntuArchetypesPandas.sif"
 
 # command="Rscript -e \"rmarkdown::render('Rmd/Melanoma.Rmd')\""
-command="/app/Rmd/_main.sh /app/Rmd/Melanoma.Rmd"
+command="/app/Rmd/_main.sh Melanoma"
 
 singularity exec \
   --env DISABLE_AUTH=true \

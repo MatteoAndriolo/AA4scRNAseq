@@ -14,7 +14,7 @@
 container="containers/img/ubuntuArchetypesPandas.sif"
 
 #command="Rscript -e \"rmarkdown::render('Rmd/Exp2.Rmd')\"" 
-command="/app/Rmd/_main.sh /app/Rmd/Exp2.Rmd"
+command="/app/Rmd/_main.sh Exp2"
 
 singularity exec \
   --env DISABLE_AUTH=true \
