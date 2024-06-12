@@ -14,3 +14,4 @@ jobs/factory
 *.sif
 
 out/
+archetypes/
