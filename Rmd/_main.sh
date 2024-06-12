@@ -50,10 +50,7 @@ echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 #                                      TEST = TRUE, 
 #                                      HVF = FALSE))"
 #params:
-Rscript -e "rmarkdown::render('$RMDFILE', \
-            params=list(TEST=$test, HVF=$hvf, TEST_genes=$test_genes \
-            TEST_sample=$test_sample, CLASS.NAME=$classname, GENES=$genes, \
-            out_path=$outpat ))" &
+Rscript -e "rmarkdown::render('$RMDFILE', params=list(TEST=$test, HVF=$hvf, TEST_genes=$test_genes, TEST_sample=$test_sample, CLASS.NAME=$classname, GENES=$genes,out_path=$outpat ))" &
 PID=$!
 echo "PID is $PID"
 

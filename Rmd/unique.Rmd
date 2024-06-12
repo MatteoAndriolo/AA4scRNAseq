@@ -34,7 +34,6 @@ if (is.null(CLASS.NAME)) {
 }
 GENES <- params$GENES
 out_path <- params$out_path
-
 ```
 
 # Load Dataset
@@ -73,13 +72,13 @@ obj_umapArchetypes(obj, out_path)
 ```
 
 
-# Seurat
-```{r}
-DimPlot(obj@se, reduction = "umap")
-# DimPlot(obj@se, reduction = "umap", group.by = "cell_type")
-```
-
-```{r}
-se <- FindNeighbors(obj@se, dims = 6:15)
-se <- FindClusters(obj@se, resolution = 0.5)
-```
+## Seurat
+#```{r}
+#DimPlot(obj@se, reduction = "umap")
+## DimPlot(obj@se, reduction = "umap", group.by = "cell_type")
+#```
+#
+#```{r}
+#se <- FindNeighbors(obj@se, dims = 6:15)
+#se <- FindClusters(obj@se, resolution = 0.5)
+#```
