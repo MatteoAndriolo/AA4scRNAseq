@@ -6,6 +6,7 @@ setClass("database",
     a = "ANY", # Archetype model will be stored here
     m = "matrix", # Data matrix
     umap.archetypes = "ANY",
+    combined_plot = "ANY",
     elbowplot = "ANY",
     umap = "ANY",
     pca = "ANY",
@@ -51,19 +52,53 @@ setMethod("obj_visualizeData", "database", function(object, out_path) {
   umapplot
   object@umap <- umapplot
 
-  combined_plot <-
-    plot_grid(pcaplot, umapplot, labels = c("A", "B"))
-  combined_imgname <- sprintf("%s/Combined_Plots.png", out_path)
-  message(sprintf("Saving Image --- %s", combined_imgname))
-  ggsave(combined_imgname, plot = combined_plot)
-  print(combined_plot)
+  # Extract legends
+  pca_legend <- cowplot::get_legend(pcaplot)
+  umap_legend <- cowplot::get_legend(umapplot)
 
-  imgname <- sprintf("%s/elbow.pdf", out_path)
-  message(sprintf("Saving Imagine --- %s", imgname))
+  # Combine plots without legends
+  combined_plot <- plot_grid(
+    pcaplot + theme(legend.position = "none"),
+    umapplot + theme(legend.position = "none"),
+    labels = c("A", "B"),
+    ncol = 2
+  )
+
+  # Combine legends
+  # combined_legend <- plot_grid(pca_legend, umap_legend, ncol = 1)
+  # Onli one legend
+  combined_legend <- plot_grid(umap_legend, ncol = 1)
+
+  # Combine plots and legends
+  final_plot <- plot_grid(
+    combined_plot, combined_legend,
+    ncol = 2, rel_widths = c(6, 1)
+  )
+
+  object@combined_plot <- final_plot
+  print(final_plot)
+
+
+  # combined_plot <-
+  #   plot_grid(pcaplot, umapplot, labels = c("A", "B"))
+  # object@combined_plot <- combined_plot
+  # print(combined_plot)
+
+
   elbowplot <- ElbowPlot(se)
   elbowplot
   object@elbowplot <- elbowplot
+  print(elbowplot)
 
+  if (!is.null(out_path)) {
+    imgname <- sprintf("%s/Combined_Plots.png", out_path)
+    message(sprintf("Saving Image --- %s", imgname))
+    ggsave(imgname, plot = combined_plot)
+
+    imgname <- sprintf("%s/elbow.pdf", out_path)
+    message(sprintf("Saving Imagine --- %s", imgname))
+    ggsave(imgname, plot = elbowplot)
+  }
   return(object)
 })
 
@@ -72,23 +107,61 @@ setMethod("obj_visualizeData", "database", function(object, out_path) {
 setGeneric("obj_performArchetypes", function(object, k = 5, HVF = TRUE) {
   standardGeneric("obj_performArchetypes")
 })
-
 setMethod("obj_performArchetypes", "database", function(object, k = 5, HVF = TRUE) {
   m <- object@m
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
   m <- as.matrix(m)
 
-  a <-
-    archetypes::archetypes(
-      m,
-      k = k,
-      verbose = TRUE,
-      maxIterations = 10,
-      saveHistory = TRUE
-    )
-  object@a <- a
+  # Time this and print as message
+  tstart <- Sys.time()
+  a <- tryCatch(
+    {
+      archetypes::archetypes(
+        m,
+        k = k,
+        verbose = TRUE,
+        maxIterations = 10,
+        saveHistory = TRUE
+      )
+    },
+    error = function(e) {
+      message(sprintf("Error in archetypes computation: %s", e$message))
+      return(NULL)
+    }
+  )
+  tend <- Sys.time()
+  message(sprintf("Archetypes Computed in %s", tend - tstart))
+
+  if (!is.null(a)) {
+    object@a <- a
+  } else {
+    stop("Archetypes computation failed, object@a not assigned.")
+  }
+
+  save(a, file = sprintf("%s/Archetypes_%02d.rds", out_path, k))
   return(object)
 })
+# setMethod("obj_performArchetypes", "database", function(object, k = 5, HVF = TRUE) {
+#  m <- object@m
+#  m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+#  m <- as.matrix(m)
+#
+#  #time this and print as message
+#  tstart <- Sys.time()
+#  a <-
+#    archetypes::archetypes(
+#      m,
+#      k = k,
+#      verbose = TRUE,
+#      maxIterations = 10,
+#      saveHistory = TRUE
+#    )
+#  tend <- Sys.time()
+#  message(sprintf("Archetypes Computed in %s", tend - tstart))
+#  object@a <- a
+#
+#  return(object)
+# })
 
 ## obj_visualizeArchetypes -----------------------------------------------------
 # Method to visualize archetypes
@@ -145,9 +218,10 @@ setMethod("obj_umapArchetypes", "database", function(object,
       scale_color_gradient(low = "grey", high = "red") +
       ggtitle(plot_title) +
       labs(color = "Weight")
+    print(umap_plot)
 
     if (!is.null(out_path)) {
-      imgname <- sprintf("%s/UMAP_Archetype_%d.png", out_path, i)
+      imgname <- sprintf("%s/UMAP_Archetype_%d.%d.png", out_path, k, i)
       ggsave(imgname, plot = umap_plot)
       message(sprintf("Saving Image --- %s", imgname))
     }
@@ -159,7 +233,7 @@ setMethod("obj_umapArchetypes", "database", function(object,
   combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
 
   # Save the combined image
-  combined_plot
+  print(combined_plot)
   if (!is.null(out_path)) {
     combined_imgname <- sprintf("%s/UMAP_Combined.png", out_path)
     ggsave(

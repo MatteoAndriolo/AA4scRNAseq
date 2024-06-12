@@ -1,16 +1,22 @@
 #!/bin/bash
 
+# Directory containing the files to be sbatch'ed
+DIRECTORY="./Rmd/factory"
 
-# Create list with strings Melanoma Exp1 Exp2 Exp3 then run dfor iterating over those strings instead of using directories
-listCLassNames=("Melanoma" "Exp1" "Exp2" "Exp3")
+# Check if the directory exists
+if [ ! -d "$DIRECTORY" ]; then
+  echo "Directory $DIRECTORY does not exist."
+  exit 1
+fi
 
 # Loop over each file in the directory
-for CLASSNAME in "${listCLassNames[@]}"; do
+for FILE in "$DIRECTORY"/*; 
+do
   # Check if it is a file
-  if [ -f "$CLASSNAME" ]; then
-    echo "Submitting $CLASSNAME"
-    sbatch "$CLASSNAME"
+  if [ -f "$FILE" ]; then
+    echo "Submitting $FILE"
+    sbatch "$FILE"
   else
-    echo "$CLASSNAME is not a file, skipping."
+    echo "$FILE is not a file, skipping."
   fi
 done

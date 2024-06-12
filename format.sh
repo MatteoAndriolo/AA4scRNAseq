@@ -2,7 +2,8 @@
 
 # formatt all python and R Rmd files recursively
 
-Rscript -e "library(styler); style_dir('.', style='tidyverse', recursive=TRUE)"
+Rscript -e "library(styler); style_dir('./Rmd', recursive=TRUE)"
+Rscript -e "library(styler); style_dir('./src', recursive=TRUE)"
 
 black **/*.py
 black **/*.ipynb

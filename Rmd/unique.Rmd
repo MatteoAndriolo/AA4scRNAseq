@@ -20,7 +20,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = TRUE)
 ```
 
-```{r setup}
+```{r setup, message=FALSE, warning=FALSE}
 source("../src/R/imports.R")
 source("../src/R/classes.R")
 
@@ -36,39 +36,35 @@ GENES <- params$GENES
 out_path <- params$out_path
 ```
 
-# Load Dataset
-```{r Load obj dataset}
+# Load Dataset, hide all outputs
+```{r Load obj dataset, message=FALSE, warning=FALSE}
 obj <- new(CLASS.NAME)
-obj <- obj_loadData(obj, test = test)
+obj <- obj_loadData(obj, test = TEST)
 ```
-# Visualize data
-
-```{r}
-obj_visualizeData(obj, out_path)
+```{r Visualize obj dataset, message=FALSE, warning=FALSE, paged.print=TRUE}
+obj <- obj_visualizeData(obj, out_path)
 ```
 
 
 # Archetypes
 ```{r AA, message=TRUE, warning=TRUE}
 obj <- obj_performArchetypes(obj)
-
-# save(a, file = sprintf("%s/Archetypes_%2d.rds", out_path, k))
 ```
 
 ## Visualize Archetypes
-```{r Visualize AA, message=TRUE, warning=TRUE}
-obj_visualizeArchetypes(obj, out_path)
+```{r Visualize AA, message=FALSE, warning=TRUE}
+obj <- obj_visualizeArchetypes(obj, out_path)
 ```
 
-```{r}
+```{r Visualize AA simplex, message=FALSE, warning=TRUE}
 simplexplot(obj@a)
 ```
 
 
 ## Plot Umap Archetypes
 
-```{r}
-obj_umapArchetypes(obj, out_path)
+```{r Visualize Umap AA, message=FALSE, warning=TRUE}
+obj <- obj_umapArchetypes(obj, out_path)
 ```
 
 
