@@ -13,5 +13,4 @@ jobs/factory
 *.png
 *.sif
 
-out/
 archetypes/
