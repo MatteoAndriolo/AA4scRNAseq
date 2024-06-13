@@ -1,6 +1,8 @@
+!slurm*.txt
+!out/**/*
+
 *.mtx
 *.txt
-!slurm*.txt
 *.rds
 *.tsv
 *.RData
