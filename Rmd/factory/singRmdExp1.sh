@@ -12,6 +12,7 @@
 #SBATCH --mem=200G
 
 container="containers/img/ubuntuArchetypesPandas.sif"
+container="containers/img/myrocker.sif"
 
 #command=Rscript -e "rmarkdown::render('Rmd/Exp1.Rmd')"
 command="/app/Rmd/_main.sh Exp1"

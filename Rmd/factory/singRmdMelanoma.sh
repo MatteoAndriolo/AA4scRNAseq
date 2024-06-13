@@ -12,6 +12,7 @@
 #SBATCH --mem=150G
 
 container="containers/img/ubuntuArchetypesPandas.sif"
+container="containers/img/myrocker.sif"
 
 # command="Rscript -e \"rmarkdown::render('Rmd/Melanoma.Rmd')\""
 command="/app/Rmd/_main.sh Melanoma"

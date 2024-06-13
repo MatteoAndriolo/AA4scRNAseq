@@ -455,7 +455,7 @@ setMethod(
     se <- RunUMAP(se, features = VariableFeatures(se))
 
 
-    if (!is.null(genes)) {
+    if (!is.null(pathw)) {
       warning("TODO: implement")
     } else if (HVF) {
       m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
