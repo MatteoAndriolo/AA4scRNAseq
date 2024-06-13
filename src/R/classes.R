@@ -380,7 +380,7 @@ setMethod(
     }
 
     se <- CreateSeuratObject(counts = se)
-    se <- ScaleData(se)
+    se <- ScaleData(se, layer = "counts")
     se <- FindVariableFeatures(se)
 
     se <- RunPCA(se, features = VariableFeatures(se))
@@ -448,7 +448,7 @@ setMethod(
     }
 
     se <- CreateSeuratObject(counts = se)
-    se <- ScaleData(se)
+    se <- ScaleData(se, layer = "counts")
     se <- FindVariableFeatures(se)
 
     se <- RunPCA(se, features = VariableFeatures(se))
@@ -517,7 +517,7 @@ setMethod(
     }
 
     se <- CreateSeuratObject(counts = se)
-    se <- ScaleData(se)
+    se <- ScaleData(se, layer = "counts")
     se <- FindVariableFeatures(se)
 
     se <- RunPCA(se, features = VariableFeatures(se))
@@ -656,7 +656,7 @@ setMethod(
       se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
     }
 
-    se <- ScaleData(se)
+    se <- ScaleData(se, layer = "counts")
     se <- FindVariableFeatures(se)
 
     se <- RunPCA(se) # , features = VariableFeatures(se))

@@ -1,118 +1,0 @@
-PID is 260259
-Welcome back andrioloma!
-Working directory is: /home/andrioloma/MasterThesis
-/usr/local/lib/R/site-library/usr/lib/R/site-library/usr/lib/R/library
-During startup - Warning messages:
-1: Setting LC_CTYPE failed, using "C" 
-2: Setting LC_COLLATE failed, using "C" 
-3: Setting LC_TIME failed, using "C" 
-4: Setting LC_MESSAGES failed, using "C" 
-5: Setting LC_MONETARY failed, using "C" 
-6: Setting LC_PAPER failed, using "C" 
-7: Setting LC_MEASUREMENT failed, using "C" 
-Loading required package: Matrix
-Loading required package: dplyr
-
-Attaching package: 'dplyr'
-
-The following objects are masked from 'package:stats':
-
-    filter, lag
-
-The following objects are masked from 'package:base':
-
-    intersect, setdiff, setequal, union
-
-Loading required package: Seurat
-Loading required package: SeuratObject
-Loading required package: sp
-
-Attaching package: 'SeuratObject'
-
-The following objects are masked from 'package:base':
-
-    intersect, t
-
-[1] "Running Archetype analysis on Melanoma with 15 archetypes"
-Warning: Feature names cannot have underscores ('_'), replacing with dashes ('-')
-Warning: Data is of class data.frame. Coercing to dgCMatrix.
-Centering and scaling data matrix
-  |                                                                              |                                                                      |   0%  |                                                                              |===                                                                   |   4%  |                                                                              |======                                                                |   8%  |                                                                              |=========                                                             |  12%  |                                                                              |============                                                          |  17%  |                                                                              |===============                                                       |  21%  |                                                                              |==================                                                    |  25%  |                                                                              |====================                                                  |  29%  |                                                                              |=======================                                               |  33%  |                                                                              |==========================                                            |  38%  |                                                                              |=============================                                         |  42%  |                                                                              |================================                                      |  46%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================                                |  54%  |                                                                              |=========================================                             |  58%  |                                                                              |============================================                          |  62%  |                                                                              |===============================================                       |  67%  |                                                                              |==================================================                    |  71%  |                                                                              |====================================================                  |  75%  |                                                                              |=======================================================               |  79%  |                                                                              |==========================================================            |  83%  |                                                                              |=============================================================         |  88%  |                                                                              |================================================================      |  92%  |                                                                              |===================================================================   |  96%  |                                                                              |======================================================================| 100%
-Finding variable features for layer counts
-Calculating gene variances
-0%   10   20   30   40   50   60   70   80   90   100%
-[----|----|----|----|----|----|----|----|----|----|
-**************************************************|
-Calculating feature variances of standardized and clipped values
-0%   10   20   30   40   50   60   70   80   90   100%
-[----|----|----|----|----|----|----|----|----|----|
-**************************************************|
-PC_ 1 
-Positive:  PTPRC, TMSB4X, ARHGDIB, PTPRCAP, LAPTM5, CXCR4, CORO1A, RAC2, LCP1, CD52 
-	   IL2RG, CCL5, B2M, CD53, CD37, CD3D, CD74, CD2, LSP1, IL32 
-	   CYTIP, CD69, SRGN, LCK, HCLS1, ITGB2, CD48, SLA, TBC1D10C, ZAP70 
-Negative:  SPARC, SERPINE2, S100B, GSN, GPNMB, S100A13, LMNA, CNN3, VAT1, TIMP1 
-	   PRAME, CST3, PLP1, LGALS3, APOD, MFGE8, MIA, PMP22, LGALS1, CD63 
-	   TYR, PTTG1IP, ST3GAL4, SRPX, TMEM98, IFITM3, SGK1, MITF, AP1S2, CD9 
-PC_ 2 
-Positive:  CD3D, CD2, TYR, PMEL, IL32, PRAME, NSG1, MIA, PLP1, CD8A 
-	   LDHB, SERPINE2, ZAP70, GPR143, SLC24A5, KLRK1, GZMK, LCK, PRKCH, CCL5 
-	   FXYD3, MFGE8, TIGIT, APOD, GZMA, GPM6B, SLC45A2, S100B, ST3GAL4, SIRPG 
-Negative:  CSF1R, CD14, CD163, PLXDC2, TYROBP, HCK, LILRB4, FCER1G, FCGR1A, IGSF6 
-	   TMEM176B, PILRA, C1QC, VSIG4, C1QA, AIF1, MSR1, MS4A4A, S100A9, MNDA 
-	   SLCO2B1, FPR1, TMEM176A, C3AR1, FPR3, ALDH2, LST1, NCF2, TGFBI, FAM26F 
-PC_ 3 
-Positive:  NKG7, CST7, PRF1, CD8A, CCL4, IL32, SRGN, KLRK1, GZMA, CD2 
-	   CTSW, IL2RB, TIGIT, CCL4L1, CCL4L2, GZMK, ID2, PRKCH, CD8B, CD3D 
-	   PDCD1, ITM2A, LAG3, CCL3, IFITM1, GBP2, HCST, SIRPG, GAPDH, S100A4 
-Negative:  BANK1, MS4A1, CD79A, BCL11A, CD19, CD22, VPREB3, BLK, NAPSB, CD79B 
-	   TCL1A, HLA-DOB, FCER2, NCF1C, BLNK, NCF1, CR2, STAP1, HVCN1, IRF8 
-	   CNR2, IGLL3P, ADAM28, FCRL5, BTK, SNX29P1, NCF1B, FCRLA, FCRL2, CD40 
-PC_ 4 
-Positive:  PMEL, TYR, SERPINA1, APOC2, APOE, ASAH1, NSG1, APOC1, PRAME, GPNMB 
-	   BIRC7, S100B, MITF, SLC24A5, AP1S2, QPCT, GPR143, GPM6B, CSF1R, FXYD3 
-	   C1QB, SAT1, FCGR1A, FCER1G, SPP1, PIR, MIA, CD163, HCK, LILRB4 
-Negative:  BGN, THY1, EFEMP1, COL3A1, COL1A1, TFPI, PPIC, COL4A1, RARRES2, DCN 
-	   C1S, ISLR, LUM, C1R, FMOD, ELN, MFAP4, MXRA8, GNG11, IGFBP4 
-	   COL1A2, IL33, MMP2, CDH5, PLAC9, TNXB, CXCR7, CD34, RAMP2, MGP 
-PC_ 5 
-Positive:  SERPINA1, TRIML2, APOC2, A2M, SEPP1, ANXA1, RDH5, SPP1, B2M, MPZ 
-	   C1QB, APOE, CD163, CD14, APOC1, GATSL3, EGR1, IL7R, SERPINA3, MSR1 
-	   CSF1R, TIMP1, FCGR1A, TM4SF1, S100A9, CST3, PILRA, FOS, MS4A4A, METTL7B 
-Negative:  TYMS, TK1, CD79A, FCRLA, MS4A1, UBE2C, PKMYT1, UBE2T, ASF1B, CD19 
-	   AURKB, CD79B, CCNB2, CDK1, BANK1, CD22, BCL11A, ZWINT, MAD2L1, IRF8 
-	   CDC20, NAPSB, HLA-DPA1, HLA-DOB, CDKN3, VPREB3, GINS2, BLK, CENPM, CCNB1 
-Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
-To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
-This message will be shown once per session
-11:14:58 UMAP embedding parameters a = 0.9922 b = 1.112
-11:14:58 Read 4645 rows and found 2000 numeric columns
-11:14:58 Using Annoy for neighbor search, n_neighbors = 30
-11:14:58 Building Annoy index with metric = cosine, n_trees = 50
-0%   10   20   30   40   50   60   70   80   90   100%
-[----|----|----|----|----|----|----|----|----|----|
-**************************************************|
-11:14:59 Writing NN index file to temp file /tmp/RtmpBpjza0/file3f8a3524a43af
-11:14:59 Searching Annoy index using 1 thread, search_k = 3000
-11:15:22 Annoy recall = 100%
-11:15:22 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-11:15:23 Initializing from normalized Laplacian + noise (using RSpectra)
-11:15:23 Commencing optimization for 500 epochs, with 207892 positive edges
-Using method 'umap'
-0%   10   20   30   40   50   60   70   80   90   100%
-[----|----|----|----|----|----|----|----|----|----|
-**************************************************|
-11:15:28 Optimization finished
-##------ Fri May 17 11:15:28 2024 ------##
-1: rss = 0.20630954, improvement = 0.65150780
-2: rss = 0.18662698, improvement = 0.01968256
-3: rss = 0.17588496, improvement = 0.01074202
-4: rss = 0.16605248, improvement = 0.00983248
-5: rss = 0.15696025, improvement = 0.00909223
-6: rss = 0.15315472, improvement = 0.00380553
-7: rss = 0.15232419, improvement = 0.00083053
-8: rss = 0.15179971, improvement = 0.00052448
-9: rss = 0.15117255, improvement = 0.00062716
-10: rss = 0.15055028, improvement = 0.00062227
-##------ Fri May 17 11:59:44 2024 ------##
-/app/singularity/AA.sh: line 22: kill: (260259) - No such process
