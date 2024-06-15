@@ -25,7 +25,8 @@ setGeneric("obj_loadData", function(obj,
                                     HVF = TRUE,
                                     pathw = NULL,
                                     test_genes = 300,
-                                    test_samples = 500) {
+                                    test_samples = 500,
+                                    ...) {
   standardGeneric("obj_loadData")
 })
 
@@ -300,7 +301,8 @@ setMethod(
            HVF = TRUE,
            pathw = NULL,
            test_genes = 300,
-           test_samples = 500) {
+           test_samples = 500,
+           ...) {
     se <- read.table(data_path, header = TRUE)
     se <- se[!duplicated(se[, 1]), ] # remove duplicated genes
     rownames(se) <- se[, 1] # extract from matrix rownames
@@ -382,6 +384,62 @@ setMethod("obj_getSeData", "Melanoma", function(obj) {
 # obj_performArchetypes(melanoma, k = 5, HVF= TRUE)
 
 # ##############################################################################
+# General Exp ------------------------------------------------------------------
+# ##############################################################################
+
+doStuff <- function(object, data, gene_names, cell_metadata, where.cell_names, pathw,test=FALSE, HVF=FALSE, ...) {
+  if (length(where.cell_names) == 2) {
+    new.names <- paste0(cell_metadata[[where.cell_names[1]]], "_", cell_metadata[[where.cell_names[2]]])
+    cell_metadata$new.names <- new.names
+  } else if (length(where.cell_names) == 1) {
+    new.names <- cell_metadata[[where.cell_names[1]]]
+  } else {
+    stop("Invalid where.cell_names")
+  }
+
+  if (!is.null(pathw)) {
+    obj@pathw <- pathw
+    obj <- obj_setGenes(obj, pathw)
+    gene.flag <- gene_names %in% obj@genes
+  }
+
+  # data <- t(data) # already done before passing argument
+  data.org <- data # TODO remove this, just for testing backup
+
+  data <- data[gene.flag, ]
+  gene_names <- gene_names[gene.flag]
+
+  if (is.null(pathw) & test) {
+    tgenes <- max(TEST_genes, nrow(data))
+    tsamples <- min(TEST_samples, ncol(data))
+    tsamples <- 30000
+  }
+
+  se <- CreateSeuratObject(counts = data)
+  se <- ScaleData(se, layer = "counts")
+  se <- FindVariableFeatures(se)
+  se <- RunPCA(se, features = VariableFeatures(se))
+  se <- RunUMAP(se, features = VariableFeatures(se))
+
+  se.org <- se # TODO remove this, just for testing backup
+  dimnames(se) <- list(gene_names, new.names)
+  se@meta.data <- cell_metadata
+
+  if (HVF) {
+    data <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+  } else {
+    data <- se@assays$RNA@layers$counts
+  }
+
+  data <- data[Matrix::rowSums(data) > 0, Matrix::colSums(data) > 0]
+  data <- as.matrix(data)
+
+  obj@se <- se
+  obj@data <- data
+  return(obj)
+}
+
+# ##############################################################################
 # Exp1 -------------------------------------------------------------------------
 # ##############################################################################
 setClass("Exp1",
@@ -397,60 +455,59 @@ setMethod(
            HVF = TRUE,
            pathw = NULL,
            test_genes = 300,
-           test_samples = 500) {
+           test_samples = 500, ...) {
     # _ # Binary matrix indicating clonal membership of each cell
     # _ # The rows of this file represent cells and correspond to the rows of _counts_matrix_in_vitro_ (above).
     # _ # The columns represent clones. Not every cell belongs to a clone.
-    clone_matrix <- Matrix::readMM("../data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
+    # clone_matrix <- Matrix::readMM("../data/AllonKleinLab/Experiment1/stateFate_inVitro_clone_matrix.mtx")
     # List of cells belonging to the neutrophil/monocyte trajectory that were used in becnmark analysis
-    neutrophil_monocyte_trajectory <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt", header = TRUE, sep = "\t")
+    # neutrophil_monocyte_trajectory <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_monocyte_trajectory.txt", header = TRUE, sep = "\t")
     # pseudotime for neutrophil trajectory cells
-    neutrophil_pseudotime <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt", header = TRUE, sep = "\t")
+    # neutrophil_pseudotime <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_neutrophil_pseudotime.txt", header = TRUE, sep = "\t")
     cell_metadata <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt", header = TRUE, sep = "\t")
     gene_names <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
 
+    # cell_metadata$new.names <- paste0(cell_metadata$Library, "_", cell_metadata$Cell.barcode)
+
 
     se <- Matrix::readMM(data_path)
-    se@Dimnames[[2]] <- gene_names$V1
-    # se@Dimnames[[1]]=cell_metadata$Cell.barcode
-    # remove duplicated rows columns looking at names
-    se <- se[!duplicated(se@Dimnames[[1]]), !duplicated(se@Dimnames[[2]])]
-    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    se <- CreateSeuratObject(counts = se)
-    se@assays$RNA@layers$counts@Dimnames[[2]] <- gene_names$V1
+    se <- t(se)
 
-    if (!is.null(pathw)) {
-      obj@pathw <- pathw
-      obj <- obj_setGenes(obj, pathw)
-      se <- se[gene_names$V1, ]
-    } else if (test) {
-      tgenes <- min(TEST_genes, nrow(se))
-      tsamples <- min(TEST_samples, ncol(se))
-      se <- se[1:tgenes, 1:tsamples]
-      rm(tgenes, tsamples)
-      se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    }
-
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    se <- ScaleData(se, layer = "counts")
-    se <- FindVariableFeatures(se)
-
-    se <- RunPCA(se, features = VariableFeatures(se))
-    se <- RunUMAP(se, features = VariableFeatures(se))
-
-    if (HVF) {
-      m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    } else {
-      m <- se@assays$RNA@layers$counts
-    }
-
-    m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    m <- as.matrix(m)
-
-    obj@se <- se
-    obj@m <- m
+    obj <- doStuff(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
 
     return(obj)
+    # se <- CreateSeuratObject(counts = se, meta.data = cell_metadata)
+    # dimnames(se) <- list(gene_names$V1, cell_metadata$new.names)
+    #
+    # if (!is.null(pathw)) {
+    #   obj <- obj_setGenes(obj, pathw)
+    #   se <- se[gene_names$V1 %in% obj$genes, ]
+    # } else if (test) {
+    #   tgenes <- min(TEST_genes, nrow(se))
+    #   tsamples <- min(TEST_samples, ncol(se))
+    #   se <- se[1:tgenes, 1:tsamples]
+    #   rm(tgenes, tsamples)
+    # }
+    #
+    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # se <- ScaleData(se, layer = "counts", do.center = FALSE)
+    # se <- FindVariableFeatures(se)
+    #
+    # se <- RunPCA(se, features = VariableFeatures(se))
+    # se <- RunUMAP(se, features = VariableFeatures(se))
+    #
+    # if (is.null(pathw) & HVF) {
+    #   m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+    #   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # } else {
+    #   m <- se@assays$RNA@layers$counts
+    # }
+    #
+    # m <- as.matrix(m)
+    #
+    # obj@se <- se
+    # obj@m <- m
+    #
   }
 )
 
@@ -478,51 +535,51 @@ setMethod(
            HVF = TRUE,
            pathw = NULL,
            test_genes = 300,
-           test_samples = 500) {
+           test_samples = 500, ...) {
     # TODO implement
     # _ clone_matrix <- Matrix::readMM("data/AllonKleinLab/Experiment2/stateFate_inVivo_clone_matrix.mtx")
-    # _ gene_names <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt",sep="\t")
-    # _ metadata <- read.table("data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt",sep="\t")
 
-    # out_path <- "../out/AllonKleinLab/Experiment2"
+    gene_names <- read.table("../data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt", sep = "\t")
+    cell_metadata <- read.table("../data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt", header = TRUE, sep = "\t")
 
     se <- Matrix::readMM(data_path)
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    se <- t(se)
 
-    if (!is.null(pathw)) {
-      obj@pathw <- pathw
-      obj <- obj_setGenes(obj, pathw)
-      se <- se[obj@genes, ]
-    } else if (test) {
-      tgenes <- min(TEST_genes, nrow(se))
-      tsamples <- min(TEST_samples, ncol(se))
-      se <- se[1:tgenes, 1:tsamples]
-      rm(tgenes, tsamples)
-      se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    }
-
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    se <- CreateSeuratobj(counts = se)
-    se <- ScaleData(se, layer = "counts")
-    se <- FindVariableFeatures(se)
-
-    se <- RunPCA(se, features = VariableFeatures(se))
-    se <- RunUMAP(se, features = VariableFeatures(se))
-
-
-    if (HVF) {
-      m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    } else {
-      m <- se@assays$RNA@layers$counts
-    }
-
-    m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    m <- as.matrix(m)
-
-    obj@se <- se
-    obj@m <- m
+    obj <- doStuff(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
 
     return(obj)
+    # if (!is.null(pathw)) {
+    #   obj@pathw <- pathw
+    #   obj <- obj_setGenes(obj, pathw)
+    #   se <- se[obj@genes, ]
+    # } else if (test) {
+    #   tgenes <- min(TEST_genes, nrow(se))
+    #   tsamples <- min(TEST_samples, ncol(se))
+    #   se <- se[1:tgenes, 1:tsamples]
+    #   rm(tgenes, tsamples)
+    #   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # }
+
+    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # se <- CreateSeuratobj(counts = se)
+    # se <- ScaleData(se, layer = "counts")
+    # se <- FindVariableFeatures(se)
+
+    # se <- RunPCA(se, features = VariableFeatures(se))
+    # se <- RunUMAP(se, features = VariableFeatures(se))
+
+
+    # if (HVF) {
+    #   m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+    # } else {
+    #   m <- se@assays$RNA@layers$counts
+    # }
+
+    # m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+    # m <- as.matrix(m)
+
+    # obj@se <- se
+    # obj@m <- m
   }
 )
 
@@ -550,54 +607,58 @@ setMethod(
            HVF = TRUE,
            pathw = NULL,
            test_genes = 300,
-           test_samples = 500) {
+           test_samples = 500,
+           ...) {
     # TODO implement
     # _ data_clone_matrix <- Matrix::readMM("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_clone_matrix.mtx")
-    data_gene_names <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_gene_names.txt", sep = "\t")
-    data_gene_names <- lapply(data_gene_names, toupper)
-    data_metadata <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt", sep = "\t")
+    gene_names <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_gene_names.txt", sep = "\t")
+    cell_metadata <- read.table("../data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt", header = TRUE, sep = "\t")
+
+
+    se <- Matrix::readMM(data_path)
+    se <- t(se)
+    obj <- doStuff(obj = obj, data = se, gene_names = gene_names$V1, cell_metadata = cell_metadata, where.cell_names = c("Library", "Cell.barcode"), pathw = pathw)
+
+    return(obj)
 
     # out_path <- "../out/AllonKleinLab/Experiment3"
 
-    se <- Matrix::readMM(data_path)
-    se@Dimnames[[1]] <- data_gene_names$V1
-    se@Dimnames[[2]] <- data_metadata$V2[-1]
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # se@Dimnames[[1]] <- data_gene_names$V1
+    # se@Dimnames[[2]] <- data_metadata$V2[-1]
+    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
 
-    if (!is.null(pathw)) {
-      obj@pathw <- pathw
-      obj <- obj_setGenes(obj, pathw)
-      common_genes <- intersect(obj@genes, rownames(se))
-      # se <- se[obj@genes, ]
-      se <- se[common_genes, ]
-    } else if (test) {
-      tgenes <- min(TEST_genes, nrow(se))
-      tsamples <- min(TEST_samples, ncol(se))
-      se <- se[1:tgenes, 1:tsamples]
-      rm(tgenes, tsamples)
-      se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    }
+    # if (!is.null(pathw)) {
+    #   obj@pathw <- pathw
+    #   obj <- obj_setGenes(obj, pathw)
+    #   common_genes <- intersect(obj@genes, rownames(se))
+    #   # se <- se[obj@genes, ]
+    #   se <- se[common_genes, ]
+    # } else if (test) {
+    #   tgenes <- min(TEST_genes, nrow(se))
+    #   tsamples <- min(TEST_samples, ncol(se))
+    #   se <- se[1:tgenes, 1:tsamples]
+    #   rm(tgenes, tsamples)
+    #   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # }
 
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    se <- CreateSeuratobj(counts = se)
-    se <- ScaleData(se, layer = "counts")
-    se <- FindVariableFeatures(se)
+    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    # se <- CreateSeuratobj(counts = se)
+    # se <- ScaleData(se, layer = "counts")
+    # se <- FindVariableFeatures(se)
 
-    se <- RunPCA(se, features = VariableFeatures(se))
-    se <- RunUMAP(se, features = VariableFeatures(se))
+    # se <- RunPCA(se, features = VariableFeatures(se))
+    # se <- RunUMAP(se, features = VariableFeatures(se))
 
-    if (HVF) {
-      m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    } else {
-      m <- se@assays$RNA@layers$counts
-    }
-    m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    m <- as.matrix(m)
+    # if (HVF) {
+    #   m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+    # } else {
+    #   m <- se@assays$RNA@layers$counts
+    # }
+    # m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+    # m <- as.matrix(m)
 
-    obj@se <- se
-    obj@m <- m
-
-    return(obj)
+    # obj@se <- se
+    # obj@m <- m
   }
 )
 
@@ -624,7 +685,8 @@ setMethod(
            HVF = TRUE,
            pathw = NULL,
            test_genes = 300,
-           test_samples = 500) {
+           test_samples = 500,
+           ...) {
     # Data definitions and loading
     # out_path <- "../out/MouseCortex"
     load(data_path)
@@ -706,7 +768,8 @@ setMethod(
            test = FALSE,
            HVF = TRUE,
            test_genes = 300,
-           test_samples = 500) {
+           test_samples = 500,
+           ...) {
     # out_path <- "../out/MyocardialInfarction"
     se <- readRDS(data_path)
 
