@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Parameters
-test=TRUE
+test=FALSE
 test_genes=300
 test_samples=500
-hvf=TRUE
+hvf=FALSE
 RMDFILE="/app/Rmd/unique.Rmd"
+pathw="MAPK signaling pathway"
 
 if [ -z "$1" ]; then
     echo "No classname provided"

@@ -36,14 +36,14 @@ source("classes.R")
 # pathw <- params$pathw
 # out_path <- params$out_path
 
-# Remove this part
-TEST <- TRUE
-HVF <- FALSE
-TEST_genes <- 300
-TEST_samples <- 500
-CLASS.NAME <- "Exp1"
-pathw <- "MAPK signaling pathway"
-out_path <- sprintf("/app/out/%s/%s_files", CLASS.NAME, CLASS.NAME)
+##TODO  Remove this part
+#TEST <- TRUE
+#HVF <- FALSE
+#TEST_genes <- 300
+#TEST_samples <- 500
+#CLASS.NAME <- "Exp1"
+#pathw <- "MAPK signaling pathway"
+#out_path <- sprintf("/app/out/%s/%s_files", CLASS.NAME, CLASS.NAME)
 ```
 
 # Load Dataset, hide all outputs

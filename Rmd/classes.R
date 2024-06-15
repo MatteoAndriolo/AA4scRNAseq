@@ -414,7 +414,7 @@ setMethod("obj_createSeuratObject", "Exp", function(object, data, gene_names, ce
   }
 
   # data <- t(data) # already done before passing argument
-  data.org <- data # TODO remove this, just for testing backup
+  # data.org <- data # TODO remove this, just for testing backup
 
   data <- data[gene.flag, ]
   gene_names <- gene_names[gene.flag]
@@ -431,7 +431,7 @@ setMethod("obj_createSeuratObject", "Exp", function(object, data, gene_names, ce
   se <- RunPCA(se, features = VariableFeatures(se))
   se <- RunUMAP(se, features = VariableFeatures(se))
 
-  se.org <- se # TODO remove this, just for testing backup
+  # se.org <- se # TODO remove this, just for testing backup
   dimnames(se) <- list(gene_names, new.names)
   se@meta.data <- cell_metadata
 
