@@ -30,6 +30,11 @@ setGeneric("obj_loadData", function(obj,
   standardGeneric("obj_loadData")
 })
 
+## obj_createSeuratObject ------------------------------------------------------
+setGeneric("obj_createSeuratObject", function(object, data, gene_names, cell_metadata, where.cell_names, pathw, test = FALSE, HVF = FALSE, ...) {
+  standardGeneric("obj_createSeuratObject")
+})
+
 ## obj_getSeData ------------------------------------------------------------
 setGeneric("obj_getSeData", function(obj) {
   standardGeneric("obj_getSeData")
@@ -285,9 +290,9 @@ setMethod("obj_setGenes", "database", function(obj, pathw, pathGenes = "/app/dat
   return(obj)
 })
 
-# ##############################################################################
+#. #############################################################################
 # Melanoma ---------------------------------------------------------------------
-# ##############################################################################
+#. #############################################################################
 setClass("Melanoma",
   contains = "database"
 )
@@ -332,7 +337,7 @@ setMethod(
 
     # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
 
-    se <- CreateSeuratobj(counts = se, meta.data = metadata)
+    se <- CreateSeuratObject(counts = se, meta.data = metadata)
     se <- ScaleData(se, layer = "counts")
     se <- FindVariableFeatures(se)
     se <- RunPCA(se, features = VariableFeatures(se))
@@ -383,11 +388,16 @@ setMethod("obj_getSeData", "Melanoma", function(obj) {
 # obj_visualizeData(melanoma, out_path = here("/app/out/Melanoma/"))
 # obj_performArchetypes(melanoma, k = 5, HVF= TRUE)
 
-# ##############################################################################
+#. ##############################################################################
 # General Exp ------------------------------------------------------------------
-# ##############################################################################
+##. ##############################################################################
+setClass("Exp",
+  contains = "database"
+)
 
-doStuff <- function(object, data, gene_names, cell_metadata, where.cell_names, pathw,test=FALSE, HVF=FALSE, ...) {
+## obj_createSeuratObject ----
+setMethod("obj_createSeuratObject", "Exp", function(object, data, gene_names, cell_metadata, where.cell_names, pathw, test = FALSE, HVF = FALSE, ...) {
+#obj_createSeuratObject <- function(object, data, gene_names, cell_metadata, where.cell_names, pathw,test=FALSE, HVF=FALSE, ...) {
   if (length(where.cell_names) == 2) {
     new.names <- paste0(cell_metadata[[where.cell_names[1]]], "_", cell_metadata[[where.cell_names[2]]])
     cell_metadata$new.names <- new.names
@@ -438,12 +448,13 @@ doStuff <- function(object, data, gene_names, cell_metadata, where.cell_names, p
   obj@data <- data
   return(obj)
 }
+)
 
-# ##############################################################################
+#. ##############################################################################
 # Exp1 -------------------------------------------------------------------------
-# ##############################################################################
+##. ##############################################################################
 setClass("Exp1",
-  contains = "database"
+  contains = "Exp"
 )
 
 ## obj_loadData --------------------------------------------------------------------
@@ -473,41 +484,9 @@ setMethod(
     se <- Matrix::readMM(data_path)
     se <- t(se)
 
-    obj <- doStuff(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
+    obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
 
     return(obj)
-    # se <- CreateSeuratObject(counts = se, meta.data = cell_metadata)
-    # dimnames(se) <- list(gene_names$V1, cell_metadata$new.names)
-    #
-    # if (!is.null(pathw)) {
-    #   obj <- obj_setGenes(obj, pathw)
-    #   se <- se[gene_names$V1 %in% obj$genes, ]
-    # } else if (test) {
-    #   tgenes <- min(TEST_genes, nrow(se))
-    #   tsamples <- min(TEST_samples, ncol(se))
-    #   se <- se[1:tgenes, 1:tsamples]
-    #   rm(tgenes, tsamples)
-    # }
-    #
-    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    # se <- ScaleData(se, layer = "counts", do.center = FALSE)
-    # se <- FindVariableFeatures(se)
-    #
-    # se <- RunPCA(se, features = VariableFeatures(se))
-    # se <- RunUMAP(se, features = VariableFeatures(se))
-    #
-    # if (is.null(pathw) & HVF) {
-    #   m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    #   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    # } else {
-    #   m <- se@assays$RNA@layers$counts
-    # }
-    #
-    # m <- as.matrix(m)
-    #
-    # obj@se <- se
-    # obj@m <- m
-    #
   }
 )
 
@@ -518,12 +497,12 @@ setMethod("obj_getSeData", "Exp1", function(obj) {
 })
 
 
-# ##############################################################################
+#. #############################################################################
 # Exp2 -------------------------------------------------------------------------
-# ##############################################################################
+##.#############################################################################
 # Define the 'Melanoma' Class that inherits from 'database'
 setClass("Exp2",
-  contains = "database"
+  contains = "Exp"
 )
 
 ## obj_loadData --------------------------------------------------------------------
@@ -545,41 +524,9 @@ setMethod(
     se <- Matrix::readMM(data_path)
     se <- t(se)
 
-    obj <- doStuff(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
+    obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
 
     return(obj)
-    # if (!is.null(pathw)) {
-    #   obj@pathw <- pathw
-    #   obj <- obj_setGenes(obj, pathw)
-    #   se <- se[obj@genes, ]
-    # } else if (test) {
-    #   tgenes <- min(TEST_genes, nrow(se))
-    #   tsamples <- min(TEST_samples, ncol(se))
-    #   se <- se[1:tgenes, 1:tsamples]
-    #   rm(tgenes, tsamples)
-    #   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    # }
-
-    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    # se <- CreateSeuratobj(counts = se)
-    # se <- ScaleData(se, layer = "counts")
-    # se <- FindVariableFeatures(se)
-
-    # se <- RunPCA(se, features = VariableFeatures(se))
-    # se <- RunUMAP(se, features = VariableFeatures(se))
-
-
-    # if (HVF) {
-    #   m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    # } else {
-    #   m <- se@assays$RNA@layers$counts
-    # }
-
-    # m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    # m <- as.matrix(m)
-
-    # obj@se <- se
-    # obj@m <- m
   }
 )
 
@@ -590,12 +537,12 @@ setMethod("obj_getSeData", "Exp2", function(obj) {
 })
 
 
-# ##############################################################################
+#. #############################################################################
 # Exp3 -------------------------------------------------------------------------
-# ##############################################################################
+##. ############################################################################
 # Define the 'Melanoma' Class that inherits from 'database'
 setClass("Exp3",
-  contains = "database"
+  contains = "Exp"
 )
 
 ## obj_loadData --------------------------------------------------------------------
@@ -617,48 +564,9 @@ setMethod(
 
     se <- Matrix::readMM(data_path)
     se <- t(se)
-    obj <- doStuff(obj = obj, data = se, gene_names = gene_names$V1, cell_metadata = cell_metadata, where.cell_names = c("Library", "Cell.barcode"), pathw = pathw)
+    obj <- obj_createSeuratObject(obj = obj, data = se, gene_names = gene_names$V1, cell_metadata = cell_metadata, where.cell_names = c("Library", "Cell.barcode"), pathw = pathw)
 
     return(obj)
-
-    # out_path <- "../out/AllonKleinLab/Experiment3"
-
-    # se@Dimnames[[1]] <- data_gene_names$V1
-    # se@Dimnames[[2]] <- data_metadata$V2[-1]
-    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-
-    # if (!is.null(pathw)) {
-    #   obj@pathw <- pathw
-    #   obj <- obj_setGenes(obj, pathw)
-    #   common_genes <- intersect(obj@genes, rownames(se))
-    #   # se <- se[obj@genes, ]
-    #   se <- se[common_genes, ]
-    # } else if (test) {
-    #   tgenes <- min(TEST_genes, nrow(se))
-    #   tsamples <- min(TEST_samples, ncol(se))
-    #   se <- se[1:tgenes, 1:tsamples]
-    #   rm(tgenes, tsamples)
-    #   se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    # }
-
-    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-    # se <- CreateSeuratobj(counts = se)
-    # se <- ScaleData(se, layer = "counts")
-    # se <- FindVariableFeatures(se)
-
-    # se <- RunPCA(se, features = VariableFeatures(se))
-    # se <- RunUMAP(se, features = VariableFeatures(se))
-
-    # if (HVF) {
-    #   m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    # } else {
-    #   m <- se@assays$RNA@layers$counts
-    # }
-    # m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    # m <- as.matrix(m)
-
-    # obj@se <- se
-    # obj@m <- m
   }
 )
 
@@ -668,9 +576,9 @@ setMethod("obj_getSeData", "Exp3", function(obj) {
   return(se@assays$RNA@layers$counts)
 })
 
-# ##############################################################################
+#. #############################################################################
 # MouseCortex-------------------------------------------------------------------
-# ##############################################################################
+##. ############################################################################
 # Define the 'Melanoma' Class that inherits from 'database'
 setClass("MouseCortex",
   contains = "database"
@@ -702,7 +610,7 @@ setMethod(
     se.ident <- se@ident
     rm(se)
 
-    se <- CreateSeuratobj(counts = raw_counts, meta.data = meta_data)
+    se <- CreateSeuratObject(counts = raw_counts, meta.data = meta_data)
     rm(raw_counts, meta_data)
     se[["RNA"]] <- SetAssayData(se[["RNA"]], layer = "data", new.data = normalized_data)
     rm(normalized_data)
@@ -753,9 +661,9 @@ setMethod("obj_getSeData", "MouseCortex", function(obj) {
   return(se@assays$RNA@layers$counts)
 })
 
-# ##############################################################################
+#. #############################################################################
 # Myocardial -------------------------------------------------------------------
-# ##############################################################################
+##. ############################################################################
 setClass("Myocardial",
   contains = "database"
 )
