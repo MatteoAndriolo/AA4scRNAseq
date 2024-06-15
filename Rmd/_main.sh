@@ -1,37 +1,39 @@
 #!/bin/bash
 
+# Parameters
 test=TRUE
-hvf=TRUE
-
-RMDFILE="/app/Rmd/unique.Rmd"
 test_genes=300
 test_samples=500
-genes=NULL
+hvf=TRUE
+RMDFILE="/app/Rmd/unique.Rmd"
 
-# Read RMD file as first parameter and extract name
+if [ -z "$1" ]; then
+    echo "No classname provided"
+    exit 1
+fi
 classname=$1
-echo $classname
 
+if [ -z "$2" ]; then
+    pathw=NULL
+    echo "Running $classname"
+else
+    pathw=$2
+    echo "Running $classname with pathway $pathw"
+fi
+
+# Set output path
 case $classname in
     Exp1)
-        #RMDFILE="/app/Rmd/Exp1.Rmd"
         output="out/AllonKleinLab/Experiment1"
-        #classname="Exp1"
         ;;
     Exp2)
-        #RMDFILE="/app/Rmd/Exp2.Rmd"
         output="out/AllonKleinLab/Experiment2"
-        #classname="Exp2"
         ;;
     Exp3)
-        #RMDFILE="/app/Rmd/Exp3.Rmd"
         output="out/AllonKleinLab/Experiment3"
-        #classname="Exp3"
         ;;
     Melanoma)
-        #RMDFILE="/app/Rmd/Melanoma.Rmd"
         output="out/Melanoma"
-        #classname="Melanoma"
         ;;
     *)
         echo "Unknown classname: $classname"
@@ -40,16 +42,22 @@ case $classname in
 esac
 
 outpath="/app/$output/${classname}_files"
-output_html="$classname.html"
-
-# create log gileo
 mkdir -p $outpath
+
+# Initialize log
 LOG_FILE="$outpath/RMSstat.log"
 touch $LOG_FILE
 echo "Timestamp, CPU%, MEM%" > $LOG_FILE
 
 # -----------------------------------------------------------------
-Rscript -e "rmarkdown::render('$RMDFILE', output_file='$output_html', output_dir='$outpath', params=list(TEST=$test, HVF=$hvf, TEST_genes=$test_genes, TEST_samples=$test_samples, CLASS.NAME='$classname', GENES=$genes, out_path='$outpath'))" &
+# TEST, TEST_genes, TEST_samples, HVF, CLASS.NAME, pathw, out_path
+output_html="$classname.html"
+
+# Old - not all quoted
+#Rscript -e "rmarkdown::render('$RMDFILE', output_file='$output_html', output_dir='$outpath', params=list(TEST=$test, HVF=$hvf, TEST_genes=$test_genes, TEST_samples=$test_samples, CLASS.NAME='$classname', pathw=$pathw, out_path='$outpath'))" &
+# New - all quoted
+Rscript -e "rmarkdown::render('$RMDFILE', output_file='$output_html', output_dir='$outpath', params=list(TEST='$test', HVF='$hvf', TEST_genes='$test_genes', TEST_samples='$test_samples', CLASS.NAME='$classname', pathw='$pathw', out_path='$outpath'))" &
+
 PID=$!
 echo "PID is $PID"
 

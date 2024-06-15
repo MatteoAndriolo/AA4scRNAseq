@@ -12,7 +12,7 @@ params:
   TEST_genes: 300
   TEST_samples: 500
   CLASS.NAME: NULL
-  GENES: NULL
+  pathw: NULL
   out_path: NULL
 ---
 
@@ -20,28 +20,39 @@ params:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = TRUE)
 ```
 
-```{r setup, message=FALSE, warning=FALSE}
-source("../src/R/imports.R")
-source("../src/R/classes.R")
 
-TEST <- params$TEST
-HVF <- params$HVF
-TEST_genes <- params$TEST_genes
-TEST_samples <- params$TEST_samples
-CLASS.NAME <- params$CLASS.NAME
-if (is.null(CLASS.NAME)) {
-  stop("CLASS.NAME is NULL")
-}
-GENES <- params$GENES
-out_path <- params$out_path
+```{r setup, message=FALSE, warning=FALSE}
+source("imports.R")
+source("classes.R")
+
+# TEST <- params$TEST
+# HVF <- params$HVF
+# TEST_genes <- params$TEST_genes
+# TEST_samples <- params$TEST_samples
+# CLASS.NAME <- params$CLASS.NAME
+# if (is.null(CLASS.NAME)) {
+#  stop("CLASS.NAME is NULL")
+# }
+# pathw <- params$pathw
+# out_path <- params$out_path
+
+# Remove this part
+TEST <- TRUE
+HVF <- FALSE
+TEST_genes <- 300
+TEST_samples <- 500
+CLASS.NAME <- "Exp1"
+pathw <- "MAPK signaling pathway"
+out_path <- sprintf("/app/out/%s/%s_files", CLASS.NAME, CLASS.NAME)
 ```
 
 # Load Dataset, hide all outputs
 ```{r Load obj dataset, message=FALSE, warning=FALSE}
 obj <- new(CLASS.NAME)
-obj <- obj_loadData(obj, test = TEST)
+obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
 ```
-```{r Visualize obj dataset, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+```{r Visualize obj dataset, message=FALSE, warning=FALSE, tabbed=TRUE}
 obj <- obj_visualizeData(obj, out_path)
 ```
 
@@ -52,7 +63,7 @@ obj <- obj_performArchetypes(obj)
 ```
 
 ## Visualize Archetypes
-```{r Visualize AA, message=FALSE, warning=TRUE}
+```{r Visualize AA, message=FALSE, warning=TRUE, paged.print=FALSE}
 obj <- obj_visualizeArchetypes(obj, out_path)
 ```
 
