@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt update; \
     apt upgrade; \
-    apt install -y libhdf5-dev libglpk-dev pandoc git build-essential
+    apt install -y libhdf5-dev libglpk-dev pandoc git build-essential tcl tk
 
 # Install R packages
 #RUN R -e 'usethis::gitcreds_set(url = "https://github.com")'
