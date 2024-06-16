@@ -3,6 +3,7 @@
 setClass("database",
   slots = list(
     se = "Seurat",
+    se.org = "ANY",
     a = "ANY", # Archetype model will be stored here
     m = "matrix", # Data matrix
     umap.archetypes = "ANY",
@@ -12,7 +13,9 @@ setClass("database",
     pca = "ANY",
     simplexplot = "ANY",
     pathw = "ANY",
-    genes = "ANY"
+    genes = "ANY",
+    a.restarts = "ANY",
+    a.bestrun = "ANY"
   )
 )
 
@@ -40,6 +43,11 @@ setGeneric("obj_getSeData", function(obj) {
   standardGeneric("obj_getSeData")
 })
 
+## obj_getMatrixHVF ------------------------------------------------------------
+setGeneric("obj_getMatrixHVF", function(obj) {
+  standardGeneric("obj_getMatrixHVF")
+})
+
 ## obj_visualizeData -----------------------------------------------------------
 # Method to visualize data
 setGeneric("obj_visualizeData", function(obj, out_path) {
@@ -49,12 +57,12 @@ setGeneric("obj_visualizeData", function(obj, out_path) {
 setMethod("obj_visualizeData", "database", function(obj, out_path) {
   se <- obj@se
 
-  imgname_pca <- sprintf("%s/PCA.png", out_path)
+  imgname_pca <- sprintf("%s/PCA_%s.png", out_path, class(obj)[[1]])
   message(sprintf("Saving Image --- %s", imgname_pca))
   pcaplot <- PCAPlot(se)
   obj@pca <- pcaplot
 
-  imgname_umap <- sprintf("%s/UMAP.png", out_path)
+  imgname_umap <- sprintf("%s/UMAP_%s.png", out_path, class(obj)[[1]])
   message(sprintf("Saving Image --- %s", imgname_umap))
   umapplot <- UMAPPlot(se)
   umapplot
@@ -99,54 +107,93 @@ setMethod("obj_visualizeData", "database", function(obj, out_path) {
   print(elbowplot)
 
   if (!is.null(out_path)) {
-    imgname <- sprintf("%s/Combined_Plots.png", out_path)
-    message(sprintf("Saving Image --- %s", imgname))
-    ggsave(imgname, plot = combined_plot)
+    tryCatch(
+      {
+        imgname <- sprintf("%s/Combined_Plots_%s.png", out_path, gsub("[/\\\\ ]", "_", obj@pathw))
+        message(sprintf("Saving Image --- %s", imgname))
+        ggsave(imgname, plot = combined_plot)
 
-    imgname <- sprintf("%s/elbow.pdf", out_path)
-    message(sprintf("Saving Imagine --- %s", imgname))
-    ggsave(imgname, plot = elbowplot)
+        imgname <- sprintf("%s/elbow_%s.pdf", out_path, gsub("[/\\\\ ]", "_", obj@pathw))
+        message(sprintf("Saving Imagine --- %s", imgname))
+        ggsave(imgname, plot = elbowplot)
+      },
+      error = function(e) {
+        message(sprintf("Error in saving image: %s", e$message))
+      }
+    )
   }
   return(obj)
 })
 
 ## obj_performArchetypes -------
 # Method to perform archetypal analysis
-setGeneric("obj_performArchetypes", function(obj, k = 5, HVF = TRUE) {
+setGeneric("obj_performArchetypes", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts) {
   standardGeneric("obj_performArchetypes")
 })
-setMethod("obj_performArchetypes", "database", function(obj, k = 5, HVF = TRUE) {
-  m <- obj@m
-  m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-  m <- as.matrix(m)
 
-  # Time this and print as message
-  tstart <- Sys.time()
-  a <- tryCatch(
-    {
-      archetypes::archetypes(
-        m,
-        k = k,
-        verbose = TRUE,
-        maxIterations = 10,
-        saveHistory = TRUE
-      )
-    },
-    error = function(e) {
-      message(sprintf("Error in archetypes computation: %s", e$message))
-      return(NULL)
-    }
-  )
-  tend <- Sys.time()
-  message(sprintf("Archetypes Computed in %s", tend - tstart))
-
-  if (!is.null(a)) {
-    obj@a <- a
-  } else {
-    stop("Archetypes computation failed, obj@a not assigned.")
+setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1) {
+  if (HVF) {
+    obj <- obj_getMatrixHVF(obj)
   }
 
-  save(a, file = sprintf("%s/Archetypes_%02d.rds", out_path, k))
+  k <- kneedle(obj@elbowplot$data$dims, obj@elbowplot$data$stdev)[1]
+  message("Number of archetypes is ", k)
+
+  obj@m <- as.matrix(obj_getSeData(obj))
+  obj@m <- obj@m[Matrix::rowSums(obj@m) > 0, Matrix::colSums(obj@m) > 0]
+  # m <- as.matrix(m)
+
+  obj@a.restarts <- list()
+  tstartReruns <- Sys.time()
+  # Time this and print as message
+  for (i in 1:num_restarts) {
+    message("Starting rerun ", i, "/", num_restarts)
+    temp <- list()
+
+    tryCatch(
+      {
+        tstart <- Sys.time()
+        temp$a <-
+          archetypes::archetypes(
+            obj@m,
+            k = k,
+            verbose = TRUE,
+            maxIterations = max_iters,
+            saveHistory = TRUE
+          )
+        tend <- Sys.time()
+        message(sprintf("Archetypes Computed in %s", tend - tstart))
+        message("Archetypes ", i, " computed in ", tend - tstart, " seconds")
+
+        temp$rss <- temp$a$rss
+        temp$time <- tend - tstart
+      },
+      error = function(e) {
+        temp$a <- NULL
+        temp$rss <- inf
+        temp$time <- NA
+
+        message(sprintf("Error in archetypes: %s", e$message))
+      }
+    )
+    obj@a.restarts[[i]] <- temp
+  }
+  tendReruns <- Sys.time()
+
+  message("Reruns completed in ", tendReruns - tstartReruns, " seconds")
+  obj@a.bestrun <- obj@a.restarts[[which.min(sapply(obj@a.restarts, function(x) x$rss))]]
+  obj@a <- obj@a.bestrun$a
+
+
+  tryCatch(
+    {
+      temp <- obj@a
+      save(temp, file = sprintf("%s/Archetypes_%02d.rds", out_path, k))
+    },
+    error = function(e) {
+      message(sprintf("Error in saving archetypes: %s", e$message))
+    }
+  )
   return(obj)
 })
 # setMethod("obj_performArchetypes", "database", function(obj, k = 5, HVF = TRUE) {
@@ -181,7 +228,7 @@ setMethod("obj_visualizeArchetypes", "database", function(obj, out_path) {
   a <- obj@a
   k <- a$k
   m <- obj@m
-  imgname <- sprintf("%s/Archetypes_%2d.png", out_path, k)
+  imgname <- sprintf("%s/Archetypes_%s_%2d.png", out_path, obj@pathw, k)
   plotarchetyps <- xyplot(a, as.matrix(obj_getSeData(obj)))
   plotarchetyps
   obj@simplexplot <- plotarchetyps
@@ -229,7 +276,9 @@ setMethod("obj_umapArchetypes", "database", function(obj,
     print(umap_plot)
 
     if (!is.null(out_path)) {
-      imgname <- sprintf("%s/UMAP_Archetype_%d.%d.png", out_path, k, i)
+      # replace in obj@pathw all / \ " " with "_"
+      pathw.name <-
+        imgname <- sprintf("%s/UMAP_Archetype_%s_%d.%d.png", out_path, gsub("[/\\\\ ]", "_", obj@pathw), k, i)
       ggsave(imgname, plot = umap_plot)
       message(sprintf("Saving Image --- %s", imgname))
     }
@@ -243,7 +292,7 @@ setMethod("obj_umapArchetypes", "database", function(obj,
   # Save the combined image
   print(combined_plot)
   if (!is.null(out_path)) {
-    combined_imgname <- sprintf("%s/UMAP_Combined.png", out_path)
+    combined_imgname <- sprintf("%s/UMAP_Combined_%s.png", out_path, gsub("[/\\\\ ]", "_", obj@pathw))
     ggsave(
       combined_imgname,
       plot = combined_plot,
@@ -290,9 +339,9 @@ setMethod("obj_setGenes", "database", function(obj, pathw, pathGenes = "/app/dat
   return(obj)
 })
 
-#. #############################################################################
+# . #############################################################################
 # Melanoma ---------------------------------------------------------------------
-#. #############################################################################
+# . #############################################################################
 setClass("Melanoma",
   contains = "database"
 )
@@ -308,60 +357,65 @@ setMethod(
            test_genes = 300,
            test_samples = 500,
            ...) {
-    se <- read.table(data_path, header = TRUE)
-    se <- se[!duplicated(se[, 1]), ] # remove duplicated genes
-    rownames(se) <- se[, 1] # extract from matrix rownames
-    se <-
-      se[, 2:ncol(se)] # elide rownames from gene expression matrix
+    if (is.null(obj@se.org)) {
+      se <- read.table(data_path, header = TRUE)
+      se <- se[!duplicated(se[, 1]), ] # remove duplicated genes
+      rownames(se) <- se[, 1] # extract from matrix rownames
+      se <-
+        se[, 2:ncol(se)] # elide rownames from gene expression matrix
 
-    metadata <- se[1:3, ] # extract metadata
-    metadata <- t(metadata) %>%
-      data.frame() %>%
-      mutate(across(where(is.character), as.numeric))
+      metadata <- se[1:3, ] # extract metadata
+      metadata <- t(metadata) %>%
+        data.frame() %>%
+        mutate(across(where(is.character), as.numeric))
 
-    se <- se[4:nrow(se), ]
-    se <- se %>%
-      data.frame() %>%
-      mutate(across(where(is.character), as.numeric))
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-
-
-    if (test) {
-      message("No Pathway")
-      tgenes <- min(test_genes, nrow(se))
-      tsamples <- min(test_samples, ncol(se))
-      metadata <- metadata[1:tsamples, ]
-      se <- se[1:tgenes, 1:tsamples]
+      se <- se[4:nrow(se), ]
+      se <- se %>%
+        data.frame() %>%
+        mutate(across(where(is.character), as.numeric))
       se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+
+
+      if (test) {
+        tgenes <- min(test_genes, nrow(se))
+        tsamples <- min(test_samples, ncol(se))
+        metadata <- metadata[1:tsamples, ]
+        se <- se[1:tgenes, 1:tsamples]
+        se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+      }
+
+      # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+
+      se <- CreateSeuratObject(counts = se, meta.data = metadata)
+      se <- ScaleData(se, layer = "counts")
+      se <- FindVariableFeatures(se)
+      se <- RunPCA(se, features = VariableFeatures(se))
+      se <- RunUMAP(se, features = VariableFeatures(se))
+      obj@se <- se
+      obj@se.org <- se
+    } else {
+      obj@se <- obj@se.org
     }
 
-    # se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
-
-    se <- CreateSeuratObject(counts = se, meta.data = metadata)
-    se <- ScaleData(se, layer = "counts")
-    se <- FindVariableFeatures(se)
-    se <- RunPCA(se, features = VariableFeatures(se))
-    se <- RunUMAP(se, features = VariableFeatures(se))
-    obj@se <- se
 
     if (!is.null(pathw)) {
       message("Pathway")
       obj <- obj_setGenes(obj, pathw)
       message(length(obj@genes))
-      se <- se[obj@genes, ]
+      obj@se <- obj@se[obj@genes, ]
     }
 
-    if (HVF) {
-      m <- se@assays$RNA@layers$counts[which(se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
-    } else {
-      m <- se@assays$RNA@layers$counts
-      m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    }
-    message("finished HVF")
+    # if (HVF) {
+    #   m <- obj@se@assays$RNA@layers$counts[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+    # } else {
+    #   m <- obj@se@assays$RNA@layers$counts
+    #   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+    # }
+    # message("finished HVF")
 
-    m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-    m <- as.matrix(m)
-    obj@m <- m
+    # m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+    # m <- as.matrix(m)
+    # obj@m <- m
 
     message("Completed Loading")
     return(obj)
@@ -372,6 +426,15 @@ setMethod(
 setMethod("obj_getSeData", "Melanoma", function(obj) {
   se <- obj@se
   return(se@assays$RNA@layers$counts)
+})
+
+## obj_geMatrixHVF -------------------------------------------------------------
+setMethod("obj_getMatrixHVF", "Melanoma", function(obj) {
+  # TODO FIXME something wrong
+  m <- obj@se@assays$RNA@layers$counts[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+  m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+  obj@m <- m
+  return(obj)
 })
 
 # melanoma = new("Melanoma")
@@ -388,16 +451,16 @@ setMethod("obj_getSeData", "Melanoma", function(obj) {
 # obj_visualizeData(melanoma, out_path = here("/app/out/Melanoma/"))
 # obj_performArchetypes(melanoma, k = 5, HVF= TRUE)
 
-#. ##############################################################################
+# . ##############################################################################
 # General Exp ------------------------------------------------------------------
-##. ##############################################################################
+## . ##############################################################################
 setClass("Exp",
   contains = "database"
 )
 
 ## obj_createSeuratObject ----
 setMethod("obj_createSeuratObject", "Exp", function(object, data, gene_names, cell_metadata, where.cell_names, pathw, test = FALSE, HVF = FALSE, ...) {
-#obj_createSeuratObject <- function(object, data, gene_names, cell_metadata, where.cell_names, pathw,test=FALSE, HVF=FALSE, ...) {
+  # obj_createSeuratObject <- function(object, data, gene_names, cell_metadata, where.cell_names, pathw,test=FALSE, HVF=FALSE, ...) {
   if (length(where.cell_names) == 2) {
     new.names <- paste0(cell_metadata[[where.cell_names[1]]], "_", cell_metadata[[where.cell_names[2]]])
     cell_metadata$new.names <- new.names
@@ -445,14 +508,13 @@ setMethod("obj_createSeuratObject", "Exp", function(object, data, gene_names, ce
   data <- as.matrix(data)
 
   obj@se <- se
-  obj@data <- data
+  obj@m <- data
   return(obj)
-}
-)
+})
 
-#. ##############################################################################
+# . ##############################################################################
 # Exp1 -------------------------------------------------------------------------
-##. ##############################################################################
+## . ##############################################################################
 setClass("Exp1",
   contains = "Exp"
 )
@@ -497,9 +559,9 @@ setMethod("obj_getSeData", "Exp1", function(obj) {
 })
 
 
-#. #############################################################################
+# . #############################################################################
 # Exp2 -------------------------------------------------------------------------
-##.#############################################################################
+## .#############################################################################
 # Define the 'Melanoma' Class that inherits from 'database'
 setClass("Exp2",
   contains = "Exp"
@@ -537,9 +599,9 @@ setMethod("obj_getSeData", "Exp2", function(obj) {
 })
 
 
-#. #############################################################################
+# . #############################################################################
 # Exp3 -------------------------------------------------------------------------
-##. ############################################################################
+## . ############################################################################
 # Define the 'Melanoma' Class that inherits from 'database'
 setClass("Exp3",
   contains = "Exp"
@@ -576,9 +638,9 @@ setMethod("obj_getSeData", "Exp3", function(obj) {
   return(se@assays$RNA@layers$counts)
 })
 
-#. #############################################################################
+# . #############################################################################
 # MouseCortex-------------------------------------------------------------------
-##. ############################################################################
+## . ############################################################################
 # Define the 'Melanoma' Class that inherits from 'database'
 setClass("MouseCortex",
   contains = "database"
@@ -661,9 +723,9 @@ setMethod("obj_getSeData", "MouseCortex", function(obj) {
   return(se@assays$RNA@layers$counts)
 })
 
-#. #############################################################################
+# . #############################################################################
 # Myocardial -------------------------------------------------------------------
-##. ############################################################################
+## . ############################################################################
 setClass("Myocardial",
   contains = "database"
 )

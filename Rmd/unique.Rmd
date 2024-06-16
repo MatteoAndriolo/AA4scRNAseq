@@ -14,39 +14,46 @@ params:
   CLASS.NAME: NULL
   pathw: NULL
   out_path: NULL
+  num_restarts: 10
+  max_iterations: 100
 ---
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = TRUE)
 ```
 
-
 ```{r setup, message=FALSE, warning=FALSE}
 source("imports.R")
 source("classes.R")
 
-# TEST <- params$TEST
-# HVF <- params$HVF
-# TEST_genes <- params$TEST_genes
-# TEST_samples <- params$TEST_samples
-# CLASS.NAME <- params$CLASS.NAME
-# if (is.null(CLASS.NAME)) {
-#  stop("CLASS.NAME is NULL")
-# }
-# pathw <- params$pathw
-# out_path <- params$out_path
+TEST <- params$TEST
+HVF <- params$HVF
+TEST_genes <- params$TEST_genes
+TEST_samples <- params$TEST_samples
+CLASS.NAME <- params$CLASS.NAME
+if (is.null(CLASS.NAME)) {
+  stop("CLASS.NAME is NULL")
+}
+pathw <- params$pathw
+out_path <- params$out_path
+num_restarts <- params$num_restarts
+max_iterations <- params$max_iterations
+```
 
-##TODO  Remove this part
-#TEST <- TRUE
-#HVF <- FALSE
-#TEST_genes <- 300
-#TEST_samples <- 500
-#CLASS.NAME <- "Exp1"
-#pathw <- "MAPK signaling pathway"
-#out_path <- sprintf("/app/out/%s/%s_files", CLASS.NAME, CLASS.NAME)
+```{r eval=FALSE}
+TEST <- FALSE
+HVF <- FALSE
+TEST_genes <- 300
+TEST_samples <- 500
+CLASS.NAME <- "Melanoma"
+pathw <- "MAPK signaling pathway"
+out_path <- sprintf("/app/out/%s/%s_files", CLASS.NAME, CLASS.NAME)
+max_iterations <- 5
+num_restarts <- 2
 ```
 
 # Load Dataset, hide all outputs
+
 ```{r Load obj dataset, message=FALSE, warning=FALSE}
 obj <- new(CLASS.NAME)
 obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
@@ -56,13 +63,14 @@ obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, te
 obj <- obj_visualizeData(obj, out_path)
 ```
 
-
 # Archetypes
+
 ```{r AA, message=TRUE, warning=TRUE}
-obj <- obj_performArchetypes(obj)
+obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts)
 ```
 
-## Visualize Archetypes
+## Visualize Archetype
+
 ```{r Visualize AA, message=FALSE, warning=TRUE, paged.print=FALSE}
 obj <- obj_visualizeArchetypes(obj, out_path)
 ```
@@ -71,21 +79,80 @@ obj <- obj_visualizeArchetypes(obj, out_path)
 simplexplot(obj@a)
 ```
 
-
 ## Plot Umap Archetypes
 
 ```{r Visualize Umap AA, message=FALSE, warning=TRUE}
 obj <- obj_umapArchetypes(obj, out_path)
 ```
 
-
 ## Seurat
-#```{r}
-#DimPlot(obj@se, reduction = "umap")
-## DimPlot(obj@se, reduction = "umap", group.by = "cell_type")
-#```
-#
-#```{r}
-#se <- FindNeighbors(obj@se, dims = 6:15)
-#se <- FindClusters(obj@se, resolution = 0.5)
-#```
+
+\#`{r} #DimPlot(obj@se, reduction = "umap") ## DimPlot(obj@se, reduction = "umap", group.by = "cell_type") #` \# \#`{r} #se <- FindNeighbors(obj@se, dims = 6:15) #se <- FindClusters(obj@se, resolution = 0.5) #`
+
+# Load Dataset, hide all outputs
+
+```{r Load obj dataset -2, message=FALSE, warning=FALSE}
+# obj <- new(CLASS.NAME)
+pathw <- "Pathways in cancer"
+obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
+```
+
+```{r Visualize obj dataset -2, message=FALSE, warning=FALSE, tabbed=TRUE}
+obj <- obj_visualizeData(obj, out_path)
+```
+
+# Archetypes
+
+```{r AA -2, message=TRUE, warning=TRUE}
+obj <- obj_performArchetypes(obj, num_restarts = num_restarts, max_iters = max_iterations)
+```
+
+## Visualize Archetype
+
+```{r Visualize AA -2, message=FALSE, warning=TRUE, paged.print=FALSE}
+obj <- obj_visualizeArchetypes(obj, out_path)
+```
+
+```{r Visualize AA simplex -2, message=FALSE, warning=TRUE}
+simplexplot(obj@a)
+```
+
+## Plot Umap Archetypes
+
+```{r Visualize Umap AA -2, message=FALSE, warning=TRUE}
+obj <- obj_umapArchetypes(obj, out_path)
+```
+
+# Load Dataset, hide all outputs
+
+```{r Load obj dataset -3, message=FALSE, warning=FALSE}
+obj <- new(CLASS.NAME)
+pathw <- "Glycolysis / Gluconeogenesis"
+obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
+```
+
+```{r Visualize obj dataset -3, message=FALSE, warning=FALSE, tabbed=TRUE}
+obj <- obj_visualizeData(obj, out_path)
+```
+
+# Archetypes
+
+```{r AA -3, message=TRUE, warning=TRUE}
+obj <- obj_performArchetypes(obj, num_restarts = num_restarts, max_iters = max_iterations)
+```
+
+## Visualize Archetype
+
+```{r Visualize AA -3, message=FALSE, warning=TRUE, paged.print=FALSE}
+obj <- obj_visualizeArchetypes(obj, out_path)
+```
+
+```{r Visualize AA simplex -3, message=FALSE, warning=TRUE}
+simplexplot(obj@a)
+```
+
+## Plot Umap Archetypes
+
+```{r Visualize Umap AA -3, message=FALSE, warning=TRUE}
+obj <- obj_umapArchetypes(obj, out_path)
+```
