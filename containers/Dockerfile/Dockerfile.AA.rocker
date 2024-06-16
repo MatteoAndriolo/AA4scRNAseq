@@ -15,7 +15,7 @@ RUN  git config --global credential.helper \
     '!f() { echo username=author; echo "password=$GITHUB_PAT"; };f'
 
 RUN R -e "update.packages(ask = FALSE, checkBuilt = TRUE)"
-RUN R -e "install.packages(c('usethis','rhdf5','remotes','devtools','BiocManager','units','sf','spdep', 'archetypes','quantmod'), Ncpus = parallel::detectCores(), make.args = c('-j', parallel::detectCores()))"
+RUN R -e "install.packages(c('usethis','rhdf5','remotes','devtools','BiocManager','units','sf','spdep', 'archetypes','quantmod', 'archetypal'), Ncpus = parallel::detectCores(), make.args = c('-j', parallel::detectCores()))"
 RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'HDF5Array', 'terra', 'ggrastr','glmGamPoi'), Ncpus = parallel::detectCores(), make.args = c('-j', parallel::detectCores()))"
 
 # packages required by Seurat
