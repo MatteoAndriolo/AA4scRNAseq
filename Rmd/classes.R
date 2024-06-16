@@ -504,11 +504,11 @@ setMethod("obj_createSeuratObject", "Exp", function(object, data, gene_names, ce
     data <- se@assays$RNA@layers$counts
   }
 
-  data <- data[Matrix::rowSums(data) > 0, Matrix::colSums(data) > 0]
-  data <- as.matrix(data)
+  #data <- data[Matrix::rowSums(data) > 0, Matrix::colSums(data) > 0]
+  #data <- as.matrix(data)
 
   obj@se <- se
-  obj@m <- data
+  #obj@m <- data
   return(obj)
 })
 
