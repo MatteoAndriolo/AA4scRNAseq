@@ -7,6 +7,8 @@ test_samples=500
 hvf=FALSE
 RMDFILE="/app/Rmd/unique.Rmd"
 pathw="MAPK signaling pathway"
+classname=NULL
+pathw=NULL
 
 if [ -z "$1" ]; then
     echo "No classname provided"
