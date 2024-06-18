@@ -1,23 +1,38 @@
 FROM ubuntu
+COPY .Rprofile /home/rstudio/.Rprofile
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Configure Git to use the PAT
+
+RUN apt update; \
+    apt upgrade; \
+    apt install -y \
+    build-essential     \
+    git                 \
+    libcurl4-gnutls-dev \
+    libfontconfig1-dev  \
+    libfribidi-dev      \
+    libglpk-dev         \
+    libharfbuzz-dev     \
+    libhdf5-dev         \
+    libssl-dev          \
+    libtiff-dev         \   
+    libxml2-dev         \
+    pandoc              \
+    pkg-config          \
+    tcl                 \
+    tk              
+
+RUN apt install -y r-base r-base-dev
+
 ARG GITHUB_PAT
 RUN  git config --global credential.helper \
     '!f() { echo username=author; echo "password=$GITHUB_PAT"; };f'
 
-# make no interaction
-
-# update and upgrade
-RUN apt-get update;\
-    apt-get upgrade;\
-    apt-get install -y libhdf5-dev libglpk-dev build-essential git pandoc r-base r-recommended 
-
-
+RUN R -e "options(Ncpus = parallel::detectCores())"
 RUN R -e "update.packages(ask = FALSE, checkBuilt = TRUE)"
-RUN R -e 'install.packages(c("usethis", "rhdf5", "remotes", "devtools", "BiocManager", "units", "sf", "spdep", "archetypes", "quantmod"), Ncpus = parallel::detectCores(), make.args = c("-j", parallel::detectCores()))'
-RUN R -e 'devtools::install_github("etam4260/kneedle")
+RUN R -e "install.packages(c('BiocManager','archetypal','archetypes','devtools','dplyr','quantmod','remotes','rhdf5','sf','spdep','units','usethis'), Ncpus = parallel::detectCores(), make.args = c('-j', parallel::detectCores()))"
 RUN R -e 'BiocManager::install(c("BiocGenerics", "DelayedArray", "DelayedMatrixStats", "limma", "lme4", "S4Vectors", "SingleCellExperiment", "SummarizedExperiment", "batchelor", "HDF5Array", "terra", "ggrastr", "glmGamPoi"), Ncpus = parallel::detectCores(), make.args = c("-j7", parallel::detectCores()))'
+RUN R -e "install.packages(c('systemfonts', 'textshaping', 'ragg', 'pkgdown', 'devtools'), dependencies=TRUE);library(devtools);install_github('etam4260/kneedle')"
 
 RUN R -e 'remotes::install_github("satijalab/seurat-data", "seurat5", quiet = TRUE)'
 RUN R -e 'remotes::install_github("satijalab/seurat-wrappers", "seurat5", quiet = TRUE)'
