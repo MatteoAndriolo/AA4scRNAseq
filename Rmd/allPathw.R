@@ -9,71 +9,70 @@ num_restarts <- as.numeric(Sys.getenv("num_restarts", 10))
 out_path <- Sys.getenv("out_path")
 pathw <- NULL
 
-{
-  pathways <- list(
-    "Glycolysis / Gluconeogenesis",
-    "MAPK signaling pathway"
-  )
-  pathways_lungo <- list(
-    "Glycolysis / Gluconeogenesis",
-    "MAPK signaling pathway",
-    "mTOR signaling pathway",
-    "Pathways in cancer",
-    "TGF-beta signaling pathway"
-  )
+pathways <- list(
+  "Glycolysis / Gluconeogenesis",
+  "MAPK signaling pathway"
+)
+pathways_lungo <- list(
+  "Glycolysis / Gluconeogenesis",
+  "MAPK signaling pathway",
+  "mTOR signaling pathway",
+  "Pathways in cancer",
+  "TGF-beta signaling pathway"
+)
 
 
-  checkEnv <- function() {
-    message("TEST: ", TEST)
-    message("HVF: ", HVF)
-    message("TEST_genes: ", TEST_genes)
-    message("TEST_samples: ", TEST_samples)
-    message("CLASS.NAME: ", CLASS.NAME)
-    message("pathw: ", pathw)
-    message("out_path: ", out_path)
-    message("num_restarts: ", num_restarts)
-    message("max_iterations: ", max_iterations)
-  }
-
-  source("/app/Rmd/z_tools.R")
-  checkEnv()
-
-  if (CLASS.NAME == "") {
-    stop("CLASS.NAME is NULL")
-  }
-
-  # Load required libraries and source files
-  source("/app/Rmd/imports.R")
-  source("/app/Rmd/classes.R")
-
-  # Load Dataset
-  obj <- new(CLASS.NAME)
-  debug <- TRUE
-  obj <- obj_updateParams(obj,
-    updateCurrent = TRUE,
-    HVF = HVF,
-    TEST = TEST,
-    TEST_genes = TEST_genes,
-    TEST_samples = TEST_samples,
-    max_iterations = max_iterations,
-    num_restarts = num_restarts,
-    # data_path = NA,
-    out_path = out_path    # pathw = NULL,
-  )
-  # obj@params$HVF <- HVF
-  # obj@params$TEST <- TEST
-  # obj@params$TEST_genes <- TEST_genes
-  # obj@params$TEST_samples <- TEST_samples
-  # obj@params$max_iterations <- max_iterations
-  # obj@params$num_restarts <- num_restarts
-  # obj@params$data_path <- NULL
-  # obj@params$out_path <- out_path
-  # obj@params$pathw <- NULL
-  #
-  # obj@curr.params <- obj@params
-
-  obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
+checkEnv <- function() {
+  message("TEST: ", TEST)
+  message("HVF: ", HVF)
+  message("TEST_genes: ", TEST_genes)
+  message("TEST_samples: ", TEST_samples)
+  message("CLASS.NAME: ", CLASS.NAME)
+  message("pathw: ", pathw)
+  message("out_path: ", out_path)
+  message("num_restarts: ", num_restarts)
+  message("max_iterations: ", max_iterations)
 }
+
+source("/app/Rmd/z_tools.R")
+checkEnv()
+
+if (CLASS.NAME == "") {
+  stop("CLASS.NAME is NULL")
+}
+
+# Load required libraries and source files
+source("/app/Rmd/imports.R")
+source("/app/Rmd/classes.R")
+
+# Load Dataset
+obj <- new(CLASS.NAME)
+debug <- TRUE
+obj <- obj_updateParams(obj,
+  updateCurrent = TRUE,
+  HVF = HVF,
+  TEST = TEST,
+  TEST_genes = TEST_genes,
+  TEST_samples = TEST_samples,
+  max_iterations = max_iterations,
+  num_restarts = num_restarts,
+  # data_path = NA,
+  out_path = out_path # pathw = NULL,
+)
+# obj@params$HVF <- HVF
+# obj@params$TEST <- TEST
+# obj@params$TEST_genes <- TEST_genes
+# obj@params$TEST_samples <- TEST_samples
+# obj@params$max_iterations <- max_iterations
+# obj@params$num_restarts <- num_restarts
+# obj@params$data_path <- NULL
+# obj@params$out_path <- out_path
+# obj@params$pathw <- NULL
+#
+# obj@curr.params <- obj@params
+
+obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
+
 
 aa.pipeline <- function(pathw) {
   obj <- obj_updateParams(obj, pathw = pathw)

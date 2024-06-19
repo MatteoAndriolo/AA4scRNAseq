@@ -14,8 +14,8 @@ pathw <- Sys.getenv("pathw")
 debug <- TRUE
 
 source("/app/Rmd/z_tools.R")
-list2env(gen_testEnv(), envir = .GlobalEnv)
-pathw <- NULL
+# list2env(gen_testEnv(), envir = .GlobalEnv)
+# pathw <- NULL
 checkEnv()
 
 obj <- new(CLASS.NAME)
@@ -44,7 +44,7 @@ message("Visualizing Data Done")
 # plan("multicore", workers = nworkers)
 # Perform Archetypes
 message("Performing Archetypes")
-obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel=TRUE)
+obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel = TRUE)
 message("Performing Archetypes Done")
 
 # Visualize Archetypes

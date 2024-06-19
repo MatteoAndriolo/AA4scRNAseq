@@ -219,11 +219,11 @@ setMethod("obj_furthestSum", "database", function(obj, k = 5) {
 
 ### obj_performArchetypes ----
 # Method to perform archetypal analysis
-setGeneric("obj_performArchetypes", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel=TRUE) {
+setGeneric("obj_performArchetypes", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel = TRUE) {
   standardGeneric("obj_performArchetypes")
 })
 
-setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel=TRUE) {
+setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel = TRUE) {
   message("Performing Archetypes")
   if (HVF) {
     obj <- obj_getMatrixHVF(obj)
@@ -278,7 +278,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
 
   tstartReruns <- Sys.time()
   if (doparallel) {
-    nworkers=parallel::detectCores()-1
+    nworkers <- parallel::detectCores() - 1
     results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = max_iterations, mc.cores = nworkers)
 
     # Store the results in the object
@@ -286,10 +286,10 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
   } else {
     for (i in 1:num_restarts) {
       runArchetypes(i, data = obj@data$m, k = k, max_iterations = max_iterations)
-      #message("Starting rerun ", i, "/", num_restarts)
-      #temp <- list()
+      # message("Starting rerun ", i, "/", num_restarts)
+      # temp <- list()
 
-      #tryCatch(
+      # tryCatch(
       #  {
       #    tstart <- Sys.time()
       #    family <- archetypes::archetypesFamily(which = "robust") # , initfn = make.fix.initfn(irows[1]))
@@ -305,8 +305,8 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
       #    temp$time <- NA
       #    message(sprintf("Error in archetypes: %s", e$message))
       #  }
-      #)
-      #obj@archetypes$restarts[[i]] <- temp
+      # )
+      # obj@archetypes$restarts[[i]] <- temp
     }
   }
   tendReruns <- Sys.time()

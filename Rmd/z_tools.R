@@ -23,4 +23,3 @@ gen_testEnv <- function() {
     "max_iterations" = 5
   ))
 }
-
