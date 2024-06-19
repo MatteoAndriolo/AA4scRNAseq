@@ -18,8 +18,6 @@ pathw="MAPK signaling pathway"
 out_path="/app/out/Melanoma"
 num_restarts=2
 max_iterations=3
-method="archetypes"
-#method="archetypal"
 
 #docker run --rm myrocker:latest
 # run unique.R script inside docker
@@ -39,7 +37,6 @@ docker run \
     -e out_path="${out_path}" \
     -e num_restarts="${num_restarts}" \
     -e max_iterations="${max_iterations}" \
-    -e method="${method}" \
     -e DISABLE_AUTH=true \
     -e PASSWORD="psw" \
     myrubuntu:latest \

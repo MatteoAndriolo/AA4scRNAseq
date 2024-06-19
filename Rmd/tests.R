@@ -9,7 +9,7 @@ TEST_samples <- 500
 CLASS.NAME <- "Exp1"
 pathw <- "MAPK signaling pathway"
 out_path <- sprintf("/app/out/%s/%s_files", CLASS.NAME, CLASS.NAME)
-obj <- new("Exp1")
+obj <- new("Melanoma")
 
 # read data
 gene_names <- read.table("../data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
