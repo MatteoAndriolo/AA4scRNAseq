@@ -5,7 +5,6 @@ TEST <- as.logical(Sys.getenv("TEST", "FALSE"))
 TEST_genes <- as.numeric(Sys.getenv("TEST_genes", 300))
 TEST_samples <- as.numeric(Sys.getenv("TEST_samples", 500))
 max_iterations <- as.numeric(Sys.getenv("max_iterations", 100))
-method <- Sys.getenv("method", "archetypes")
 num_restarts <- as.numeric(Sys.getenv("num_restarts", 10))
 out_path <- Sys.getenv("out_path")
 pathw <- NULL
@@ -34,7 +33,6 @@ pathw <- NULL
     message("out_path: ", out_path)
     message("num_restarts: ", num_restarts)
     message("max_iterations: ", max_iterations)
-    message("method: ", method)
   }
 
   source("/app/Rmd/z_tools.R")
@@ -60,9 +58,7 @@ pathw <- NULL
     max_iterations = max_iterations,
     num_restarts = num_restarts,
     # data_path = NA,
-    out_path = out_path,
-    # pathw = NULL,
-    method = method
+    out_path = out_path    # pathw = NULL,
   )
   # obj@params$HVF <- HVF
   # obj@params$TEST <- TEST
@@ -73,7 +69,6 @@ pathw <- NULL
   # obj@params$data_path <- NULL
   # obj@params$out_path <- out_path
   # obj@params$pathw <- NULL
-  # obj@params$method <- method
   #
   # obj@curr.params <- obj@params
 
@@ -91,7 +86,7 @@ aa.pipeline <- function(pathw) {
 
   # Perform Archetypes
   message("Performing Archetypes")
-  obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, method = method)
+  obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts)
   message("Performing Archetypes Done")
 
   # Visualize Archetypes
@@ -120,63 +115,3 @@ for (pathw in pathways) {
   message("Processing pathway: ", pathw)
   aa.pipeline(pathw)
 }
-
-# Stop the cluster
-# stopCluster(cl)
-
-# pathw <- pathways[[1]]
-# obj <- obj_updateParams(obj, pathw = pathw)
-# obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
-#
-## Visualize Dataset
-# message("Visualizing Data")
-# obj <- obj_visualizeData(obj)
-# message("Visualizing Data Done")
-#
-## Perform Archetypes
-# message("Performing Archetypes")
-# obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, method = method)
-# message("Performing Archetypes Done")
-#
-## Visualize Archetypes
-# message("Visualizing Archetypes")
-# obj <- obj_visualizeArchetypes(obj, out_path)
-# message("Visualizing Archetypes Done")
-#
-## Umap Archetypes Plot
-# message("Umap Archetypes")
-# obj <- obj_umapArchetypes(obj, out_path)
-# message("Umap Archetypes Done")
-#
-# message("Saving Object in ", obj@params$out_path, " ", class(obj)[[1]])
-# obj_saveObj(obj)
-# message("Saving Object Done")
-#
-# pathw <- pathways[[2]]
-# obj <- obj_updateParams(obj, pathw = pathw)
-# obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
-#
-## Visualize Dataset
-# message("Visualizing Data")
-# obj <- obj_visualizeData(obj)
-# message("Visualizing Data Done")
-#
-## Perform Archetypes
-# message("Performing Archetypes")
-# obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, method = method)
-# message("Performing Archetypes Done")
-#
-## Visualize Archetypes
-# message("Visualizing Archetypes")
-# obj <- obj_visualizeArchetypes(obj, out_path)
-# message("Visualizing Archetypes Done")
-#
-## Umap Archetypes Plot
-# message("Umap Archetypes")
-# obj <- obj_umapArchetypes(obj, out_path)
-# message("Umap Archetypes Done")
-#
-# message("Saving Object in ", obj@params$out_path, " ", class(obj)[[1]])
-# obj_saveObj(obj)
-# message("Saving Object Done")
-#

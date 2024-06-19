@@ -213,22 +213,21 @@ setGeneric("obj_furthestSum", function(obj, k = 5) {
 })
 
 setMethod("obj_furthestSum", "database", function(obj, k = 5) {
-  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k,doparallel=TRUE, nworkers=4 )
+  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k)
   return(irows)
 })
 
 ### obj_performArchetypes ----
 # Method to perform archetypal analysis
-setGeneric("obj_performArchetypes", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, method = "archetypes") {
+setGeneric("obj_performArchetypes", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel=TRUE) {
   standardGeneric("obj_performArchetypes")
 })
 
-setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, method = "archetypes") {
+setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel=TRUE) {
   message("Performing Archetypes")
   if (HVF) {
     obj <- obj_getMatrixHVF(obj)
   }
-
 
   k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
   message("Number of archetypes is ", k)
@@ -237,9 +236,9 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
   obj@data$m <- obj@data$m[Matrix::rowSums(obj@data$m) > 0, Matrix::colSums(obj@data$m) > 0]
 
   #### Furthest Sum Initialization
-  message("Finding Furthest Sum")
+  message("LOG: Finding Furthest Sum")
   irows <- obj_furthestSum(obj, k = k)
-  message("Furthest Sum Found")
+  message("LOG: Furthest Sum Found")
 
   #### Archetypes Computation
 
@@ -248,23 +247,20 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
     updateCurrent = TRUE,
     k = k,
     max_iterations = max_iters,
-    num_restarts = num_restarts,
-    method = method
+    num_restarts = num_restarts
   )
-  # obj@params$max_iterations <- max_iterations
-  # obj@params$num_restarts <- num_restarts
-  tstartReruns <- Sys.time()
-  for (i in 1:num_restarts) {
+
+  runArchetypes <- function(i, data, k, max_iterations) {
     message("Starting rerun ", i, "/", num_restarts)
     temp <- list()
-
     tryCatch(
       {
         tstart <- Sys.time()
-          family <- archetypes::archetypesFamily(which = "robust") # , initfn = make.fix.initfn(irows[1]))
-          temp$a <- archetypes::archetypes(obj@data$m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+        family <- archetypes::archetypesFamily(which = "robust")
+        temp$a <- archetypes::archetypes(data, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
         tend <- Sys.time()
         message(sprintf("Archetypes Computed in %s", tend - tstart))
+
         temp$rss <- temp$a$rss
         temp$time <- tend - tstart
       },
@@ -275,7 +271,43 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
         message(sprintf("Error in archetypes: %s", e$message))
       }
     )
-    obj@archetypes$restarts[[i]] <- temp
+    return(temp)
+  }
+
+
+
+  tstartReruns <- Sys.time()
+  if (doparallel) {
+    nworkers=parallel::detectCores()-1
+    results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = max_iterations, mc.cores = nworkers)
+
+    # Store the results in the object
+    obj@archetypes$restarts <- results
+  } else {
+    for (i in 1:num_restarts) {
+      runArchetypes(i, data = obj@data$m, k = k, max_iterations = max_iterations)
+      #message("Starting rerun ", i, "/", num_restarts)
+      #temp <- list()
+
+      #tryCatch(
+      #  {
+      #    tstart <- Sys.time()
+      #    family <- archetypes::archetypesFamily(which = "robust") # , initfn = make.fix.initfn(irows[1]))
+      #    temp$a <- archetypes::archetypes(obj@data$m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+      #    tend <- Sys.time()
+      #    message(sprintf("Archetypes Computed in %s", tend - tstart))
+      #    temp$rss <- temp$a$rss
+      #    temp$time <- tend - tstart
+      #  },
+      #  error = function(e) {
+      #    temp$a <- NULL
+      #    temp$rss <- Inf
+      #    temp$time <- NA
+      #    message(sprintf("Error in archetypes: %s", e$message))
+      #  }
+      #)
+      #obj@archetypes$restarts[[i]] <- temp
+    }
   }
   tendReruns <- Sys.time()
 
@@ -485,11 +517,11 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   }
 
   if (!is.null(pathw)) {
-   obj@params$pathw <- pathw
-   obj <- obj_setGenes(obj, pathw)
-   gene.flag <- gene_names %in% obj@genes
-   se <- se[gene.flag, ]
-   gene_names <- gene_names[gene.flag]
+    obj@params$pathw <- pathw
+    obj <- obj_setGenes(obj, pathw)
+    gene.flag <- gene_names %in% obj@genes
+    se <- se[gene.flag, ]
+    gene_names <- gene_names[gene.flag]
   }
 
 
@@ -498,27 +530,27 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     # se <- se[1:tgenes, 1:tsamples]
     tsamples <- min(test_samples, ncol(se))
     se <- se[, 1:tsamples]
-    cell_metadata=cell_metadata[1:tsamples,]
-    gene_names=gene_names[Matrix::rowSums(se)>0]
+    cell_metadata <- cell_metadata[1:tsamples, ]
+    gene_names <- gene_names[Matrix::rowSums(se) > 0]
     se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
   }
-  if(debug){
-    message("Dimension matrix is ", dim(se)[[1]], " " , dim(se)[[2]])
+  if (debug) {
+    message("Dimension matrix is ", dim(se)[[1]], " ", dim(se)[[2]])
     message("Dimension gene_names ", length(gene_names), " cell_metadata ", dim(cell_metadata)[[1]])
   }
-  
+
 
   # newmax=1200*1024^2
   # options(future.globals.maxSize=newmax)
 
   obj@se <- CreateSeuratObject(counts = se)
-  message("LOG: Seurat object has dimension ",dim(se)[[1]], " ", dim(se)[[2]])
+  message("LOG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
   obj@se <- ScaleData(obj@se, layer = "counts")
   obj@se <- FindVariableFeatures(obj@se)
   obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
-  #dimnames(obj@se) <- list(gene_names, new.names)
+  # dimnames(obj@se) <- list(gene_names, new.names)
   obj@se@assays$RNA@layers$counts@Dimnames <- list(gene_names, cell_metadata$new.names)
   obj@se@meta.data <- cell_metadata
 
@@ -549,8 +581,9 @@ setMethod(
            test_genes = 300,
            test_samples = 500, ...) {
     # isnew <- obj_areParamsEqual(obj, update = TRUE)
-    if(FALSE)
-           data_path = "/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx"
+    if (FALSE) {
+      data_path <- "/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx"
+    }
     if (is.null(obj@se.org)) { # | isnew) {
       message("LOG: Full loading")
       cell_metadata <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt", header = TRUE, sep = "\t")
@@ -558,7 +591,7 @@ setMethod(
       se <- Matrix::readMM(data_path)
       se <- t(se)
 
-      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata,where.cell_names =  c("Library", "Cell.barcode"), pathw, test, HVF, test_genes, test_samples)
+      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"), pathw, test, HVF, test_genes, test_samples)
       obj@se.org <- obj@se
       message("LOG: Seurat object created")
     } else {

@@ -5,7 +5,6 @@ TEST <- as.logical(Sys.getenv("TEST", "FALSE"))
 TEST_genes <- as.numeric(Sys.getenv("TEST_genes", 300))
 TEST_samples <- as.numeric(Sys.getenv("TEST_samples", 500))
 max_iterations <- as.numeric(Sys.getenv("max_iterations", 100))
-method <- Sys.getenv("method", "archetypes")
 num_restarts <- as.numeric(Sys.getenv("num_restarts", 10))
 out_path <- Sys.getenv("out_path")
 
@@ -18,7 +17,6 @@ checkEnv <- function() {
   message("out_path: ", out_path)
   message("num_restarts: ", num_restarts)
   message("max_iterations: ", max_iterations)
-  message("method: ", method)
 }
 
 
@@ -40,7 +38,6 @@ obj@params$max_iterations <- max_iterations
 obj@params$num_restarts <- num_restarts
 obj@params$out_path <- out_path
 obj@params$pathw <- pathw
-obj@params$method <- method
 
 obj@curr.params <- obj@params
 
@@ -57,7 +54,7 @@ message("Visualizing Data Done")
 # plan("multicore", workers = nworkers)
 # Perform Archetypes
 message("Performing Archetypes")
-obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, method = method)
+obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts)
 message("Performing Archetypes Done")
 
 # Visualize Archetypes

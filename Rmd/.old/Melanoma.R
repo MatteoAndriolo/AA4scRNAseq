@@ -8,7 +8,6 @@ library(dplyr)
 if (!require(kneedle)) {
   install.packages("quantmod")
 }
-devtools::install_github("etam4260/kneedle")
 library(kneedle)
 
 HVF <- TRUE
@@ -18,8 +17,8 @@ TEST_genes <- 300
 TEST_samples <- 500
 
 # %% Load Dataset
-data_path <- "../data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
-out_path <- "../out/Melanoma"
+data_path <- "data/Melanoma/GSE72056_melanoma_single_cell_revised_v2.txt"
+out_path <- "out/Melanoma"
 
 se <- read.table(data_path, header = TRUE)
 se <- se[!duplicated(se[, 1]), ] # remove duplicated genes
@@ -86,7 +85,7 @@ m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
 m <- as.matrix(m)
 
 s <- timestamp()
-a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = 10)
+a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = 30)
 e <- timestamp()
 
 save(a, file = sprintf("%s/Archetypes_%2d.rds", out_path, k))
