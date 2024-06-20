@@ -1,15 +1,17 @@
 # Name: allPathw
 source("/app/Rmd/imports.R")
 source("/app/Rmd/classes.R")
+# nworkers <- parallel::detectCores() - 2
+# plan("multicore", workers = nworkers)
 
-CLASS.NAME <- Sys.getenv("CLASSNAME")
-HVF <- as.logical(Sys.getenv("HVF", "TRUE"))
-TEST <- as.logical(Sys.getenv("TEST", "FALSE"))
-TEST_genes <- as.numeric(Sys.getenv("TEST_genes", 300))
-TEST_samples <- as.numeric(Sys.getenv("TEST_samples", 500))
-max_iterations <- as.numeric(Sys.getenv("max_iterations", 100))
-num_restarts <- as.numeric(Sys.getenv("num_restarts", 10))
-out_path <- Sys.getenv("out_path")
+classname <- Sys.getenv("CLASSNAME")
+hvf <- as.logical(Sys.getenv("HVF", "TRUE"))
+test <- as.logical(Sys.getenv("TEST", "FALSE"))
+test_genes <- as.numeric(Sys.getenv("TEST_GENES", 300))
+test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", 500))
+max_iterations <- as.numeric(Sys.getenv("MAX_ITERATIONS", 100))
+num_restarts <- as.numeric(Sys.getenv("NUM_RESTARTS", 10))
+out_path <- Sys.getenv("OUT_PATH")
 pathw <- NULL
 
 pathways <- list(
@@ -27,65 +29,67 @@ pathways_lungo <- list(
 
 
 checkEnv <- function() {
-  message("TEST: ", TEST)
-  message("HVF: ", HVF)
-  message("TEST_genes: ", TEST_genes)
-  message("TEST_samples: ", TEST_samples)
-  message("CLASS.NAME: ", CLASS.NAME)
+  message("test: ", test)
+  message("hvf: ", hvf)
+  message("test_genes: ", test_genes)
+  message("test_samples: ", test_samples)
+  message("classname", classname)
   message("pathw: ", pathw)
   message("out_path: ", out_path)
   message("num_restarts: ", num_restarts)
   message("max_iterations: ", max_iterations)
 }
 
-#source("/app/Rmd/z_tools.R")
+# source("/app/Rmd/z_tools.R")
 checkEnv()
 
-obj <- new(CLASS.NAME)
+obj <- new(classname)
 debug <- TRUE
 obj <- obj_updateParams(obj,
   updateCurrent = TRUE,
-  HVF = HVF,
-  TEST = TEST,
-  TEST_genes = TEST_genes,
-  TEST_samples = TEST_samples,
+  hvf = hvf,
+  test = test,
+  test_genes = test_genes,
+  test_samples = test_samples,
   max_iterations = max_iterations,
   num_restarts = num_restarts,
   data_path = NULL,
   out_path = out_path
 )
 
-pathw=NULL
-obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
+pathw <- NULL
+
+obj <- obj_loadData(obj, test = test, pathw = pathw, test_genes = test_genes, test_samples = test_samples)
+
 
 aa.pipeline <- function(obj, pathw) {
   message("LOG: starting with PATHW ", pathw)
   obj <- obj_updateParams(obj, pathw = pathw)
-  obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
+  obj <- obj_loadData(obj, test = test, pathw = pathw, test_genes = test_genes, test_samples = test_samples)
 
-  # Visualize Dataset
-  message("Visualizing Data")
-  obj <- obj_visualizeData(obj)
-  message("Visualizing Data Done")
+  # # Visualize Dataset
+  # message("Visualizing Data")
+  # obj <- obj_visualizeData(obj)
+  # message("Visualizing Data Done")
 
-  # Perform Archetypes
-  message("Performing Archetypes")
-  obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel = FALSE)
-  message("Performing Archetypes Done")
+  # # Perform Archetypes
+  # message("Performing Archetypes")
+  # obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel = FALSE)
+  # message("Performing Archetypes Done")
 
-  # Visualize Archetypes
-  message("Visualizing Archetypes")
-  obj <- obj_visualizeArchetypes(obj, out_path)
-  message("Visualizing Archetypes Done")
+  # # Visualize Archetypes
+  # message("Visualizing Archetypes")
+  # obj <- obj_visualizeArchetypes(obj, out_path)
+  # message("Visualizing Archetypes Done")
 
-  # Umap Archetypes Plot
-  message("Umap Archetypes")
-  obj <- obj_umapArchetypes(obj, out_path)
-  message("Umap Archetypes Done")
+  # # Umap Archetypes Plot
+  # message("Umap Archetypes")
+  # obj <- obj_umapArchetypes(obj, out_path)
+  # message("Umap Archetypes Done")
 
-  message("Saving Object in ", obj@params$out_path, " ", class(obj)[[1]])
-  obj_saveObj(obj)
-  message("Saving Object Done")
+  # message("Saving Object in ", obj@params$out_path, " ", class(obj)[[1]])
+  # obj_saveObj(obj)
+  # message("Saving Object Done")
 }
 
 # Register parallel backend

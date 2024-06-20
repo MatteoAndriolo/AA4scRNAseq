@@ -12,6 +12,3 @@ library(ggplot2)
 library(here)
 library(kneedle)
 library(tidyr)
-
-nworkers <- parallel::detectCores() - 2
-plan("multicore", workers = nworkers)
