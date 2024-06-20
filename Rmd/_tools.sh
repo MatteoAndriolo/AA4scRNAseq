@@ -102,7 +102,17 @@ render_rmd() {
         params[$key]=$value
     done
 
-    Rscript -e "rmarkdown::render('${params[rmd_file]}', output_file='${params[output_html]}', output_dir='${params[outpath]}', params=list(TEST='${params[test]}', HVF='${params[hvf]}', TEST_genes='${params[test_genes]}', TEST_samples='${params[test_samples]}', CLASS.NAME='${params[classname]}', pathw='${params[pathw]}', out_path='${params[outpath]}', max_iterations='${params[max_iterations]}', num_restarts='${params[num_restarts]}'))" &
+    Rscript -e "rmarkdown::render('${params[rmd_file]}', output_file='${params[output_html]}', output_dir='${params[outpath]}', params=list(TEST='${params[test]}', HVF='${params[hvf]}', TEST_genes='${params[test_genes]}', TEST_samples='${params[test_samples]}', CLASSNAME='${params[classname]}', pathw='${params[pathw]}', out_path='${params[outpath]}', max_iterations='${params[max_iterations]}', num_restarts='${params[num_restarts]}'))" &
+}
+
+run_R() {
+    declare -A params
+    for param in "$@"; do
+        IFS="=" read -r key value <<< "$param"
+        params[$key]=$value
+    done
+
+    Rscript $1 &
 }
 
 # Function to monitor the process and log CPU and memory usage

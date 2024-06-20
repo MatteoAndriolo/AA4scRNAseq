@@ -213,7 +213,7 @@ setGeneric("obj_furthestSum", function(obj, k = 5) {
 })
 
 setMethod("obj_furthestSum", "database", function(obj, k = 5) {
-  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k)
+  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k, nworkers=parallell::detectCores()/2)
   return(irows)
 })
 
@@ -223,8 +223,8 @@ setGeneric("obj_performArchetypes", function(obj, k = NULL, HVF = FALSE, max_ite
   standardGeneric("obj_performArchetypes")
 })
 
-setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel = TRUE) {
-  message("Performing Archetypes")
+setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FALSE, max_iters = 100, num_restarts = 1, doparallel = FALSE) {
+  message("LOG: Performing Archetypes and ", obj@params$pathw)
   if (HVF) {
     obj <- obj_getMatrixHVF(obj)
   }
@@ -232,13 +232,17 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
   k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
   message("Number of archetypes is ", k)
 
-  obj@data$m <- as.matrix(obj_getSeData(obj))
-  obj@data$m <- obj@data$m[Matrix::rowSums(obj@data$m) > 0, Matrix::colSums(obj@data$m) > 0]
+  m <- as.matrix(obj_getSeData(obj))
+  m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
+  message("LOG: MATRIX DIMENSION FOR ARCHETYPES IS ", dim(m)[[1]], " ", dim(m)[[2]])
 
+#  obj@data$m <- as.matrix(obj_getSeData(obj))
+#  obj@data$m <- obj@data$m[Matrix::rowSums(obj@data$m) > 0, Matrix::colSums(obj@data$m) > 0]
+#  message("LOG: MATRIX DIMENSION FOR ARCHETYPES IS ", dim(obj@data$m)[[1]], " ", dim(obj@data$m)[[2]])
   #### Furthest Sum Initialization
-  message("LOG: Finding Furthest Sum")
-  irows <- obj_furthestSum(obj, k = k)
-  message("LOG: Furthest Sum Found")
+#  message("LOG: Finding Furthest Sum")
+#  irows <- obj_furthestSum(obj, k = k)
+#  message("LOG: Furthest Sum Found")
 
   #### Archetypes Computation
 
@@ -253,24 +257,24 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
   runArchetypes <- function(i, data, k, max_iterations) {
     message("Starting rerun ", i, "/", num_restarts)
     temp <- list()
-    tryCatch(
-      {
-        tstart <- Sys.time()
-        family <- archetypes::archetypesFamily(which = "robust")
-        temp$a <- archetypes::archetypes(data, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
-        tend <- Sys.time()
-        message(sprintf("Archetypes Computed in %s", tend - tstart))
+    #tryCatch(
+    #  {
+    tstart <- Sys.time()
+    family <- archetypes::archetypesFamily(which = "robust")
+    temp$a <- archetypes::archetypes(data, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+    tend <- Sys.time()
+    message(sprintf("Archetypes Computed in %s", tend - tstart))
 
-        temp$rss <- temp$a$rss
-        temp$time <- tend - tstart
-      },
-      error = function(e) {
-        temp$a <- NULL
-        temp$rss <- Inf
-        temp$time <- NA
-        message(sprintf("Error in archetypes: %s", e$message))
-      }
-    )
+    temp$rss <- temp$a$rss
+    temp$time <- tend - tstart
+    #  },
+    #  error = function(e) {
+    #    temp$a <- NULL
+    #    temp$rss <- Inf
+    #    temp$time <- NA
+    #    message(sprintf("Error in archetypes: %s", e$message))
+    #  }
+    #)
     return(temp)
   }
 
@@ -279,34 +283,34 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, HVF = FAL
   tstartReruns <- Sys.time()
   if (doparallel) {
     nworkers <- parallel::detectCores() - 1
-    results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = max_iterations, mc.cores = nworkers)
-
-    # Store the results in the object
+    #results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = max_iterations, mc.cores = 3)
+    results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = max_iterations, mc.cores = 3)
     obj@archetypes$restarts <- results
   } else {
     for (i in 1:num_restarts) {
-      runArchetypes(i, data = obj@data$m, k = k, max_iterations = max_iterations)
-      # message("Starting rerun ", i, "/", num_restarts)
-      # temp <- list()
+      #obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = max_iterations)
+      message("Starting rerun ", i, "/", num_restarts)
+      temp <- list()
 
-      # tryCatch(
-      #  {
-      #    tstart <- Sys.time()
-      #    family <- archetypes::archetypesFamily(which = "robust") # , initfn = make.fix.initfn(irows[1]))
-      #    temp$a <- archetypes::archetypes(obj@data$m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
-      #    tend <- Sys.time()
-      #    message(sprintf("Archetypes Computed in %s", tend - tstart))
-      #    temp$rss <- temp$a$rss
-      #    temp$time <- tend - tstart
-      #  },
-      #  error = function(e) {
-      #    temp$a <- NULL
-      #    temp$rss <- Inf
-      #    temp$time <- NA
-      #    message(sprintf("Error in archetypes: %s", e$message))
-      #  }
-      # )
-      # obj@archetypes$restarts[[i]] <- temp
+      #tryCatch(
+      # {
+         tstart <- Sys.time()
+         family <- archetypes::archetypesFamily(which = "robust") # , initfn = make.fix.initfn(irows[1]))
+         #temp$a <- archetypes::archetypes(obj@data$m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+         temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+         tend <- Sys.time()
+         message(sprintf("Archetypes Computed in %s", tend - tstart))
+         temp$rss <- temp$a$rss
+         temp$time <- tend - tstart
+      # },
+      # error = function(e) {
+      #   temp$a <- NULL
+      #   temp$rss <- Inf
+      #   temp$time <- NA
+      #   message(sprintf("Error in archetypes: %s", e$message))
+      # }
+      #)
+      obj@archetypes$restarts[[i]] <- temp
     }
   }
   tendReruns <- Sys.time()
@@ -384,7 +388,7 @@ setGeneric("obj_saveObj", function(obj) {
 })
 
 setMethod("obj_saveObj", "database", function(obj) {
-  filename <- sprintf("%s/%s/%s_%s.rds", obj@params$out_path, class(obj), class(obj), substr(obj@params$pathw, 1, 4))
+  filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
   message(sprintf("Saving object to %s", filename))
   saveRDS(obj, file = filename)
 })
@@ -463,10 +467,10 @@ setMethod(
         test_samples = test_samples
       )
     } else {
-      message("Compy from original se")
+      message("LOG: Copy from original se")
       obj@se <- obj@se.org
     }
-
+    if(debug) message("DEBUG: pathw is ", pathw)
     if (!is.null(pathw)) {
       obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
       obj <- obj_setGenes(obj, pathw)
@@ -478,7 +482,7 @@ setMethod(
     }
 
 
-    message("Completed Loading")
+    message("LOG: Completed Loading")
     return(obj)
   }
 )
@@ -519,7 +523,9 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   if (!is.null(pathw)) {
     obj@params$pathw <- pathw
     obj <- obj_setGenes(obj, pathw)
+    message("LOG: Number of genes: ", length(obj@params$genes))
     gene.flag <- gene_names %in% obj@genes
+    message("LOG: intersection pathw and seurat: ", sum(gene.flag))
     se <- se[gene.flag, ]
     gene_names <- gene_names[gene.flag]
   }
@@ -540,8 +546,8 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   }
 
 
-  # newmax=1200*1024^2
-  # options(future.globals.maxSize=newmax)
+  newmax=3000*1024^2
+  options(future.globals.maxSize=newmax)
 
   obj@se <- CreateSeuratObject(counts = se)
   message("LOG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
@@ -607,7 +613,7 @@ setMethod(
       gene.flag <- genenames %in% obj@params$genes
       message("LOG: intersection pathw and seurat: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
-      gene_names <- gene_names[gene.flag]
+     # gene_names <- gene_names[gene.flag]
     }
 
     # obj <- obj_updateParams(obj,
@@ -669,7 +675,7 @@ setMethod(
       gene.flag <- gene_names %in% obj@genes
       message("LOG: intersection pathw and seurat: ", sum(gene.flag))
       se <- se[gene.flag, ]
-      gene_names <- gene_names[gene.flag]
+      #gene_names <- gene_names[gene.flag]
     }
 
     # obj <- obj_updateParams(obj,
@@ -737,7 +743,7 @@ setMethod(
       gene.flag <- gene_names %in% obj@genes
       message("LOG: intersection pathw and seurat: ", sum(gene.flag))
       se <- se[gene.flag, ]
-      gene_names <- gene_names[gene.flag]
+      #gene_names <- gene_names[gene.flag]
     }
 
     # obj <- obj_updateParams(obj,

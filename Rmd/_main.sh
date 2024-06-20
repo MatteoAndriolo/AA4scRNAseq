@@ -8,12 +8,13 @@ else
 fi
 
 # Default parameter values
-test=TRUE
+test=FALSE
 test_genes=300
 test_samples=500
 hvf=FALSE
-RMDFILE="/app/Rmd/unique.Rmd"
-pathw="MAPK signaling pathway"
+RMDFILE="/app/Rmd/unique.R"
+RMDFILE="/app/Rmd/allPathw.R"
+pathw="NULL"
 classname="Melanoma"
 max_iterations=100
 num_restarts=10
@@ -22,7 +23,7 @@ num_restarts=10
 set_parameters "$@"
 
 # Validate classname and set outpath
-outpath=$(set_output_path $classname)
+outpath="$(set_output_path $classname)"
 if [ $? -ne 0 ]; then
     exit 1
 fi
@@ -51,7 +52,20 @@ params=(
     "num_restarts=$num_restarts"
 )
 
-render_rmd "${params[@]}"
+export TEST=$test
+export TEST_genes=$test_genes
+export TEST_samples=$test_samples
+export HVF=$hvf
+export pathw=$pathw
+export CLASSNAME=$classname
+export max_iterations=$max_iterations
+export num_restarts=$num_restarts
+export out_path=$outpath
+
+
+echo "classname is $classname"
+#render_rmd "${params[@]}"
+run_R $RMDFILE
 
 PID=$!
 echo "PID is $PID"

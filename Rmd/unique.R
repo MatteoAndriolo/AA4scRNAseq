@@ -10,7 +10,8 @@ TEST_samples <- as.numeric(Sys.getenv("TEST_samples", 500))
 max_iterations <- as.numeric(Sys.getenv("max_iterations", 100))
 num_restarts <- as.numeric(Sys.getenv("num_restarts", 10))
 out_path <- Sys.getenv("out_path")
-pathw <- Sys.getenv("pathw")
+#pathw <- Sys.getenv("pathw")
+pathw = NULL
 debug <- TRUE
 
 source("/app/Rmd/z_tools.R")
@@ -44,7 +45,7 @@ message("Visualizing Data Done")
 # plan("multicore", workers = nworkers)
 # Perform Archetypes
 message("Performing Archetypes")
-obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel = TRUE)
+obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel = FALSE)
 message("Performing Archetypes Done")
 
 # Visualize Archetypes
@@ -52,15 +53,11 @@ message("Visualizing Archetypes")
 obj <- obj_visualizeArchetypes(obj, out_path)
 message("Visualizing Archetypes Done")
 
-
-# Simplex Plot
-# simplexplot(obj@a)
-
 # Umap Archetypes Plot
 message("Umap Archetypes")
 obj <- obj_umapArchetypes(obj, out_path)
 message("Umap Archetypes Done")
 
 message("Saving Object in ", obj@params$out_path, " ", class(obj)[[1]])
-obj <- obj_saveObj(obj)
+obj_saveObj(obj)
 message("Saving Object Done")

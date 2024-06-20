@@ -1,4 +1,7 @@
 # Name: allPathw
+source("/app/Rmd/imports.R")
+source("/app/Rmd/classes.R")
+
 CLASS.NAME <- Sys.getenv("CLASSNAME")
 HVF <- as.logical(Sys.getenv("HVF", "TRUE"))
 TEST <- as.logical(Sys.getenv("TEST", "FALSE"))
@@ -13,6 +16,7 @@ pathways <- list(
   "Glycolysis / Gluconeogenesis",
   "MAPK signaling pathway"
 )
+
 pathways_lungo <- list(
   "Glycolysis / Gluconeogenesis",
   "MAPK signaling pathway",
@@ -34,18 +38,9 @@ checkEnv <- function() {
   message("max_iterations: ", max_iterations)
 }
 
-source("/app/Rmd/z_tools.R")
+#source("/app/Rmd/z_tools.R")
 checkEnv()
 
-if (CLASS.NAME == "") {
-  stop("CLASS.NAME is NULL")
-}
-
-# Load required libraries and source files
-source("/app/Rmd/imports.R")
-source("/app/Rmd/classes.R")
-
-# Load Dataset
 obj <- new(CLASS.NAME)
 debug <- TRUE
 obj <- obj_updateParams(obj,
@@ -56,25 +51,15 @@ obj <- obj_updateParams(obj,
   TEST_samples = TEST_samples,
   max_iterations = max_iterations,
   num_restarts = num_restarts,
-  # data_path = NA,
-  out_path = out_path # pathw = NULL,
+  data_path = NULL,
+  out_path = out_path
 )
-# obj@params$HVF <- HVF
-# obj@params$TEST <- TEST
-# obj@params$TEST_genes <- TEST_genes
-# obj@params$TEST_samples <- TEST_samples
-# obj@params$max_iterations <- max_iterations
-# obj@params$num_restarts <- num_restarts
-# obj@params$data_path <- NULL
-# obj@params$out_path <- out_path
-# obj@params$pathw <- NULL
-#
-# obj@curr.params <- obj@params
 
+pathw=NULL
 obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
 
-
-aa.pipeline <- function(pathw) {
+aa.pipeline <- function(obj, pathw) {
+  message("LOG: starting with PATHW ", pathw)
   obj <- obj_updateParams(obj, pathw = pathw)
   obj <- obj_loadData(obj, test = TEST, pathw = pathw, test_genes = TEST_genes, test_samples = TEST_samples)
 
@@ -85,7 +70,7 @@ aa.pipeline <- function(pathw) {
 
   # Perform Archetypes
   message("Performing Archetypes")
-  obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts)
+  obj <- obj_performArchetypes(obj, max_iters = max_iterations, num_restarts = num_restarts, doparallel = FALSE)
   message("Performing Archetypes Done")
 
   # Visualize Archetypes
@@ -111,6 +96,6 @@ aa.pipeline <- function(pathw) {
 # Parallel execution of the pipeline for each pathway
 # foreach(pathw = pathways, .packages = c("methods")) %do% {
 for (pathw in pathways) {
-  message("Processing pathway: ", pathw)
-  aa.pipeline(pathw)
+  message("LOG: Processing pathway: ", pathw)
+  aa.pipeline(obj, pathw)
 }

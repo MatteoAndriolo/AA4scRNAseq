@@ -7,15 +7,16 @@
 #SBATCH --error=./out/Melanoma/RMDslurm_error.txt
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=15
-#SBATCH --time=10:00:00
-#SBATCH --mem=150G
+#SBATCH --cpus-per-task=20
+#SBATCH --time=2:00:00
+#SBATCH --mem=100G
 
 container="containers/img/ubuntuArchetypesPandas.sif"
 container="containers/img/myrocker.sif"
+container="containers/img/myrubuntu.sif"
 
 # command="Rscript -e \"rmarkdown::render('Rmd/Melanoma.Rmd')\""
-command="/app/Rmd/_main.sh Melanoma"
+command="/app/Rmd/_main.sh -c Melanoma"
 
 singularity exec \
   --env DISABLE_AUTH=true \

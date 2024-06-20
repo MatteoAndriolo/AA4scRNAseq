@@ -7,15 +7,15 @@
 #SBATCH --error=./out/AllonKleinLab/Experiment3/RMDslurm_error.txt
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=15
-#SBATCH --time=5:00:00
-#SBATCH --mem=250G
+#SBATCH --cpus-per-task=20
+#SBATCH --time=6:00:00
+#SBATCH --mem=200G
 
 container="containers/img/ubuntuArchetypesPandas.sif"
-container="containers/img/myrocker.sif"
+container="containers/img/myrubuntu.sif"
 
 #command="Rscript -e \"rmarkdown::render('Rmd/Exp3.Rmd')\"" 
-command="/app/Rmd/_main.sh Exp3"
+command="/app/Rmd/_main.sh -c Exp3"
 
 singularity exec \
   --env DISABLE_AUTH=true \
