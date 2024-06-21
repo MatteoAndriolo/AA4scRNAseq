@@ -11,12 +11,16 @@
 #SBATCH --time=4:00:00
 #SBATCH --mem=200G
 
+#SBATCH --cpus-per-task=1
+#SBATCH --time=0:01:00
+#SBATCH --mem=1G
+
 container="containers/img/ubuntuArchetypesPandas.sif"
 container="containers/img/myrocker.sif"
 container="containers/img/myrubuntu.sif"
 
 #command="Rscript -e \"rmarkdown::render('Rmd/Exp2.Rmd')\"" 
-command="/app/Rmd/_main.sh -c Exp2"
+command="/app/Rmd/_main.sh -c Exp2 $@"
 
 singularity exec \
   --env DISABLE_AUTH=true \

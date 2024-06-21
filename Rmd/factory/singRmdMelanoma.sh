@@ -11,6 +11,10 @@
 #SBATCH --time=2:00:00
 #SBATCH --mem=100G
 
+#SBATCH --cpus-per-task=1
+#SBATCH --time=0:01:00
+#SBATCH --mem=1G
+
 container="containers/img/ubuntuArchetypesPandas.sif"
 container="containers/img/myrocker.sif"
 container="containers/img/myrubuntu.sif"

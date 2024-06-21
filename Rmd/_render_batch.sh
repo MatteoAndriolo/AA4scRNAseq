@@ -9,13 +9,15 @@ if [ ! -d "$DIRECTORY" ]; then
   exit 1
 fi
 
+PARAMS="$@"
+
 # Loop over each file in the directory
 for FILE in "$DIRECTORY"/*; 
 do
   # Check if it is a file
   if [ -f "$FILE" ]; then
     echo "Submitting $FILE"
-    sbatch "$FILE"
+    sbatch "$FILE" $PARAMS
   else
     echo "$FILE is not a file, skipping."
   fi
