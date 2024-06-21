@@ -336,6 +336,27 @@ setMethod("obj_umapArchetypes", "database", function(obj, out_path = NULL, tresh
   return(obj)
 })
 
+### obj_nameFiles -----
+setGeneric("obj_nameFiles", function(obj,...)){
+  standardGeneric("obj_nameFiles")
+}
+
+setMethod("obj_nameFiles", function(obj, name,ext){
+  if(obj@params$test){
+    t="T"
+  }else{
+    t=""
+  }
+
+  if(obj@params$hvf){
+    h="H"
+  }else{
+    h=""
+  }
+
+  return sprintf("%s/%s%s%s_%s.%s", obj@params$out_path, class(obj),t,h,name,ext )
+})
+
 
 ### obj_saveObj ----
 # Method to save object
@@ -344,7 +365,8 @@ setGeneric("obj_saveObj", function(obj) {
 })
 
 setMethod("obj_saveObj", "database", function(obj) {
-  filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
+  #filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
+  filename <- obj_nameFiles(obj, "final","rds")
   message(sprintf("Saving object to %s", filename))
   saveRDS(obj, file = filename)
 })
