@@ -5,12 +5,13 @@ classname="Melanoma"
 hvf=FALSE
 max_iterations=100
 num_restarts=10
-pathw="NULL"
+pathw=-1
 rscriptfile="/app/Rmd/unique.R"
 test=FALSE
 test_genes=300
 test_samples=500
 
+echo $@
 # Display usage
 usage() {
     echo "Usage: $0 [-t test] [-g test_genes] [-s test_samples] [-H hvf] [-f rscriptfile] [-p pathw] -c classname"
@@ -26,18 +27,67 @@ usage() {
     echo "  -h   Show this help message and exit"
 }
 
-# Parse and set parameters
+## Parse and set parameters
+#while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
+#    case "${opt}" in
+#        t) test=${OPTARG} ;;
+#        g) test_genes=${OPTARG} ;;
+#        s) test_samples=${OPTARG} ;;
+#        H) hvf=${OPTARG} ;;
+#        f) rscriptfile=${OPTARG} ;;
+#        p) pathw=${OPTARG} ;;
+#        c) classname=${OPTARG} ;;
+#        r) num_restarts=${OPTARG} ;;
+#        i) max_iterations=${OPTARG} ;;
+#        h)
+#            usage
+#            exit 0
+#            ;;
+#        *)
+#            usage
+#            exit 1
+#            ;;
+#    esac
+#done
+
 while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
     case "${opt}" in
-        t) test=${OPTARG} ;;
-        g) test_genes=${OPTARG} ;;
-        s) test_samples=${OPTARG} ;;
-        H) hvf=${OPTARG} ;;
-        f) rscriptfile=${OPTARG} ;;
-        p) pathw=${OPTARG} ;;
-        c) classname=${OPTARG} ;;
-        r) num_restarts=${OPTARG} ;;
-        i) max_iterations=${OPTARG} ;;
+        t)
+            test=${OPTARG}
+            echo "Test set to: ${test}"
+            ;;
+        g)
+            test_genes=${OPTARG}
+            echo "Test genes set to: ${test_genes}"
+            ;;
+        s)
+            test_samples=${OPTARG}
+            echo "Test samples set to: ${test_samples}"
+            ;;
+        H)
+            hvf=${OPTARG}
+            echo "HVF set to: ${hvf}"
+            ;;
+        f)
+            rscriptfile=${OPTARG}
+            echo "R script file set to: ${rscriptfile}"
+            ;;
+        p)
+            pathw="${OPTARG}"
+            echo "Pathw set to: ${pathw}"
+            ;;
+        c)
+            classname="${OPTARG}"
+            echo "Class name set to: ${classname}"
+            ;;
+        r)
+            num_restarts=${OPTARG}
+            echo "Number of restarts set to: ${num_restarts}"
+            ;;
+        i)
+            max_iterations=${OPTARG}
+            echo "Max iterations set to: ${max_iterations}"
+            ;;
         h)
             usage
             exit 0
@@ -101,7 +151,7 @@ export NUM_RESTARTS=$num_restarts
 export OUT_PATH=$outpath
 # if pathw null do ont export
 
-export PATHW=$pathw
+export PATHW="$pathw"
 export TEST=$test
 export TEST_genes=$test_genes
 export TEST_samples=$test_samples

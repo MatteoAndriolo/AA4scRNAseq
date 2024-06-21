@@ -14,20 +14,6 @@ num_restarts <- as.numeric(Sys.getenv("NUM_RESTARTS", 10))
 out_path <- Sys.getenv("OUT_PATH")
 pathw <- NULL
 
-pathways <- list(
-  "Glycolysis / Gluconeogenesis",
-  "MAPK signaling pathway"
-)
-
-pathways_lungo <- list(
-  "Glycolysis / Gluconeogenesis",
-  "MAPK signaling pathway",
-  "mTOR signaling pathway",
-  "Pathways in cancer",
-  "TGF-beta signaling pathway"
-)
-
-
 checkEnv <- function() {
   message("test: ", test)
   message("hvf: ", hvf)

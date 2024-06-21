@@ -17,7 +17,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     stop("Invalid where.cell_names")
   }
 
-  if (debug) message("DEBUG: data matrix has dimension post rem0", dim(se)[[1]], " ", dim(se)[[2]])
+  if (debug) message("DEBUG: data matrix has dimension post rem0 ", dim(se)[[1]], " ", dim(se)[[2]])
 
   if (obj@params$test) {
     if (!is.null(obj@params$pathw)) {
@@ -25,13 +25,18 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     } else {
       tgenes <- min(obj@params$test_genes, nrow(se))
     }
+
     tsamples <- min(obj@params$test_samples, ncol(se))
-
-    cell_metadata <- cell_metadata[1:tsamples, ]
-    gene_names <- gene_names[Matrix::rowSums(se) > 0]
-
     se <- se[1:tgenes, 1:tsamples]
-    se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+    gene_names <- gene_names[1:tgenes]
+    cell_metadata <- cell_metadata[1:tsamples, ]
+
+    row_filter <- Matrix::rowSums(se) > 0
+    col_filter <- Matrix::colSums(se) > 0
+
+    se <- se[row_filter, col_filter]
+    gene_names <- gene_names[row_filter]
+    cell_metadata <- cell_metadata[col_filter, ]
   }
 
   obj@se <- CreateSeuratObject(counts = se)
@@ -51,7 +56,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     message("LOG: HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
 
-  #if (!is.null(pathw)) {
+  # if (!is.null(pathw)) {
   #  obj@params$pathw <- pathw
   #  obj <- obj_setGenes(obj, pathw)
   #  message("LOG: Number of genes: ", length(obj@params$genes))
@@ -59,7 +64,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   #  message("LOG: intersection pathw and seurat: ", sum(gene.flag))
   #  se <- se[gene.flag, ]
   #  gene_names <- gene_names[gene.flag]
-  #}
+  # }
 
   obj@se.org <- obj@se
   return(obj)
@@ -98,7 +103,7 @@ setMethod(
     }
 
     if (!is.null(obj@params$pathw)) {
-      #obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
+      # obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
       obj <- obj_setGenes(obj)
       message("LOG: Number of genes: ", length(obj@params$genes))
       genenames <- rownames(obj@se)
@@ -177,9 +182,9 @@ setMethod(
 
 ### obj_getSeData ----
 setMethod("obj_getSeData", "Exp2", function(obj) {
-  se <- obj@se
-  return(se@assays$RNA@layers$counts)
+  return(obj@se@assays$RNA@layers$counts)
 })
+
 
 # . #############################################################################
 # Exp3 ----
@@ -225,8 +230,8 @@ setMethod(
     }
 
     obj <- obj_updateParams(obj,
-     updateCurrent = TRUE,
-     data_path = data_path
+      updateCurrent = TRUE,
+      data_path = data_path
     )
 
     message("Completed Loading")
@@ -236,6 +241,5 @@ setMethod(
 
 ### obj_getSeData ----
 setMethod("obj_getSeData", "Exp3", function(obj) {
-  se <- obj@se
-  return(se@assays$RNA@layers$counts)
+  return(obj@se@assays$RNA@layers$counts)
 })
