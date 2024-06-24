@@ -8,6 +8,7 @@ setClass("Exp",
 ### obj_createSeuratObject ----
 # function(object, data, gene_names, cell_metadata, where.cell_names, pathw, test = FALSE, HVF = FALSE) {
 setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_metadata, where.cell_names) {
+  if (debug) message("DEBUG: classExp | Entering in function")
   if (length(where.cell_names) == 2) {
     new.names <- paste0(cell_metadata[[where.cell_names[1]]], "_", cell_metadata[[where.cell_names[2]]])
     cell_metadata$new.names <- new.names
@@ -143,7 +144,6 @@ setMethod(
   "obj_loadData", "Exp2",
   function(obj,
            data_path = "/app/data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx",
-           test = FALSE,
            ...) {
     # isnew <- obj_areParamsEqual(obj, update = TRUE)
     if (is.null(obj@se.org)) { #| isnew) {

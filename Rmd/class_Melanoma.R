@@ -13,7 +13,7 @@ setMethod(
            ...) {
     # obj <- obj_setParams(obj, test = test, HVF = HVF, test_genes = test_genes, test_samples = test_samples, pathw = pathw)
     # isnew <- obj_areParamsEqual(obj, update = TRUE)
-
+    if(debug) message("DEBUG:INITLOADMELANOMA pathw is ", obj@params$pathw)
     if (is.null(obj@se.org)) { #  isnew) {
       message("LOG: Full loading")
       se <- read.table(data_path, header = TRUE)

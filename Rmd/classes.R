@@ -41,10 +41,21 @@ setGeneric("obj_updateParams", function(obj, updateCurrent = FALSE, ...) {
 })
 
 setMethod("obj_updateParams", "database", function(obj, updateCurrent = FALSE, ...) {
+  message("LOG: obj_updateParams | entered")
   # for each key=value in ... do obj@params$key <- value
   list.params <- list(...)
+  list.params
   for (i in names(list.params)) {
-    if (debug) message("DEBUG: Updating ", i, " with ", list.params[[i]])
+    message("DEBUG: obj_updateParams | Updating ", i, " with ", list.params[[i]])
+    if (i=="pathw" & is.numeric(list.params[[i]])) {
+      if (list.params[[i]] > 0) {
+        if(debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], ">0")
+        obj@params$pathw <- pathways[[obj@params$pathw]]
+      } else {
+        if(debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], "<=0")
+        obj@params$pathw <- NULL
+      }
+    }
     obj@params[[i]] <- list.params[[i]]
   }
 
@@ -82,28 +93,28 @@ setGeneric("obj_setGenes", function(obj, pathGenes = "/app/data/list_genes_pathw
 })
 
 setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_genes_pathway.RData") {
-  if (debug) message("DEBUG: path genes is :", pathGenes)
+  if (debug) message("DEBUG: obj_setGenes | path genes is :", pathGenes)
   load(pathGenes)
   list_genes_human_pathway <- list_genes_human_pathway
   list_genes_mouse_pathway <- list_genes_mouse_pathway
 
-  message("LOG: Setting Genes ", obj@params$pathw)
+  message("LOG: obj_setGenes | Setting Genes ", obj@params$pathw)
 
   if (inherits(obj, "Melanoma")) {
     if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
       genes <- list_genes_human_pathway[[obj@params$pathw]]
-      if (debug) message("DEBUG: Number genes in ", obj@params$pathw, " is ", length(genes))
+      if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
     } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
       genes <- lapply(obj@params$pathw, function(p) list_genes_human_pathway[[p]])
-      if (debug) message("DEBUG: Number genes in ", obj@params$pathw, " is ", sapply(genes, length))
+      if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", sapply(genes, length))
     }
   } else {
     if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
       genes <- list_genes_mouse_pathway[[obj@params$pathw]]
-      if (debug) message("DEBUG: Number genes in ", obj@params$pathw, " is ", length(genes))
+      if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
     } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
       genes <- lapply(obj@params$pathw, function(p) list_genes_mouse_pathway[[p]])
-      if (debug) message("DEBUG: Number genes in ", pathw, " is ", sapply(genes, length))
+      if (debug) message("DEBUG: obj_setGenes | Number genes in ", pathw, " is ", sapply(genes, length))
     }
   }
 
@@ -114,22 +125,8 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
 
   obj <- obj_updateParams(obj,
     updateCurrent = TRUE,
-    genes = genes,
+    genes = genes
   )
-  return(obj)
-})
-
-### obj_filterGenesFromOrg ----
-setGeneric("obj_filterGenesFromOrg", function(obj) {
-  standardGeneric("obj_filterGenesFromOrg")
-})
-
-setMethod("obj_filterGenesFromOrg", "database", function(obj) {
-  message("Pathway")
-  obj@se <- obj@se.org
-  obj <- obj_setGenes(obj)
-  message("LOG: Number of genes: ", length(obj@params$genes))
-  obj@se <- obj@se[obj@params$genes, ]
   return(obj)
 })
 
@@ -169,10 +166,10 @@ setGeneric("obj_furthestSum", function(obj, k = 5) {
 })
 
 # no obj@data
-# setMethod("obj_furthestSum", "database", function(obj, k = 5) {
-#  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k, nworkers = parallell::detectCores() / 2)
-#  return(irows)
-# })
+setMethod("obj_furthestSum", "database", function(obj, k = 5) {
+  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k, nworkers = parallell::detectCores() / 2)
+  return(irows)
+})
 
 ### obj_performArchetypes ----
 # Method to perform archetypal analysis
@@ -181,14 +178,14 @@ setGeneric("obj_performArchetypes", function(obj, k = NULL, doparallel = TRUE) {
 })
 
 setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparallel = FALSE) {
-  message("LOG: Performing Archetypes and ", obj@params$pathw)
+  message("LOG: obj_performArchetyps | Performing Archetypes and ", obj@params$pathw)
 
   k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
   message("Number of archetypes is ", k)
 
   m <- as.matrix(obj_getSeData(obj))
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-  message("LOG: MATRIX DIMENSION FOR ARCHETYPES IS ", dim(m)[[1]], " ", dim(m)[[2]])
+  message("LOG: obj_performArchetyps | MATRIX DIMENSION FOR ARCHETYPES IS ", dim(m)[[1]], " ", dim(m)[[2]])
 
   #  obj@data$m <- as.matrix(obj_getSeData(obj))
   #  obj@data$m <- obj@data$m[Matrix::rowSums(obj@data$m) > 0, Matrix::colSums(obj@data$m) > 0]
@@ -200,7 +197,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
 
   #### Archetypes Computation
   obj@archetypes$restarts <- list()
-  obj_updateParams(obj,
+  obj <- obj_updateParams(obj,
     updateCurrent = TRUE,
     k = k
   )
@@ -209,7 +206,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
   num_restarts <- obj@params$num_restarts
 
   runArchetypes <- function(i, data, k, max_iterations) {
-    message("Starting rerun ", i, "/", num_restarts)
+    message("LOG: obj_performArchetypes | Starting rerun ", i, "/", num_restarts)
     temp <- list()
     # tryCatch(
     #  {
@@ -232,8 +229,6 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
     return(temp)
   }
 
-
-
   tstartReruns <- Sys.time()
   if (doparallel) {
     nworkers <- parallel::detectCores() - 1
@@ -243,7 +238,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
   } else {
     for (i in 1:num_restarts) {
       # obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = max_iterations)
-      message("Starting rerun ", i, "/", num_restarts)
+      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", num_restarts)
       temp <- list()
 
       # tryCatch(
@@ -269,7 +264,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
   }
   tendReruns <- Sys.time()
 
-  message("Reruns completed in ", tendReruns - tstartReruns, " seconds")
+  message("LOG: obj_performArchetypes | Reruns completed in ", tendReruns - tstartReruns, " seconds")
   obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   obj@archetypes$restarts <- list()
   obj@archetypes$model <- obj@archetypes$bestrun$a
@@ -326,6 +321,7 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
     plot_list[[i]] <- umap_plot
   }
 
+
   combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
   # print(combined_plot)
   obj@plots$umap_archetypes <- combined_plot
@@ -334,6 +330,32 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
   # obj@params$umap_threshold <- treshold
   return(obj)
 })
+
+### obj_assignAAClusters ----
+setGeneric("obj_assignAAClusters", function(obj) {
+  standardGeneric("obj_assignAAClusters")
+})
+
+setMethod("obj_assignAAClusters", "database", function(obj) {
+  se <- obj@se
+  a <- obj@archetypes$model
+  k <- a$k
+
+  weights <- coef(a)
+  weights <- as.data.frame(weights)
+
+  # Assign each cell the number of the archetype with the highest weight
+  aa_clusters <- apply(weights, 2, which.max)
+
+  # Add aa_clusters to the metadata of SingleCellExperiment object
+  se@meta.data$aa_clusters <- aa_clusters
+
+  # Update the object with the new metadata
+  obj@se <- se
+
+  return(obj)
+})
+
 
 ### obj_nameFiles -----
 setGeneric("obj_nameFiles", function(obj, name, ext) {
@@ -356,19 +378,34 @@ setMethod("obj_nameFiles", "database", function(obj, name, ext) {
   return(sprintf("%s/%s%s%s_%s.%s", obj@params$out_path, class(obj), t, h, name, ext))
 })
 
+### obj_seuratCluster ----
+setGeneric("obj_seuratCluster", function(obj) {
+  standardGeneric("obj_seuratCluster")
+})
+
+setMethod("obj_seuratCluster", "database", function(obj) {
+  obj@se <- Seurat::FindNeighbors(obj@se, dims = 1:10)
+  obj@se <- Seurat::FindClusters(obj@se, method = "igraph", resolution = 1, n.start = 10, n.iter = 10, verbose = TRUE)
+
+  obj@plots$clusterplot <- Seurat::DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
+  return(obj)
+})
+
 
 ### obj_saveObj ----
 # Method to save object
-setGeneric("obj_saveObj", function(obj) {
+setGeneric("obj_saveObj", function(obj, keep.org = FALSE) {
   standardGeneric("obj_saveObj")
 })
 
-setMethod("obj_saveObj", "database", function(obj) {
+setMethod("obj_saveObj", "database", function(obj, keep.org = FALSE) {
   # filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
   filename <- obj_nameFiles(obj, "final", "rds")
-  message(sprintf("Saving object to %s", filename))
+  message(sprintf("LOG: obj_saveObj | Saving object to %s", filename))
   t <- obj
-  t@se.org <- NULL
+  if (!keep.org) {
+    t@se.org <- NULL
+  }
   t@curr.params <- list()
   saveRDS(obj, file = filename)
 })
