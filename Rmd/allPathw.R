@@ -18,12 +18,10 @@ params$test_genes <- as.numeric(Sys.getenv("TEST_GENES", "300"))
 params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 
 # TODO remove
-params$test <- TRUE
-params$classname <- "Melanoma"
-params$test_samples = 2000
-
-# source("/app/Rmd/z_tools.R")
-# checkEnv()
+# params$test <- TRUE
+params$pathw <- -1
+# params$classname <- "Melanoma"
+# params$test_samples <- 2000
 
 if (params$pathw > 0) {
   params$pathw <- pathways[[params$pathw]]
@@ -43,12 +41,12 @@ message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
 message("LOG: main | Loading Data Done")
 
+params$pathw <- pathways[[1]]
 # aa.pipeline <- function(obj, pathw) {
 # for (pathw in pathways) {
-params$pathw <- pathways[[1]]
-message("LOG: Processing pathway: ", params$pathw)
 message("LOG: starting with PATHW ", params$pathw)
 obj <- obj_updateParams(obj, pathw = params$pathw)
+
 message("LOG: aa.pipeline | Visualizing Data")
 obj <- obj_loadData(obj)
 message("LOG: aa.pipeline | Visualizing Data Done")

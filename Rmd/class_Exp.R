@@ -107,8 +107,8 @@ setMethod(
       # obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
       obj <- obj_setGenes(obj)
       message("LOG: Number of genes: ", length(obj@params$genes))
-      genenames <- rownames(obj@se)
-      gene.flag <- genenames %in% obj@params$genes
+      gene_names <- rownames(obj@se)
+      gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and seurat: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]
@@ -165,6 +165,7 @@ setMethod(
     if (!is.null(obj@params$pathw)) {
       obj <- obj_setGenes(obj)
       message("LOG: Number of genes: ", length(obj@params$genes))
+      gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@genes
       message("LOG: intersection pathw and seurat: ", sum(gene.flag))
       se <- se[gene.flag, ]
@@ -223,7 +224,8 @@ setMethod(
     if (!is.null(obj@params$pathw)) {
       obj <- obj_setGenes(obj)
       message("LOG: Number of genes: ", length(obj@params$genes))
-      gene.flag <- gene_names %in% obj@genes
+      gene_names <- rownames(obj@se)
+      gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and seurat: ", sum(gene.flag))
       se <- se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]

@@ -337,22 +337,19 @@ setGeneric("obj_assignAAClusters", function(obj) {
 })
 
 setMethod("obj_assignAAClusters", "database", function(obj) {
-  se <- obj@se
-  a <- obj@archetypes$model
-  k <- a$k
-
-  weights <- coef(a)
+  # se <- obj@se
+  # a <- obj@archetypes$model
+  # k <- a$k
+  message("LOG: obj_assingAACluster | creating aa_clusters metadata")
+  #weights <- coef(obj@archetypes$model)
+  weights <- obj@archetypes$model$archetypes
+  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]]," ", dim(weights)[[2]])
   weights <- as.data.frame(weights)
 
-  # Assign each cell the number of the archetype with the highest weight
-  aa_clusters <- apply(weights, 2, which.max)
 
-  # Add aa_clusters to the metadata of SingleCellExperiment object
-  se@meta.data$aa_clusters <- aa_clusters
-
-  # Update the object with the new metadata
-  obj@se <- se
-
+  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]]," ", dim(obj@se@meta.data)[[2]])
+  obj@se@meta.data$aa_clusters <- apply(weights, 2, which.max)
+  message("LOG: obj_assingAACluster | finished aa_clusters metadata")
   return(obj)
 })
 

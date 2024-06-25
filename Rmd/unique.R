@@ -18,10 +18,10 @@ params$test_genes <- as.numeric(Sys.getenv("TEST_GENES", "300"))
 params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 
 # TODO remove
-params$test <- TRUE
-params$pathw <- -1
-params$classname <- "Melanoma"
-
+# params$test <- TRUE
+# params$pathw <- -1
+# params$classname <- "Melanoma"
+# params$test_samples <- 2000
 
 if (params$pathw > 0) {
   params$pathw <- pathways[[params$pathw]]
@@ -32,15 +32,23 @@ if (params$pathw > 0) {
 for (k in names(params)) {
   message("LOG: main | param ", k, ": ", params[[k]])
 }
+debug <- TRUE
 
 obj <- new(params$classname)
-
-debug <- TRUE
 obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 
 message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
 message("LOG: main | Loading Data Done")
+
+params$pathw <- pathways[[1]]
+
+message("LOG: starting with PATHW ", params$pathw)
+obj <- obj_updateParams(obj, pathw = params$pathw)
+
+message("LOG: main | Visualizing Data")
+obj <- obj_loadData(obj)
+message("LOG: main | Visualizing Data Done")
 
 # Visualize Dataset
 message("LOG: main | Visualizing Data")
@@ -70,9 +78,6 @@ message("LOG: main | assign AA clusters")
 obj <- obj_assignAAClusters(obj)
 message("LOG: main | assign AA clusters Done")
 
-message("LOG: main | Saving Object")
-obj_saveObj(obj)
-message("LOG: main | Saving Object Done")
 
 message("LOG: main | LOG completed")
 
@@ -80,12 +85,16 @@ message("LOG: main | LOG completed")
 message("LOG: main | Seurat Clustering")
 obj <- obj_seuratCluster(obj)
 message("LOG: main | Seurat Clustering Done")
-obj@se@meta.data$seurat_clusters
-DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
-DimPlot(obj@se, reduction = "umap", group.by = "tumor")
-DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
-DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
+#obj@se@meta.data$seurat_clusters
+obj@plots$umap_orig.ident = DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
+obj@plots$umap_tumor DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+obj@plots$umap_seucl DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
+obj@plots$umap_aacl DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
 
 # Compare aa_clusters and seurat_clasters with Ident()
 table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
 table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
+
+message("LOG: main | Saving Object")
+obj_saveObj(obj)
+message("LOG: main | Saving Object Done")
