@@ -3,8 +3,8 @@ source("/app/Rmd/imports.R")
 source("/app/Rmd/classes.R")
 params <- list()
 params$debug <- TRUE
-# params$nworkers <- parallel::detectCores() - 2
-# plan("multicore", workers = nworkers)
+params$nworkers <- parallel::detectCores() - 2
+plan("multicore", workers = params$nworkers)
 
 # params$pathw <- Sys.getenv("pathw")
 params$classname <- Sys.getenv("CLASSNAME")

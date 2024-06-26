@@ -63,11 +63,13 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   obj@se <- ScaleData(obj@se, layer = "counts")
   obj@se <- FindVariableFeatures(obj@se)
-  obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-  obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+  #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
+  #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
   if (obj@params$hvf) {
+    if(debug) message("DEBUG: obj_createSeuratObject | number of genes with rank ", sum(which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0)))
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+
     obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
     message("LOG: HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")

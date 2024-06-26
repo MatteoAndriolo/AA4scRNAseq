@@ -10,7 +10,8 @@ setClass("database",
     archetypes = "list", # Group archetype analysis related stuff here
     params = "list", # Execution parameters
     curr.params = "list", # Current execution parameters
-    compare = "list"
+    compare = "list",
+    other = "list"
   )
 )
 
@@ -180,7 +181,7 @@ setGeneric("obj_performArchetypes", function(obj, k = NULL, doparallel = TRUE) {
 
 setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparallel = FALSE) {
   message("LOG: obj_performArchetyps | Performing Archetypes and ", obj@params$pathw)
-  if(k=NULL){
+  if(is.null(k)){
     k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
     message("LOG: obj_performArchetypes | Number of archetypes is ", k)
   }
@@ -235,7 +236,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
   if (doparallel) {
     nworkers <- parallel::detectCores() - 1
     # results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = max_iterations, mc.cores = 3)
-    results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = max_iterations, mc.cores = 3)
+    results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = max_iterations, mc.cores = nworkers)
     obj@archetypes$restarts <- results
   } else {
     for (i in 1:num_restarts) {
@@ -250,7 +251,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
       # temp$a <- archetypes::archetypes(obj@data$m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
       temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
       tend <- Sys.time()
-      message(sprintf("Archetypes Computed in %s", tend - tstart))
+      message(sprintf("Archetypes Computed in %s", difftime(tend, tstart,units="secs")))
       temp$rss <- temp$a$rss
       temp$time <- tend - tstart
       # },
@@ -266,7 +267,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
   }
   tendReruns <- Sys.time()
 
-  message("LOG: obj_performArchetypes | Reruns completed in ", tendReruns - tstartReruns, " seconds")
+  message("OUTPUT: obj_performArchetypes | Reruns completed in ", difftime(tendReruns, tstartReruns, units="secs"), " seconds")
   obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   # obj@archetypes$restarts <- list()
   obj@archetypes$model <- obj@archetypes$bestrun$a

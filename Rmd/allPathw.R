@@ -3,8 +3,8 @@ source("/app/Rmd/imports.R")
 source("/app/Rmd/classes.R")
 params <- list()
 params$debug <- TRUE
-# params$nworkers <- parallel::detectCores() - 2
-# plan("multicore", workers = nworkers)
+params$nworkers <- parallel::detectCores() - 2
+plan("multicore", workers = params$nworkers)
 
 # params$pathw <- Sys.getenv("pathw")
 params$classname <- Sys.getenv("CLASSNAME")
@@ -43,8 +43,8 @@ message("LOG: main | Loading Data Done")
 
 # aa.pipeline <- function(obj, pathw) {
 for (pathw in pathways) {
+  obj <- obj_updateParams(obj, pathw = pathw)
   message("LOG: starting with PATHW ", params$pathw)
-  obj <- obj_updateParams(obj, pathw = params$pathw)
 
   message("LOG: aa.pipeline | Visualizing Data")
   obj <- obj_loadData(obj)
