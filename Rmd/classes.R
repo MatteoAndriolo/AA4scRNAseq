@@ -180,9 +180,10 @@ setGeneric("obj_performArchetypes", function(obj, k = NULL, doparallel = TRUE) {
 
 setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparallel = FALSE) {
   message("LOG: obj_performArchetyps | Performing Archetypes and ", obj@params$pathw)
-
-  k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
-  message("Number of archetypes is ", k)
+  if(k=NULL){
+    k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
+    message("LOG: obj_performArchetypes | Number of archetypes is ", k)
+  }
 
   m <- as.matrix(obj_getSeData(obj))
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
@@ -267,7 +268,7 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
 
   message("LOG: obj_performArchetypes | Reruns completed in ", tendReruns - tstartReruns, " seconds")
   obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
-  obj@archetypes$restarts <- list()
+  # obj@archetypes$restarts <- list()
   obj@archetypes$model <- obj@archetypes$bestrun$a
 
   return(obj)

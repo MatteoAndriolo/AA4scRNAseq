@@ -1,0 +1,51 @@
+# Name: aaonly 
+source("/app/Rmd/imports.R")
+source("/app/Rmd/classes.R")
+params <- list()
+params$debug <- TRUE
+# params$nworkers <- parallel::detectCores() - 2
+# plan("multicore", workers = nworkers)
+
+# params$pathw <- Sys.getenv("pathw")
+params$classname <- Sys.getenv("CLASSNAME")
+params$hvf <- as.logical(Sys.getenv("HVF", "FALSE"))
+params$max_iterations <- as.numeric(Sys.getenv("MAX_ITERATIONS", "100"))
+params$num_restarts <- as.numeric(Sys.getenv("NUM_RESTARTS", "10"))
+params$out_path <- Sys.getenv("OUT_PATH")
+params$pathw <- as.numeric(Sys.getenv("PATHW", unset = "-1"))
+params$test <- as.logical(Sys.getenv("TEST", "FALSE"))
+params$test_genes <- as.numeric(Sys.getenv("TEST_GENES", "300"))
+params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
+
+# TODO remove
+# params$test <- TRUE
+# params$pathw <- -1
+# params$classname <- "Melanoma"
+# params$test_samples <- 2000
+
+if (params$pathw > 0) {
+  params$pathw <- pathways[[params$pathw]]
+} else {
+  params$pathw <- NULL
+}
+
+for (k in names(params)) {
+  message("LOG: main | param ", k, ": ", params[[k]])
+}
+debug <- TRUE
+
+obj <- new(params$classname)
+obj <- do.call(obj_updateParams, c(list(obj = obj), params))
+
+message("LOG: main | Loading Data")
+obj <- obj_updateParams(obj, pathw=NULL)
+obj <- obj_loadData(obj)
+message("LOG: main | Loading Data Done")
+
+message("LOG: main | Performing Archetypes")
+for(k in 4:14){
+    obj <- obj_performArchetypes(obj, doparallel = FALSE)
+    message("OUT: performArchetypes | ", obj@arcetypes$bestrun$time)
+}
+message("LOG: main | Performing Archetypes Done")
+

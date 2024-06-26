@@ -77,13 +77,11 @@ message("LOG: main | assign AA clusters")
 obj <- obj_assignAAClusters(obj)
 message("LOG: main | assign AA clusters Done")
 
-
-message("LOG: main | LOG completed")
-
 # Seurat Clusterizatoin
 message("LOG: main | Seurat Clustering")
 obj <- obj_seuratCluster(obj)
 message("LOG: main | Seurat Clustering Done")
+
 obj@se@meta.data$seurat_clusters
 obj@plots$umap_orig.ident <- DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
 obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
