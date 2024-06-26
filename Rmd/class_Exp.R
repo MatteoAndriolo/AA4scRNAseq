@@ -50,34 +50,42 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   # CREATE OBJECT
   obj@se <- CreateSeuratObject(counts = se) # , meta.data = cell_metadata)
-  if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+  if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
+  if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
-  dimnames(obj@se) <- list(gene_names, cell_metadata$new.names)
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
-  obj@se@meta.data <- cell_metadata
+  obj@se <- AddMetaData(obj@se, metadata=cell_metadata)
 
   # TEST
   if (obj@params$test) {
     if (!is.null(obj@params$pathw)) {
-      tgenes <- nrow(se)
+      tgenes <- nrow(obj@se)
     } else {
-      tgenes <- min(obj@params$test_genes, nrow(se))
+      tgenes <- min(obj@params$test_genes, nrow(obj@se))
     }
 
-    tsamples <- min(obj@params$test_samples, ncol(se))
+    tsamples <- min(obj@params$test_samples, ncol(obj@se))
 
     obj@se <- obj@se[1:tgenes, 1:tsamples]
     # row_filter <- Matrix::rowSums(obj@se) > 0
     # col_filter <- Matrix::colSums(obj@se) > 0
     # obj@se <- obj@se[row_filter, col_filter]
-    # obj@se=obj@se[Matrix::rowSums(obj@se)>0, Matrix::colSums(obj@se)>0]
-    if (debug) message("DEBUG: Seurat after test has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+    obj@se=obj@se[Matrix::rowSums(obj@se)>0, Matrix::colSums(obj@se)>0]
+    if (debug) message("DEBUG: Seurat after test has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
+  # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+  # obj@se <- FindVariableFeatures(obj@se)
+  # obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+  # obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+
   obj@se <- ScaleData(obj@se, layer = "counts")
   obj@se <- FindVariableFeatures(obj@se)
   obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+
+  #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
+  #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
   # dimnames(obj@se) <- list(gene_names, new.names)
   # obj@se@assays$RNA@layers$counts@Dimnames <- list(gene_names, cell_metadata$new.names)
@@ -120,7 +128,10 @@ setMethod(
     if (FALSE) {
       data_path <- "/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx"
     }
-    if (is.null(obj@se.org)) {
+    if (!is.null(obj@se.org)) {
+      message("LOG: obj_loadData | Copy from original se")
+      obj@se <- obj@se.org
+    } else{
       message("LOG: Full loading")
       cell_metadata <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt", header = TRUE, sep = "\t")
       gene_names <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
@@ -130,9 +141,6 @@ setMethod(
       obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"), obj@params$pathw, obj@params$test, obj@params$hvf, obj@params$test_genes, obj@params$test_samples)
       obj@se.org <- obj@se
       message("LOG: Seurat object created")
-    } else {
-      message("Compy from original se")
-      obj@se <- obj@se.org
     }
 
     if (!is.null(obj@params$pathw)) {
@@ -159,8 +167,7 @@ setMethod(
 
 ### obj_getSeData ----
 setMethod("obj_getSeData", "Exp1", function(obj) {
-  se <- obj@se
-  return(se@assays$RNA@layers$counts)
+  return(obj@se@assays$RNA@layers$counts)
 })
 
 # . #############################################################################
@@ -198,9 +205,9 @@ setMethod(
       obj <- obj_setGenes(obj)
       message("LOG: Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
-      gene.flag <- gene_names %in% obj@genes
+      gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and genenames: ", sum(gene.flag))
-      se <- se[gene.flag, ]
+      obj@se <- obj@se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]
     }
 
@@ -259,7 +266,7 @@ setMethod(
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and genenames: ", sum(gene.flag))
-      se <- se[gene.flag, ]
+      obj@se <- obj@se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]
     }
 

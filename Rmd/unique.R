@@ -38,17 +38,16 @@ obj <- new(params$classname)
 obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 
 message("LOG: main | Loading Data")
+obj <- obj_updateParams(obj, pathw=NULL)
 obj <- obj_loadData(obj)
 message("LOG: main | Loading Data Done")
 
-params$pathw <- pathways[[1]]
-
-message("LOG: starting with PATHW ", params$pathw)
-obj <- obj_updateParams(obj, pathw = params$pathw)
-
-message("LOG: main | Visualizing Data")
-obj <- obj_loadData(obj)
-message("LOG: main | Visualizing Data Done")
+if(!is.null(params$pathw)){
+  message("LOG: main | starting with PATHW ", params$pathw)
+  obj <- obj_updateParams(obj, pathw = params$pathw)
+  message("LOG: main | reloading data with pathw")
+  obj <- obj_loadData(obj)
+}
 
 # Visualize Dataset
 message("LOG: main | Visualizing Data")
@@ -97,5 +96,5 @@ obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$
 obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
 
 message("LOG: main | Saving Object")
-obj_saveObj(obj)
+obj_saveObj(obj, name="unique")
 message("LOG: main | Saving Object Done")

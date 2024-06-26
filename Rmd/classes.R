@@ -314,7 +314,8 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
   if (debug) message("DEBUG: obj_umapArchetypes | umap_data dimension is ", dim(umap_data)[[1]], " ", dim(umap_data)[[2]])
 
   plot_list <- list()
-  for (i in 1:obj@a$k) {
+  
+  for (i in 1:obj@params$k) {
     umap_data$weight <- t(weights[i, ])
     plot_title <- sprintf("UMAP Archetype %d", i)
     umap_plot <- ggplot(umap_data, aes(x = UMAP1, y = UMAP2, color = weight)) +
@@ -401,8 +402,8 @@ setGeneric("obj_saveObj", function(obj, namefile = "final", keep.org = FALSE) {
   standardGeneric("obj_saveObj")
 })
 
-setMethod("obj_saveObj", "database", function(obj, namefile = "final", keep.org = FALSE) {
-  # filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
+setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FALSE) {
+  #filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
   filename <- obj_nameFiles(obj, namefile, "rds")
   message(sprintf("LOG: obj_saveObj | Saving object to %s", filename))
   t <- obj
@@ -410,7 +411,7 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "final", keep.org 
     t@se.org <- NULL
   }
   t@curr.params <- list()
-  saveRDS(obj, file = filename)
+  saveRDS(t, file = filename)
 })
 
 source("/app/Rmd/class_Melanoma.R")
