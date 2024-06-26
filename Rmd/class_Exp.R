@@ -22,27 +22,6 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   if (debug) message("DEBUG: data matrix has dimension post rem0 ", dim(se)[[1]], " ", dim(se)[[2]])
 
-  # IF TEST reduce dimension
-  # if (obj@params$test) {
-  #   if (!is.null(obj@params$pathw)) {
-  #     tgenes <- nrow(se)
-  #   } else {
-  #     tgenes <- min(obj@params$test_genes, nrow(se))
-  #   }
-
-  #   tsamples <- min(obj@params$test_samples, ncol(se))
-  #   # se <- se[1:tgenes, 1:tsamples]
-  #   # gene_names <- gene_names[1:tgenes]
-  #   # cell_metadata <- cell_metadata[1:tsamples, ]
-
-  #   # row_filter <- Matrix::rowSums(se) > 0
-  #   # col_filter <- Matrix::colSums(se) > 0
-
-  #   # se <- se[row_filter, col_filter]
-  #   # gene_names <- gene_names[row_filter]
-  #   # cell_metadata <- cell_metadata[col_filter, ]
-  # }
-
   # REMOVE duplicates
   se <- se[!duplicated(gene_names), !duplicated(cell_metadata$new.names)]
   gene_names <- gene_names[!duplicated(gene_names)]
@@ -56,6 +35,9 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
   obj@se <- AddMetaData(obj@se, metadata=cell_metadata)
+
+  # SAVE obj@se to obj@se.org
+  obj@se.org <- obj@se
 
   # TEST
   if (obj@params$test) {
@@ -84,17 +66,14 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
-  #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-  #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
-
-  # dimnames(obj@se) <- list(gene_names, new.names)
-  # obj@se@assays$RNA@layers$counts@Dimnames <- list(gene_names, cell_metadata$new.names)
-  # obj@se@meta.data <- cell_metadata
-
   if (obj@params$hvf) {
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
     obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
     message("LOG: HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
+     obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+     obj@se <- FindVariableFeatures(obj@se)
+     obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+     obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
   }
 
   # if (!is.null(pathw)) {
@@ -107,7 +86,6 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   #  gene_names <- gene_names[gene.flag]
   # }
 
-  obj@se.org <- obj@se
   return(obj)
 })
 
@@ -135,31 +113,30 @@ setMethod(
       message("LOG: Full loading")
       cell_metadata <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt", header = TRUE, sep = "\t")
       gene_names <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
+      
       se <- Matrix::readMM(data_path)
       se <- t(se)
 
-      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"), obj@params$pathw, obj@params$test, obj@params$hvf, obj@params$test_genes, obj@params$test_samples)
-      obj@se.org <- obj@se
+      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"))
+
       message("LOG: Seurat object created")
+      obj@se.org <- obj@se
     }
 
     if (!is.null(obj@params$pathw)) {
       # obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
       obj <- obj_setGenes(obj)
+      gene.flag <- rownames(obj@se) %in% obj@params$genes
       message("LOG: Number of genes: ", length(obj@params$genes))
-      gene_names <- rownames(obj@se)
-      gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
-      # gene_names <- gene_names[gene.flag]
+
+      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+      obj@se <- FindVariableFeatures(obj@se)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
     }
 
-    # obj <- obj_updateParams(obj,
-    #   updateCurrent = TRUE,
-    #   data_path = data_path,
-    #   TEST = test,
-    #   HVF = HVF
-    # )
     message("Completed Loading")
     return(obj)
   }
@@ -185,7 +162,10 @@ setMethod(
            data_path = "/app/data/AllonKleinLab/Experiment2/stateFate_inVivo_normed_counts.mtx",
            ...) {
     # isnew <- obj_areParamsEqual(obj, update = TRUE)
-    if (is.null(obj@se.org)) { #| isnew) {
+    if (!is.null(obj@se.org)) { #| isnew) {
+      message("LOG: obj_loadData | Copy from original se")
+      obj@se <- obj@se.org
+    } else {
       message("LOG: Full loading")
       gene_names <- read.table("/app/data/AllonKleinLab/Experiment2/stateFate_inVivo_gene_names.txt", sep = "\t")
       cell_metadata <- read.table("/app/data/AllonKleinLab/Experiment2/stateFate_inVivo_metadata.txt", header = TRUE, sep = "\t")
@@ -193,28 +173,25 @@ setMethod(
       se <- Matrix::readMM(data_path)
       se <- t(se)
 
-      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"), pathw)
-      message("LOG: Seurat object created")
+      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, c("Library", "Cell.barcode"))
 
+      message("LOG: Seurat object created")
       obj@se.org <- obj@se
-    } else {
-      obj@se <- obj@se.org
     }
 
     if (!is.null(obj@params$pathw)) {
       obj <- obj_setGenes(obj)
+      gene.flag <- rownames(obj@se) %in% obj@params$genes
       message("LOG: Number of genes: ", length(obj@params$genes))
-      gene_names <- rownames(obj@se)
-      gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
-      # gene_names <- gene_names[gene.flag]
+
+      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+      obj@se <- FindVariableFeatures(obj@se)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
     }
 
-    obj <- obj_updateParams(obj,
-      updateCurrent = TRUE,
-      data_path = data_path
-    )
     message("Completed Loading")
     return(obj)
   }
@@ -245,35 +222,34 @@ setMethod(
     }
 
     # isnew <- obj_areParamsEqual(obj, update = TRUE)
-    if (is.null(obj@se.org)) {
+    if (!is.null(obj@se.org)) {
+      obj@se <- obj@se.org
+    } else {
       message("LOG: Full loading")
       gene_names <- read.table("/app/data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_gene_names.txt", sep = "\t")
       cell_metadata <- read.table("/app/data/AllonKleinLab/Experiment3/stateFate_cytokinePerturbation_metadata.txt", header = TRUE, sep = "\t")
 
       se <- Matrix::readMM(data_path)
       se <- t(se)
-      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"), obj@params$pathw)
-      message("LOG: Seurat object created")
 
+      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"))
+      
+      message("LOG: Seurat object created")
       obj@se.org <- obj@se
-    } else {
-      obj@se <- obj@se.org
     }
 
     if (!is.null(obj@params$pathw)) {
       obj <- obj_setGenes(obj)
+      gene.flag <- rownames(obj@se) %in% obj@params$genes
       message("LOG: Number of genes: ", length(obj@params$genes))
-      gene_names <- rownames(obj@se)
-      gene.flag <- gene_names %in% obj@params$genes
       message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
-      # gene_names <- gene_names[gene.flag]
+    
+      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+      obj@se <- FindVariableFeatures(obj@se)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
     }
-
-    obj <- obj_updateParams(obj,
-      updateCurrent = TRUE,
-      data_path = data_path
-    )
 
     message("Completed Loading")
     return(obj)

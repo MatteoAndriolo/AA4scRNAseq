@@ -55,18 +55,17 @@ setMethod(
       obj@se <- CreateSeuratObject(counts = se, meta.data = metadata)
       if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
       obj@se <- ScaleData(obj@se, layer = "counts")
-      if (debug) message("DEBUG: Data scaled")
       obj@se <- FindVariableFeatures(obj@se)
-      if (debug) message("DEBUG: Variable features found")
       #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
       obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      if (debug) message("DEBUG: PCA done")
       #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-      if (debug) message("DEBUG: UMAP done")
-      obj@se.org <- obj@se
-      if (debug) message("DEBUG: Seurat object created")
 
+      # save obj@se
+      obj@se.org <- obj@se
+
+
+      # HVF
       if (obj@params$hvf) {
         message("LOG: HVF")
         obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
@@ -112,9 +111,4 @@ setMethod(
 ### obj_getSeData ----
 setMethod("obj_getSeData", "Melanoma", function(obj) {
   return(obj@se@assays$RNA@layers$counts)
-})
-
-### obj_geMatrixHVF ----
-setMethod("obj_getMatrixHVF", "Melanoma", function(obj) {
-  return(obj)
 })
