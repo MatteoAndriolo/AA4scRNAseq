@@ -28,9 +28,9 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     }
 
     tsamples <- min(obj@params$test_samples, ncol(se))
-    #se <- se[1:tgenes, 1:tsamples]
-    #gene_names <- gene_names[1:tgenes]
-    #cell_metadata <- cell_metadata[1:tsamples, ]
+    # se <- se[1:tgenes, 1:tsamples]
+    # gene_names <- gene_names[1:tgenes]
+    # cell_metadata <- cell_metadata[1:tsamples, ]
 
     # row_filter <- Matrix::rowSums(se) > 0
     # col_filter <- Matrix::colSums(se) > 0
@@ -40,11 +40,11 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     # cell_metadata <- cell_metadata[col_filter, ]
   }
 
-  se=se[!duplicated(gene_names), !duplicated(cell_metadata$new.names)]
-  obj@se <- CreateSeuratObject(counts = se) #, meta.data = cell_metadata)
-  rownames(obj@se)=gene_names
-  colnames(obj@se)=cell_metadata$new.names
-  obj@se@meta.data=cell_metadata
+  se <- se[!duplicated(gene_names), !duplicated(cell_metadata$new.names)]
+  obj@se <- CreateSeuratObject(counts = se) # , meta.data = cell_metadata)
+  rownames(obj@se) <- gene_names
+  colnames(obj@se) <- cell_metadata$new.names
+  obj@se@meta.data <- cell_metadata
   if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
   if (obj@params$test) {
     if (!is.null(obj@params$pathw)) {
@@ -54,12 +54,12 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     }
 
     tsamples <- min(obj@params$test_samples, ncol(se))
-    
-    obj@se=obj@se[1:tgenes, 1:tsamples]
-    #row_filter <- Matrix::rowSums(obj@se) > 0
-    #col_filter <- Matrix::colSums(obj@se) > 0
-    #obj@se <- obj@se[row_filter, col_filter]
-    #obj@se=obj@se[Matrix::rowSums(obj@se)>0, Matrix::colSums(obj@se)>0]
+
+    obj@se <- obj@se[1:tgenes, 1:tsamples]
+    # row_filter <- Matrix::rowSums(obj@se) > 0
+    # col_filter <- Matrix::colSums(obj@se) > 0
+    # obj@se <- obj@se[row_filter, col_filter]
+    # obj@se=obj@se[Matrix::rowSums(obj@se)>0, Matrix::colSums(obj@se)>0]
     if (debug) message("DEBUG: Seurat after test has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
   }
   obj@se <- ScaleData(obj@se, layer = "counts")
@@ -69,7 +69,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   # dimnames(obj@se) <- list(gene_names, new.names)
   # obj@se@assays$RNA@layers$counts@Dimnames <- list(gene_names, cell_metadata$new.names)
-  #obj@se@meta.data <- cell_metadata
+  # obj@se@meta.data <- cell_metadata
 
   if (obj@params$hvf) {
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]

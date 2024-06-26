@@ -48,12 +48,12 @@ setMethod("obj_updateParams", "database", function(obj, updateCurrent = FALSE, .
   list.params
   for (i in names(list.params)) {
     message("DEBUG: obj_updateParams | Updating ", i, " with ", list.params[[i]])
-    if (i=="pathw" & is.numeric(list.params[[i]])) {
+    if (i == "pathw" & is.numeric(list.params[[i]])) {
       if (list.params[[i]] > 0) {
-        if(debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], ">0")
+        if (debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], ">0")
         obj@params$pathw <- pathways[[obj@params$pathw]]
       } else {
-        if(debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], "<=0")
+        if (debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], "<=0")
         obj@params$pathw <- NULL
       }
     }
@@ -292,26 +292,26 @@ setGeneric("obj_umapArchetypes", function(obj, treshold = 0.2) {
 })
 
 setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
-  if(debug) message("DEBUG: obj_umapArchetypes | entering function ")
+  if (debug) message("DEBUG: obj_umapArchetypes | entering function ")
   umap_result <- UMAPPlot(obj@se)
   umap_data <- as.data.frame(umap_result$data)[, 1:2]
   colnames(umap_data) <- c("UMAP1", "UMAP2")
-  if(debug) message("DEBUG: obj_umapArchetypes | umapPlot done and fetched data")
+  if (debug) message("DEBUG: obj_umapArchetypes | umapPlot done and fetched data")
 
   weights <- coef(obj@archetypes$model)
   weights <- as.data.frame(weights)
-  if(debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
+  if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   weights[weights < treshold] <- 0
 
-  
+
   column_sums <- colSums(obj@archetypes$model$archetypes)
-    if(debug) message("DEBUG: obj_umapArchetypes | column_sums dimension is ", dim(column_sums)[[1]], " ", dim(column_sums)[[2]])
+  if (debug) message("DEBUG: obj_umapArchetypes | column_sums dimension is ", dim(column_sums)[[1]], " ", dim(column_sums)[[2]])
   normalized_mat <- sweep(obj@archetypes$model$archetypes, 2, column_sums, FUN = "/")
-  if(debug) message("DEBUG: obj_umapArchetypes | normalized_mat dimension is ", dim(normalized_mat)[[1]], " ", dim(normalized_mat)[[2]])
+  if (debug) message("DEBUG: obj_umapArchetypes | normalized_mat dimension is ", dim(normalized_mat)[[1]], " ", dim(normalized_mat)[[2]])
   weights <- as.data.frame(normalized_mat)
 
-  if(debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
-  if(debug) message("DEBUG: obj_umapArchetypes | umap_data dimension is ", dim(umap_data)[[1]], " ", dim(umap_data)[[2]]
+  if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
+  if (debug) message("DEBUG: obj_umapArchetypes | umap_data dimension is ", dim(umap_data)[[1]], " ", dim(umap_data)[[2]])
 
   plot_list <- list()
   for (i in 1:obj@a$k) {
@@ -347,13 +347,13 @@ setMethod("obj_assignAAClusters", "database", function(obj) {
   # a <- obj@archetypes$model
   # k <- a$k
   message("LOG: obj_assingAACluster | creating aa_clusters metadata")
-  #weights <- coef(obj@archetypes$model)
+  # weights <- coef(obj@archetypes$model)
   weights <- obj@archetypes$model$archetypes
-  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]]," ", dim(weights)[[2]])
+  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   weights <- as.data.frame(weights)
 
 
-  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]]," ", dim(obj@se@meta.data)[[2]])
+  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
   obj@se@meta.data$aa_clusters <- apply(weights, 2, which.max)
   message("LOG: obj_assingAACluster | finished aa_clusters metadata")
   return(obj)
@@ -397,11 +397,11 @@ setMethod("obj_seuratCluster", "database", function(obj) {
 
 ### obj_saveObj ----
 # Method to save object
-setGeneric("obj_saveObj", function(obj, namefile="final",keep.org = FALSE) {
+setGeneric("obj_saveObj", function(obj, namefile = "final", keep.org = FALSE) {
   standardGeneric("obj_saveObj")
 })
 
-setMethod("obj_saveObj", "database", function(obj,namefile= "final", keep.org = FALSE) {
+setMethod("obj_saveObj", "database", function(obj, namefile = "final", keep.org = FALSE) {
   # filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
   filename <- obj_nameFiles(obj, namefile, "rds")
   message(sprintf("LOG: obj_saveObj | Saving object to %s", filename))
