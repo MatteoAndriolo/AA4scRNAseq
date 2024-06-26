@@ -9,7 +9,8 @@ setClass("database",
     plots = "list", # Group plots here
     archetypes = "list", # Group archetype analysis related stuff here
     params = "list", # Execution parameters
-    curr.params = "list" # Current execution parameters
+    curr.params = "list", # Current execution parameters
+    compare = "list"
   )
 )
 
@@ -291,24 +292,29 @@ setGeneric("obj_umapArchetypes", function(obj, treshold = 0.2) {
 })
 
 setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
-  se <- obj@se
-  a <- obj@archetypes$model
-  k <- a$k
-
-  umap_result <- UMAPPlot(se)
+  if(debug) message("DEBUG: obj_umapArchetypes | entering function ")
+  umap_result <- UMAPPlot(obj@se)
   umap_data <- as.data.frame(umap_result$data)[, 1:2]
   colnames(umap_data) <- c("UMAP1", "UMAP2")
+  if(debug) message("DEBUG: obj_umapArchetypes | umapPlot done and fetched data")
 
-  weights <- coef(a)
+  weights <- coef(obj@archetypes$model)
   weights <- as.data.frame(weights)
+  if(debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   weights[weights < treshold] <- 0
 
-  column_sums <- colSums(a$archetypes)
-  normalized_mat <- sweep(a$archetypes, 2, column_sums, FUN = "/")
+  
+  column_sums <- colSums(obj@archetypes$model$archetypes)
+    if(debug) message("DEBUG: obj_umapArchetypes | column_sums dimension is ", dim(column_sums)[[1]], " ", dim(column_sums)[[2]])
+  normalized_mat <- sweep(obj@archetypes$model$archetypes, 2, column_sums, FUN = "/")
+  if(debug) message("DEBUG: obj_umapArchetypes | normalized_mat dimension is ", dim(normalized_mat)[[1]], " ", dim(normalized_mat)[[2]])
   weights <- as.data.frame(normalized_mat)
 
+  if(debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
+  if(debug) message("DEBUG: obj_umapArchetypes | umap_data dimension is ", dim(umap_data)[[1]], " ", dim(umap_data)[[2]]
+
   plot_list <- list()
-  for (i in 1:k) {
+  for (i in 1:obj@a$k) {
     umap_data$weight <- t(weights[i, ])
     plot_title <- sprintf("UMAP Archetype %d", i)
     umap_plot <- ggplot(umap_data, aes(x = UMAP1, y = UMAP2, color = weight)) +
@@ -383,7 +389,7 @@ setGeneric("obj_seuratCluster", function(obj) {
 setMethod("obj_seuratCluster", "database", function(obj) {
   obj@se <- Seurat::FindNeighbors(obj@se, dims = 1:10)
   obj@se <- Seurat::FindClusters(obj@se, method = "igraph", resolution = 1, n.start = 10, n.iter = 10, verbose = TRUE)
-
+  names(obj@se)
   obj@plots$clusterplot <- Seurat::DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
   return(obj)
 })
@@ -391,13 +397,13 @@ setMethod("obj_seuratCluster", "database", function(obj) {
 
 ### obj_saveObj ----
 # Method to save object
-setGeneric("obj_saveObj", function(obj, keep.org = FALSE) {
+setGeneric("obj_saveObj", function(obj, namefile="final",keep.org = FALSE) {
   standardGeneric("obj_saveObj")
 })
 
-setMethod("obj_saveObj", "database", function(obj, keep.org = FALSE) {
+setMethod("obj_saveObj", "database", function(obj,namefile= "final", keep.org = FALSE) {
   # filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
-  filename <- obj_nameFiles(obj, "final", "rds")
+  filename <- obj_nameFiles(obj, namefile, "rds")
   message(sprintf("LOG: obj_saveObj | Saving object to %s", filename))
   t <- obj
   if (!keep.org) {

@@ -89,7 +89,7 @@ setMethod(
       message("LOG: Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
-      message("LOG: intersection pathw and seurat: ", sum(gene.flag))
+      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       obj@se <- obj@se[obj@params$genes, ]
       message("LOG: dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
     }

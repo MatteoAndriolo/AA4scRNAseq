@@ -85,15 +85,16 @@ message("LOG: main | LOG completed")
 message("LOG: main | Seurat Clustering")
 obj <- obj_seuratCluster(obj)
 message("LOG: main | Seurat Clustering Done")
-#obj@se@meta.data$seurat_clusters
+obj@se@meta.data$seurat_clusters
 obj@plots$umap_orig.ident = DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
-obj@plots$umap_tumor DimPlot(obj@se, reduction = "umap", group.by = "tumor")
-obj@plots$umap_seucl DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
-obj@plots$umap_aacl DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
+obj@plots$umap_tumor = DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+obj@plots$umap_seucl = DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
+obj@plots$umap_aacl = DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
 
 # Compare aa_clusters and seurat_clasters with Ident()
-table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
-table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
+obj@compare$aa.orig= table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
+obj@compare$se.orig= table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
+obj@compare$aa.se = table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
 
 message("LOG: main | Saving Object")
 obj_saveObj(obj)

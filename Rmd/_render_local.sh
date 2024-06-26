@@ -16,6 +16,6 @@ echo $PARAMS
 
 
 # docker exec agitated_nobel /app/Rmd/_main.sh Melanoma
-command="docker run --rm -v $(pwd):/app -w /app myrocker:latest /app/Rmd/_main.sh $PARAMS"
+command="docker run --rm -v $(pwd):/app -w /app myrubuntu /app/Rmd/_main.sh $PARAMS"
 echo $command
 $command

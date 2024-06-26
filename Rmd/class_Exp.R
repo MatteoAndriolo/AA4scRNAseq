@@ -28,28 +28,48 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     }
 
     tsamples <- min(obj@params$test_samples, ncol(se))
-    se <- se[1:tgenes, 1:tsamples]
-    gene_names <- gene_names[1:tgenes]
-    cell_metadata <- cell_metadata[1:tsamples, ]
+    #se <- se[1:tgenes, 1:tsamples]
+    #gene_names <- gene_names[1:tgenes]
+    #cell_metadata <- cell_metadata[1:tsamples, ]
 
-    row_filter <- Matrix::rowSums(se) > 0
-    col_filter <- Matrix::colSums(se) > 0
+    # row_filter <- Matrix::rowSums(se) > 0
+    # col_filter <- Matrix::colSums(se) > 0
 
-    se <- se[row_filter, col_filter]
-    gene_names <- gene_names[row_filter]
-    cell_metadata <- cell_metadata[col_filter, ]
+    # se <- se[row_filter, col_filter]
+    # gene_names <- gene_names[row_filter]
+    # cell_metadata <- cell_metadata[col_filter, ]
   }
 
-  obj@se <- CreateSeuratObject(counts = se)
+  se=se[!duplicated(gene_names), !duplicated(cell_metadata$new.names)]
+  obj@se <- CreateSeuratObject(counts = se) #, meta.data = cell_metadata)
+  rownames(obj@se)=gene_names
+  colnames(obj@se)=cell_metadata$new.names
+  obj@se@meta.data=cell_metadata
   if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+  if (obj@params$test) {
+    if (!is.null(obj@params$pathw)) {
+      tgenes <- nrow(se)
+    } else {
+      tgenes <- min(obj@params$test_genes, nrow(se))
+    }
+
+    tsamples <- min(obj@params$test_samples, ncol(se))
+    
+    obj@se=obj@se[1:tgenes, 1:tsamples]
+    #row_filter <- Matrix::rowSums(obj@se) > 0
+    #col_filter <- Matrix::colSums(obj@se) > 0
+    #obj@se <- obj@se[row_filter, col_filter]
+    #obj@se=obj@se[Matrix::rowSums(obj@se)>0, Matrix::colSums(obj@se)>0]
+    if (debug) message("DEBUG: Seurat after test has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+  }
   obj@se <- ScaleData(obj@se, layer = "counts")
   obj@se <- FindVariableFeatures(obj@se)
   obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
   # dimnames(obj@se) <- list(gene_names, new.names)
-  obj@se@assays$RNA@layers$counts@Dimnames <- list(gene_names, cell_metadata$new.names)
-  obj@se@meta.data <- cell_metadata
+  # obj@se@assays$RNA@layers$counts@Dimnames <- list(gene_names, cell_metadata$new.names)
+  #obj@se@meta.data <- cell_metadata
 
   if (obj@params$hvf) {
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
@@ -109,7 +129,7 @@ setMethod(
       message("LOG: Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
-      message("LOG: intersection pathw and seurat: ", sum(gene.flag))
+      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]
     }
@@ -167,7 +187,7 @@ setMethod(
       message("LOG: Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@genes
-      message("LOG: intersection pathw and seurat: ", sum(gene.flag))
+      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       se <- se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]
     }
@@ -226,7 +246,7 @@ setMethod(
       message("LOG: Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
-      message("LOG: intersection pathw and seurat: ", sum(gene.flag))
+      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       se <- se[gene.flag, ]
       # gene_names <- gene_names[gene.flag]
     }
