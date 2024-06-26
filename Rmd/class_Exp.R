@@ -9,6 +9,8 @@ setClass("Exp",
 # function(object, data, gene_names, cell_metadata, where.cell_names, pathw, test = FALSE, HVF = FALSE) {
 setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_metadata, where.cell_names) {
   if (debug) message("DEBUG: classExp | Entering in function")
+  
+  # Creating new names for removing duplicated
   if (length(where.cell_names) == 2) {
     new.names <- paste0(cell_metadata[[where.cell_names[1]]], "_", cell_metadata[[where.cell_names[2]]])
     cell_metadata$new.names <- new.names
@@ -20,32 +22,42 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   if (debug) message("DEBUG: data matrix has dimension post rem0 ", dim(se)[[1]], " ", dim(se)[[2]])
 
-  if (obj@params$test) {
-    if (!is.null(obj@params$pathw)) {
-      tgenes <- nrow(se)
-    } else {
-      tgenes <- min(obj@params$test_genes, nrow(se))
-    }
+  # IF TEST reduce dimension
+  # if (obj@params$test) {
+  #   if (!is.null(obj@params$pathw)) {
+  #     tgenes <- nrow(se)
+  #   } else {
+  #     tgenes <- min(obj@params$test_genes, nrow(se))
+  #   }
 
-    tsamples <- min(obj@params$test_samples, ncol(se))
-    # se <- se[1:tgenes, 1:tsamples]
-    # gene_names <- gene_names[1:tgenes]
-    # cell_metadata <- cell_metadata[1:tsamples, ]
+  #   tsamples <- min(obj@params$test_samples, ncol(se))
+  #   # se <- se[1:tgenes, 1:tsamples]
+  #   # gene_names <- gene_names[1:tgenes]
+  #   # cell_metadata <- cell_metadata[1:tsamples, ]
 
-    # row_filter <- Matrix::rowSums(se) > 0
-    # col_filter <- Matrix::colSums(se) > 0
+  #   # row_filter <- Matrix::rowSums(se) > 0
+  #   # col_filter <- Matrix::colSums(se) > 0
 
-    # se <- se[row_filter, col_filter]
-    # gene_names <- gene_names[row_filter]
-    # cell_metadata <- cell_metadata[col_filter, ]
-  }
+  #   # se <- se[row_filter, col_filter]
+  #   # gene_names <- gene_names[row_filter]
+  #   # cell_metadata <- cell_metadata[col_filter, ]
+  # }
 
+  # REMOVE duplicates
   se <- se[!duplicated(gene_names), !duplicated(cell_metadata$new.names)]
+  gene_names <- gene_names[!duplicated(gene_names)]
+  cell_metadata <- cell_metadata[!duplicated(cell_metadata$new.names), ]
+
+  # CREATE OBJECT
   obj@se <- CreateSeuratObject(counts = se) # , meta.data = cell_metadata)
+  if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+
+  dimnames(obj@se) <- list(gene_names, cell_metadata$new.names)
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
   obj@se@meta.data <- cell_metadata
-  if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+
+  # TEST
   if (obj@params$test) {
     if (!is.null(obj@params$pathw)) {
       tgenes <- nrow(se)
