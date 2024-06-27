@@ -185,6 +185,10 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
     k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
     message("LOG: obj_performArchetypes | Number of archetypes is ", k)
   }
+  obj <- obj_updateParams(obj,
+    updateCurrent = TRUE,
+    k = k
+  )
 
   m <- as.matrix(obj_getSeData(obj))
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
@@ -200,10 +204,6 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
 
   #### Archetypes Computation
   obj@archetypes$restarts <- list()
-  obj <- obj_updateParams(obj,
-    updateCurrent = TRUE,
-    k = k
-  )
 
   max_iterations <- obj@params$max_iterations
   num_restarts <- obj@params$num_restarts
@@ -380,8 +380,13 @@ setMethod("obj_nameFiles", "database", function(obj, name, ext) {
   } else {
     h <- ""
   }
+  if(is.null(obj@params$pathw)){
+    p <- ""
+  }else{
+    p <- sprintf("%s%s","_",substr(obj@params$pathw,1,4))
+  }
 
-  return(sprintf("%s/%s%s%s_%s.%s", obj@params$out_path, class(obj), t, h, name, ext))
+  return(sprintf("%s/%s%s%s%s_%s.%s", obj@params$out_path, class(obj), p,t, h, name, ext))
 })
 
 ### obj_seuratCluster ----

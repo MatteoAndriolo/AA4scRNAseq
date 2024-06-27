@@ -72,7 +72,7 @@ for(k in 4:6){
     allarchetypes[[k]]=obj@archetypes
     message("OUT: performArchetypes | ", obj@archetypes$bestrun$time)
 }
-obj@other[[aa]]=allarchetypes
+obj@other$aa=allarchetypes
 
 main_tend=Sys.time()
 message("OUT: main | 10 runs of AA with k from 4 to 14 in ", difftime(main_tend, main_tstart, units="secs"), " seconds")
