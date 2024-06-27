@@ -56,21 +56,22 @@ message("LOG: main | Loading Data Done")
 #   obj <- obj_loadData(obj)
 # }
 
-# PERFORM ARCHETYPES ---------
+# PERFORM ARCHETYPES ---------------------------------
 message("LOG: main | Performing Archetypes")
 obj@params$kappas=7:9
 obj <- obj_performArchetypes(obj, doparallel = FALSE)
 message("LOG: main | Performing Archetypes Done")
 
-message("LOG: main | assign AA clusters")
-obj <- obj_assignAAClusters(obj)
-message("LOG: main | assign AA clusters Done")
+# message("LOG: main | assign AA clusters")
+# obj <- obj_assignAAClusters(obj)
+# message("LOG: main | assign AA clusters Done")
 
-# Seurat Clusterizatoin
+# SEURAT CLUSTERIZATOIN -------------------------------
 message("LOG: main | Seurat Clustering")
 obj <- obj_seuratCluster(obj)
 message("LOG: main | Seurat Clustering Done")
 
+# # VISUALIZE -------------------------------------------
 # # Visualize Dataset
 # message("LOG: main | Visualizing Data")
 # obj <- obj_visualizeData(obj)

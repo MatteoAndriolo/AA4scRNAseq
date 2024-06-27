@@ -112,3 +112,9 @@ setMethod(
 setMethod("obj_getSeData", "Melanoma", function(obj) {
   return(obj@se@assays$RNA@layers$counts)
 })
+
+### obj_plotGoldUmap
+setMethod("obj_plotGoldUmap", "Melanoma", function(obj){
+  ct="non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
+  return(DimPlot(obj@se, reduction = "umap", group.by = ct))
+})

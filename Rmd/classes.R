@@ -149,21 +149,19 @@ setMethod("obj_visualizeData", "database", function(obj) {
   obj@plots$umap <- UMAPPlot(obj@se)
 
   obj@plots$combined_plot <- plot_grid(
-    obj@plots$pcaplot + theme(legend.position = "none"),
-    obj@plots$umapplot + theme(legend.position = "none"),
+    obj@plots$pca + theme(legend.position = "none"),
+    obj@plots$umap + theme(legend.position = "none"),
     labels = c("A", "B"),
     ncol = 2
   )
+
   obj@plots$elbowplot <- ElbowPlot(obj@se)
 
   # obj@se@meta.data$seurat_clusters
-  obj@plots$umap_orig.ident <- DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
+  obj@plots$umap_gold <- obj_plotGoldUmap(obj)
   obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
   obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
   obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
-
-  # print(combined_plot)
-  # print(elbowplot)
 
   return(obj)
 })
@@ -208,7 +206,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
   message("LOG: obj_performArchetypes | Performing Archetypes on pathw ", obj@params$pathw)
   message("LOG: obj_performArchetypes | Number of archetypes is ", obj@params$kappas)
 
-  m <- as.matrix(obj_getSeData(obj))
+  m <- as.matrix(t(obj_getSeData(obj)))
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
   message("LOG: obj_performArchetypes | matrix dimension for archetypes is ", dim(m)[1], " ", dim(m)[2])
 
@@ -284,13 +282,18 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
       # )
       history.restarts.k[[i]] <- temp
 
+      message("DEBUG: obj_performArchetypes | best_rss is ", best_rss, " and temp$rss is ", temp$rss)
+      if(is.na(temp$rss)){
+        temp$rss=Inf
+      }
       if (temp$rss < best_rss) {
         best_rss = temp$rss
         #best_model = temp$a
         best_restart_index = i
+        if(debug) message("DEBUG: obj_performArchetypes | best_rss chosen is ", best_rss)
       }
     }
-    history.restarts.k$best_run <- history.restarts.k[[best_restart_index]]
+    history.restarts.k$best.run <- history.restarts.k[[best_restart_index]]
     obj@archetypes$aa.kappas[[as.character(k)]] <- history.restarts.k
   }
   # }
@@ -311,12 +314,23 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
   # obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   obj@archetypes$bestrun <- best_overall_run
   obj@archetypes$model = best_overall_run$a
+  obj@archetypes$screeplot <- screeplot()
   # obj@archetypes$model <- obj@archetypes$bestrun$a
 
   # obj@archetypes$restarts <- list()
 
   return(obj)
 })
+
+# obj_performStepArchetypes
+setGeneric("obj_performStepArchetypes", function(obj, kappas=NULL, k = NULL, doparallel = TRUE) {
+  standardGeneric("obj_performStepArchetypes")
+})
+
+setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = NULL, doparallel = FALSE) {
+
+})
+
 
 ### obj_visualizeArchetypes ----
 setGeneric("obj_visualizeArchetypes", function(obj) {
@@ -336,7 +350,7 @@ setGeneric("obj_umapArchetypes", function(obj, treshold = 0.2) {
   standardGeneric("obj_umapArchetypes")
 })
 
-setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
+setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.01) {
   if (debug) message("DEBUG: obj_umapArchetypes | entering function ")
   umap_result <- UMAPPlot(obj@se)
   umap_data <- as.data.frame(umap_result$data)[, 1:2]
@@ -348,12 +362,11 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.2) {
   if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   weights[weights < treshold] <- 0
 
-
-  column_sums <- colSums(obj@archetypes$model$archetypes)
-  if (debug) message("DEBUG: obj_umapArchetypes | column_sums dimension is ", dim(column_sums)[[1]], " ", dim(column_sums)[[2]])
-  normalized_mat <- sweep(obj@archetypes$model$archetypes, 2, column_sums, FUN = "/")
-  if (debug) message("DEBUG: obj_umapArchetypes | normalized_mat dimension is ", dim(normalized_mat)[[1]], " ", dim(normalized_mat)[[2]])
-  weights <- as.data.frame(normalized_mat)
+  # column_sums <- colSums(obj@archetypes$model$archetypes)
+  # if (debug) message("DEBUG: obj_umapArchetypes | column_sums dimension is ", dim(column_sums)[[1]], " ", dim(column_sums)[[2]])
+  # normalized_mat <- sweep(obj@archetypes$model$archetypes, 2, column_sums, FUN = "/")
+  # if (debug) message("DEBUG: obj_umapArchetypes | normalized_mat dimension is ", dim(normalized_mat)[[1]], " ", dim(normalized_mat)[[2]])
+  # weights <- as.data.frame(normalized_mat)
 
   if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   if (debug) message("DEBUG: obj_umapArchetypes | umap_data dimension is ", dim(umap_data)[[1]], " ", dim(umap_data)[[2]])
@@ -462,6 +475,11 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
   }
   t@curr.params <- list()
   saveRDS(t, file = filename)
+})
+
+### obj_plotGoldUmap
+setGeneric("obj_plotGoldUmap", function(obj){
+  standardGeneric("obj_plotGoldUmap")
 })
 
 source("/app/Rmd/class_Melanoma.R")
