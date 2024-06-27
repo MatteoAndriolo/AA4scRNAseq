@@ -156,6 +156,12 @@ setMethod("obj_visualizeData", "database", function(obj) {
   )
   obj@plots$elbowplot <- ElbowPlot(obj@se)
 
+  # obj@se@meta.data$seurat_clusters
+  obj@plots$umap_orig.ident <- DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
+  obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+  obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
+  obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
+
   # print(combined_plot)
   # print(elbowplot)
 
@@ -175,38 +181,45 @@ setMethod("obj_furthestSum", "database", function(obj, k = 5) {
 
 ### obj_performArchetypes ----
 # Method to perform archetypal analysis
-setGeneric("obj_performArchetypes", function(obj, k = NULL, doparallel = TRUE) {
+setGeneric("obj_performArchetypes", function(obj, kappas=NULL, k = NULL, doparallel = TRUE) {
   standardGeneric("obj_performArchetypes")
 })
 
-setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparallel = FALSE) {
-  message("LOG: obj_performArchetyps | Performing Archetypes and ", obj@params$pathw)
-  if(is.null(k)){
-    k <- kneedle(obj@plots$elbowplot$data$dims, obj@plots$elbowplot$data$stdev)[1]
-    message("LOG: obj_performArchetypes | Number of archetypes is ", k)
+setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = NULL, doparallel = FALSE) {
+  if(debug){
+    message("DEBUG: obj_performArchetypes | k=",k)
+    message("DEBUG: obj_performArchetypes | kappas=",kappas)
+    message("DEBUG: obj_performArchetypes | obj@params$k=",obj@params$k)
+    message("DEBUG: obj_performArchetypes | obj@params$kappas=",obj@params$kappas)
   }
-  obj <- obj_updateParams(obj,
-    updateCurrent = TRUE,
-    k = k
-  )
+  if(is.null(obj@params$kappas) & is.null(obj@params$k)){
+    stop("ERROR: obj_performArchetypes | k and kappas are null")
+  }
+  if(is.null(obj@params$kappas) & !is.null(obj@params$k)){
+    obj@params$kappas=obj@params$k
+  }
+
+
+  if(is.null(obj@params$which.aa)){
+    obj_updateParams(obj, which.aa="robust")
+  }
+
+  # SETUP matrices
+  message("LOG: obj_performArchetypes | Performing Archetypes on pathw ", obj@params$pathw)
+  message("LOG: obj_performArchetypes | Number of archetypes is ", obj@params$kappas)
 
   m <- as.matrix(obj_getSeData(obj))
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-  message("LOG: obj_performArchetyps | MATRIX DIMENSION FOR ARCHETYPES IS ", dim(m)[[1]], " ", dim(m)[[2]])
+  message("LOG: obj_performArchetypes | matrix dimension for archetypes is ", dim(m)[1], " ", dim(m)[2])
 
-  #  obj@data$m <- as.matrix(obj_getSeData(obj))
-  #  obj@data$m <- obj@data$m[Matrix::rowSums(obj@data$m) > 0, Matrix::colSums(obj@data$m) > 0]
-  #  message("LOG: MATRIX DIMENSION FOR ARCHETYPES IS ", dim(obj@data$m)[[1]], " ", dim(obj@data$m)[[2]])
+
   #### Furthest Sum Initialization
-  #  message("LOG: Finding Furthest Sum")
-  #  irows <- obj_furthestSum(obj, k = k)
-  #  message("LOG: Furthest Sum Found")
+  # message("LOG: Finding Furthest Sum")
+  # irows <- obj_furthestSum(obj, k = obj@params$k)
+  # message("LOG: Furthest Sum Found")
 
   #### Archetypes Computation
-  obj@archetypes$restarts <- list()
-
-  max_iterations <- obj@params$max_iterations
-  num_restarts <- obj@params$num_restarts
+  obj@archetypes$aa.kappas <- list()
 
   runArchetypes <- function(i, data, k, max_iterations) {
     message("LOG: obj_performArchetypes | Starting rerun ", i, "/", num_restarts)
@@ -233,27 +246,34 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
   }
 
   tstartReruns <- Sys.time()
-  if (doparallel) {
-    nworkers <- parallel::detectCores() - 1
-    # results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = max_iterations, mc.cores = 3)
-    results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = max_iterations, mc.cores = nworkers)
-    obj@archetypes$restarts <- results
-  } else {
-    for (i in 1:num_restarts) {
-      # obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = max_iterations)
-      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", num_restarts)
+  # if (doparallel) {
+  #   nworkers <- parallel::detectCores() - 1
+  #   # results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations, mc.cores = 3)
+  #   results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = obj@params$max_iterations, mc.cores = nworkers)
+  #   obj@archetypes$restarts <- results
+  # } else {
+  family <- archetypes::archetypesFamily(which = obj@params$which.aa) # , initfn = make.fix.initfn(irows[1]))
+  obj@params$family <- family
+
+  for(k in obj@params$kappas){
+    history.restarts.k =list()
+    best_rss=Inf
+    #best_model=NULL
+    best_restart_index=-1
+
+    for (i in 1:obj@params$num_restarts) {
+      # If you want to use function instead of explicit code uncomment this
+      # obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations)
+      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=",k)
       temp <- list()
 
-      # tryCatch(
-      # {
       tstart <- Sys.time()
-      family <- archetypes::archetypesFamily(which = "robust") # , initfn = make.fix.initfn(irows[1]))
-      # temp$a <- archetypes::archetypes(obj@data$m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
-      temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+      temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = obj@params$max_iterations, saveHistory = TRUE, family = family)
       tend <- Sys.time()
-      message(sprintf("Archetypes Computed in %s", difftime(tend, tstart,units="secs")))
+      message("Archetypes Computed in ", difftime(tend, tstart,units="secs"))
+
       temp$rss <- temp$a$rss
-      temp$time <- tend - tstart
+      temp$time <- difftime(tend, tstart,units="secs")
       # },
       # error = function(e) {
       #   temp$a <- NULL
@@ -262,15 +282,38 @@ setMethod("obj_performArchetypes", "database", function(obj, k = NULL, doparalle
       #   message(sprintf("Error in archetypes: %s", e$message))
       # }
       # )
-      obj@archetypes$restarts[[i]] <- temp
+      history.restarts.k[[i]] <- temp
+
+      if (temp$rss < best_rss) {
+        best_rss = temp$rss
+        #best_model = temp$a
+        best_restart_index = i
+      }
+    }
+    history.restarts.k$best_run <- history.restarts.k[[best_restart_index]]
+    obj@archetypes$aa.kappas[[as.character(k)]] <- history.restarts.k
+  }
+  # }
+  tendReruns <- Sys.time() 
+  message("OUTPUT: obj_performArchetypes | Reruns completed in ", difftime(tendReruns, tstartReruns, units="secs"), " seconds")
+
+  # Now find the best model across all kappas
+  best_overall_run = NULL
+  best_overall_rss = Inf
+
+  for (k in obj@params$kappas) {
+    best_k_run = obj@archetypes$aa.kappas[[as.character(k)]]$best.run
+    if (best_k_run$rss < best_overall_rss) {
+      best_overall_rss = best_k_run$rss
+      best_overall_run = best_k_run
     }
   }
-  tendReruns <- Sys.time()
+  # obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
+  obj@archetypes$bestrun <- best_overall_run
+  obj@archetypes$model = best_overall_run$a
+  # obj@archetypes$model <- obj@archetypes$bestrun$a
 
-  message("OUTPUT: obj_performArchetypes | Reruns completed in ", difftime(tendReruns, tstartReruns, units="secs"), " seconds")
-  obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   # obj@archetypes$restarts <- list()
-  obj@archetypes$model <- obj@archetypes$bestrun$a
 
   return(obj)
 })
