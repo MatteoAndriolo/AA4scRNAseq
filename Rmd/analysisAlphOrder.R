@@ -33,29 +33,29 @@ for (archetype_name in names(obj@archetypes$aa.kappas)) {
   cat("Processing archetype =", archetype_name, "\n")
   rss_values <- c()
   time_values <- c()
-  
+
   for (j in seq_along(obj@archetypes$aa.kappas[[archetype_name]])) {
     time_value <- obj@archetypes$aa.kappas[[archetype_name]][[j]]$time
     rss_value <- obj@archetypes$aa.kappas[[archetype_name]][[j]]$rss
-    
+
     cat("archetype =", archetype_name, ", run =", j, ", time =", time_value, ", RSS =", rss_value, "\n")
-    
+
     rss_values <- c(rss_values, rss_value)
     time_values <- c(time_values, time_value)
   }
-  
+
   best_rss <- obj@archetypes$aa.kappas[[archetype_name]]$best.run$rss
   best_time <- obj@archetypes$aa.kappas[[archetype_name]]$best.run$time
   bestrssoverall <- c(bestrssoverall, best_rss)
   archetype_names <- c(archetype_names, archetype_name)
-  
+
   all_rss_times[[archetype_name]] <- data.frame(Run = seq_along(rss_values), Time = time_values, RSS = rss_values)
-  
+
   cat("Best RSS for archetype =", archetype_name, "is", best_rss, "in time", best_time, "\n")
-  
+
   mean_rss <- mean(rss_values)
   std_rss <- sd(rss_values)
-  
+
   cat("Mean RSS for archetype =", archetype_name, "is", mean_rss, "\n")
   cat("Standard Deviation of RSS for archetype =", archetype_name, "is", std_rss, "\n\n")
 }
@@ -77,9 +77,11 @@ plot1 <- ggplot(plot_data_rss, aes(x = Archetype, y = Best_RSS, group = 1)) +
   geom_point() +
   geom_line() +
   theme_minimal() +
-  labs(title = "Best RSS",
-       x = "#Archetypes",
-       y = "RSS")
+  labs(
+    title = "Best RSS",
+    x = "#Archetypes",
+    y = "RSS"
+  )
 
 # Combine all time values into a single data frame for plotting
 plot_data_time <- do.call(rbind, lapply(names(all_rss_times), function(name) {
@@ -90,18 +92,22 @@ plot_data_time <- do.call(rbind, lapply(names(all_rss_times), function(name) {
 plot2 <- ggplot(plot_data_time, aes(x = Archetype, y = Time)) +
   geom_point(alpha = 0.6) +
   theme_minimal() +
-  labs(title = "Run Times",
-       x = "#Archetypes",
-       y = "Time (sec)") +
+  labs(
+    title = "Run Times",
+    x = "#Archetypes",
+    y = "Time (sec)"
+  ) +
   scale_y_continuous(limits = c(0, NA))
 
 # Plot the RSS for each run grouped by archetype
 plot3 <- ggplot(plot_data_time, aes(x = Archetype, y = RSS)) +
   geom_point(alpha = 0.6) +
   theme_minimal() +
-  labs(title = "RSS",
-       x = "#Archetypes",
-       y = "RSS")
+  labs(
+    title = "RSS",
+    x = "#Archetypes",
+    y = "RSS"
+  )
 
 # Extract and transpose archetype parameters
 aspe <- t(parameters(obj@archetypes$model))

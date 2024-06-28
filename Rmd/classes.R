@@ -205,15 +205,11 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
   message("LOG: obj_performArchetypes | Performing Archetypes on pathw ", obj@params$pathw)
   message("LOG: obj_performArchetypes | Number of archetypes is ", obj@params$kappas)
 
+  # IMPORTANT !!!! column <-> features, row <-> samples
   m <- as.matrix(t(obj_getSeData(obj)))
   m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
   message("LOG: obj_performArchetypes | matrix dimension for archetypes is ", dim(m)[1], " ", dim(m)[2])
 
-
-  #### Furthest Sum Initialization
-  # message("LOG: Finding Furthest Sum")
-  # irows <- obj_furthestSum(obj, k = obj@params$k)
-  # message("LOG: Furthest Sum Found")
 
   #### Archetypes Computation
   obj@archetypes$aa.kappas <- list()
@@ -249,20 +245,36 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
   #   results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = obj@params$max_iterations, mc.cores = nworkers)
   #   obj@archetypes$restarts <- results
   # } else {
-  family <- archetypes::archetypesFamily(which = obj@params$which.aa) # , initfn = make.fix.initfn(irows[1]))
+  family <- archetypes::archetypesFamily(which = obj@params$which.aa)
   obj@params$family <- family
 
   for (k in obj@params$kappas) {
+    # Archetypal Analysis ---------------------------------------------------------
     history.restarts.k <- list()
     best_rss <- Inf
     # best_model=NULL
     best_restart_index <- -1
 
     for (i in 1:obj@params$num_restarts) {
+      temp <- list()
+      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
+      # FURTHEST SUM ---------------------------------------------------------
+      if (!is.null(obj@params$FurthestSum) & obj@params$doFurthestSum) {
+        message("LOG: obj_performArchetypes | Performing Furthest Sum")
+        ttstart <- Sys.time()
+        irow <- sample(1:nrow(m), 1)
+        irows <- FurthestSum(m, irow = irow, k = k)
+        family$initfn <- archetypes:::make.fix.initfn(irows)
+        ttend <- Sys.time()
+        temp$FStime <- difftime(ttend, ttstart, units = "secs")
+        temp$FSindices <- sort(irows)
+
+        message("LOG: obj_performArchetypes | Furthest Sum Done in ", temp$FStime, " seconds")
+      }
+
+
       # If you want to use function instead of explicit code uncomment this
       # obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations)
-      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
-      temp <- list()
 
       tstart <- Sys.time()
       temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = obj@params$max_iterations, saveHistory = TRUE, family = family)
@@ -281,6 +293,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
       # )
       history.restarts.k[[i]] <- temp
 
+      # MISC
       message("DEBUG: obj_performArchetypes | best_rss is ", best_rss, " and temp$rss is ", temp$rss)
       if (is.na(temp$rss)) {
         temp$rss <- Inf
