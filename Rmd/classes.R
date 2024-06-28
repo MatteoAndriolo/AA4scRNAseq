@@ -406,7 +406,7 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
   #################
   aspe <- t(parameters(obj@archetypes$model))
   rownames(aspe) <- rownames(obj@se@assays$RNA$counts)
-  colnames(aspe) <- paste0("Archetype", 1:9)
+  colnames(aspe) <- paste0("Archetype", 1:ncol(aspe))
 
   # Combine the original matrix and archetypes
   newse <- cbind(as.matrix(obj@se@assays$RNA$counts), aspe)
