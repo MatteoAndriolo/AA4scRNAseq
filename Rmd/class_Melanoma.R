@@ -114,7 +114,9 @@ setMethod("obj_getSeData", "Melanoma", function(obj) {
 })
 
 ### obj_plotGoldUmap
-setMethod("obj_plotGoldUmap", "Melanoma", function(obj){
+setMethod("obj_plotObjSpecifivUmap", "Melanoma", function(obj){
   ct="non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-  return(DimPlot(obj@se, reduction = "umap", group.by = ct))
+  obj@plots$umap_celltypes = DimPlot(obj@se, reduction = "umap", group.by = ct)
+  obj@plots$umap_tumor = DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+  return(obj)
 })

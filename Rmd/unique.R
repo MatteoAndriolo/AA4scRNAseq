@@ -30,7 +30,7 @@ if (params$pathw > 0) {
 }
 
 #if(is.null(params$k) & classname=="Melanoma"){
-params$kappas<- 7:9
+params$kappas<- 7:15
 #}
 
 params$hvf <- TRUE
@@ -58,36 +58,38 @@ message("LOG: main | Loading Data Done")
 
 # PERFORM ARCHETYPES ---------------------------------
 message("LOG: main | Performing Archetypes")
-obj@params$kappas=7:9
 obj <- obj_performArchetypes(obj, doparallel = FALSE)
 message("LOG: main | Performing Archetypes Done")
 
-# message("LOG: main | assign AA clusters")
-# obj <- obj_assignAAClusters(obj)
-# message("LOG: main | assign AA clusters Done")
+message("LOG: main | assign AA clusters")
+obj <- obj_assignAAClusters(obj)
+message("LOG: main | assign AA clusters Done")
 
 # SEURAT CLUSTERIZATOIN -------------------------------
 message("LOG: main | Seurat Clustering")
 obj <- obj_seuratCluster(obj)
 message("LOG: main | Seurat Clustering Done")
 
-# # VISUALIZE -------------------------------------------
-# # Visualize Dataset
-# message("LOG: main | Visualizing Data")
-# obj <- obj_visualizeData(obj)
-# message("LOG: main | Visualizing Data Done")
-# 
-# # Visualize Archetypes
-# message("LOG: main | Visualizing Archetypes")
-# obj <- obj_visualizeArchetypes(obj)
-# message("LOG: main | Visualizing Archetypes Done")
-# 
-# # Umap Archetypes Plot
-# message("LOG: main | Umap Archetypes")
-# obj <- obj_umapArchetypes(obj)
-# message("LOG: main | Umap Archetypes Done")
-# 
-# 
+# VISUALIZE -------------------------------------------
+# Visualize Dataset
+message("LOG: main | Visualizing Data")
+obj <- obj_visualizeData(obj)
+message("LOG: main | Visualizing Data Done")
+
+# Visualize Archetypes
+message("LOG: main | Visualizing Archetypes")
+obj <- obj_visualizeArchetypes(obj)
+message("LOG: main | Visualizing Archetypes Done")
+
+# Umap Archetypes Plot
+message("LOG: main | Umap Archetypes")
+obj <- obj_umapArchetypes(obj)
+message("LOG: main | Umap Archetypes Done")
+
+# # Umap With Archetypes Plot
+# message("LOG: main | Umap with Archetypes")
+# obj <- obj_umapWithArchetypes(obj)
+# message("LOG: main | Umap with Archetypes Done")
 # 
 # obj@se@meta.data$seurat_clusters
 # obj@plots$umap_orig.ident <- DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")

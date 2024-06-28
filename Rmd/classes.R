@@ -158,7 +158,7 @@ setMethod("obj_visualizeData", "database", function(obj) {
   obj@plots$elbowplot <- ElbowPlot(obj@se)
 
   # obj@se@meta.data$seurat_clusters
-  obj@plots$umap_gold <- obj_plotGoldUmap(obj)
+  obj <- obj_plotObjSpecifivUmap(obj)
   obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
   obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
   obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
@@ -197,7 +197,6 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
     obj@params$kappas=obj@params$k
   }
 
-
   if(is.null(obj@params$which.aa)){
     obj_updateParams(obj, which.aa="robust")
   }
@@ -226,7 +225,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
     #  {
     tstart <- Sys.time()
     family <- archetypes::archetypesFamily(which = "robust")
-    temp$a <- archetypes::archetypes(data, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = TRUE, family = family)
+    temp$a <- archetypes::archetypes(data, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = FALSE, family = family)
     tend <- Sys.time()
     message(sprintf("Archetypes Computed in %s", tend - tstart))
 
@@ -314,7 +313,8 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
   # obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   obj@archetypes$bestrun <- best_overall_run
   obj@archetypes$model = best_overall_run$a
-  obj@archetypes$screeplot <- screeplot()
+  if(debug) message("DEBUG: obj_performArchetypes | dim archetypes ", dim(parameters(best_overall_run$a))[1]," ",dim(parameters(best_overall_run$a))[2] )
+  #obj@archetypes$screeplot <- screeplot()
   # obj@archetypes$model <- obj@archetypes$bestrun$a
 
   # obj@archetypes$restarts <- list()
@@ -327,7 +327,7 @@ setGeneric("obj_performStepArchetypes", function(obj, kappas=NULL, k = NULL, dop
   standardGeneric("obj_performStepArchetypes")
 })
 
-setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = NULL, doparallel = FALSE) {
+setMethod("obj_performStepArchetypes", "database", function(obj, kappas=NULL , k = NULL, doparallel = FALSE) {
 
 })
 
@@ -346,7 +346,7 @@ setMethod("obj_visualizeArchetypes", "database", function(obj) {
 })
 
 ### obj_umapArchetypes ----
-setGeneric("obj_umapArchetypes", function(obj, treshold = 0.2) {
+setGeneric("obj_umapArchetypes", function(obj, treshold = 0.1) {
   standardGeneric("obj_umapArchetypes")
 })
 
@@ -374,7 +374,8 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.01) {
   plot_list <- list()
   
   for (i in 1:obj@params$k) {
-    umap_data$weight <- t(weights[i, ])
+    if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", length(weights[,i]))
+    umap_data$weight <- weights[, i]
     plot_title <- sprintf("UMAP Archetype %d", i)
     umap_plot <- ggplot(umap_data, aes(x = UMAP1, y = UMAP2, color = weight)) +
       geom_point(size = 1) +
@@ -386,13 +387,123 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.01) {
     plot_list[[i]] <- umap_plot
   }
 
-
   combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
-  # print(combined_plot)
   obj@plots$umap_archetypes <- combined_plot
 
   obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
-  # obj@params$umap_threshold <- treshold
+  return(obj)
+})
+
+### obj_umapWithArchetypes ----
+setGeneric("obj_umapWithArchetypes", function(obj, treshold = 0.1) {
+  standardGeneric("obj_umapWithArchetypes")
+})
+
+setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
+  if (debug) message("DEBUG: obj_umapWithArchetypes | entering function ")
+  if (debug) message("DEBUG: obj_umapWithArchetypes | archetypes dimension is ", dim(parameters(obj@archetypes$model))[[1]], " ", dim(parameters(obj@archetypes$model))[[2]])
+  archetypes_sparse <- as(parameters(obj@archetypes$model),"dgCMatrix")
+  if (debug) message("DEBUG: obj_umapWithArchetypes | archetypes_sparse dimension is ", dim(archetypes_sparse)[[1]], " ", dim(archetypes_sparse)[[2]])
+
+
+  expanded_se=cbind(obj@se, t(archetypes_sparse))
+  if (debug) message("DEBUG: obj_umapWithArchetypes | expanded_se dimension is ", dim(expanded_se)[[1]], " ", dim(expanded_se)[[2]])
+  # Create a temporary Seurat object with the combined matrix
+  combined_obj <- CreateSeuratObject(counts = expanded_se)
+  combined_obj <- ScaleData(combined_obj, layer="counts")
+  if (debug) message("DEBUG: obj_umapWithArchetypes | objdim ", dim(combined_obj)[[1]], " ", dim(combined_obj)[[2]])
+  combined_obj <- RunPCA(combined_obj, features = rownames(combined_obj))
+
+  # UMAP on combined matrix
+  combined_obj <- RunUMAP(combined_obj, dims = 1:20)  # Adjust dimensions as needed
+
+  # Extract UMAP embeddings
+  umap_combined <- Embeddings(combined_obj, "umap")
+
+  # Separate the combined results for plotting
+  combined_umap_df <- data.frame(umap_combined)
+  combined_umap_df$type <- rep(c('SE', 'Archetype'), c(ncol(obj@se), ncol(archetypes_transposed)))
+
+  # Plot for Approach 2
+  plot2 <- ggplot(combined_umap_df, aes(x = UMAP_1, y = UMAP_2, color = type)) +
+    geom_point() +
+    theme_minimal() +
+    labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
+
+  #ggsave("umap_projection_2.png", plot2)
+  # if (debug) message("DEBUG: obj_umapArchetypes | Approach 2 plot saved")
+
+  obj@plots$umap_withArchetypes <- plot2
+
+  #obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
+
+
+  #   # Approach 2: Combine SE and Archetypes, Then Perform UMAP
+  # #se_matrix <- GetAssayData(obj@se, slot = "scale.data")
+  # #se_matrix <- obj@se
+
+  # # Transpose archetypes to match the SE samples
+  # archetypes_transposed <- t(parameters(obj@archetypes$model))
+  # if (debug) message("DEBUG: obj_umapArchetypes | archetypes_transposed dimension is ", dim(archetypes_transposed)[[1]], " ", dim(archetypes_transposed)[[2]])
+  # if (debug) message("DEBUG: obj_umapArchetypes | archetypes_transposed type is ", typeof(archetypes_transposed))
+
+  # # Combine SE and Archetypes
+  # #combined_matrix <- cbind(obj@se, archetypes_transposed)
+  # combined_matrix <- rbind(t(obj@se), parameters(obj@archetypes$model))
+
+  # # Create a temporary Seurat object with the combined matrix
+  # combined_obj <- CreateSeuratObject(counts = combined_matrix)
+  # combined_obj <- ScaleData(combined_obj)
+  # combined_obj <- RunPCA(combined_obj, features = rownames(combined_obj))
+
+  # # UMAP on combined matrix
+  # combined_obj <- RunUMAP(combined_obj, dims = 1:20)  # Adjust dimensions as needed
+
+  # # Extract UMAP embeddings
+  # umap_combined <- Embeddings(combined_obj, "umap")
+
+  # # Separate the combined results for plotting
+  # combined_umap_df <- data.frame(umap_combined)
+  # combined_umap_df$type <- rep(c('SE', 'Archetype'), c(ncol(obj@se), ncol(archetypes_transposed)))
+
+  # # Plot for Approach 2
+  # plot2 <- ggplot(combined_umap_df, aes(x = UMAP_1, y = UMAP_2, color = type)) +
+  #   geom_point() +
+  #   theme_minimal() +
+  #   labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
+
+  # #ggsave("umap_projection_2.png", plot2)
+  # # if (debug) message("DEBUG: obj_umapArchetypes | Approach 2 plot saved")
+
+  # obj@plots$umap_withArchetypes <- plot2
+
+  #obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
+
+  # # Approach 1: UMAP of SE and then Add Archetypes
+  # # Assuming obj@se has UMAP embeddings already computed
+  # umap_result <- UMAPPlot(obj@se, return.data = TRUE)
+  # umap_se <- as.data.frame(umap_result[, 1:2])
+  # colnames(umap_se) <- c("UMAP_1", "UMAP_2")
+
+  # # Transform archetypes using the same UMAP model
+  # umap_model <- obj@se@reductions$umap@misc$model
+  # umap_archetypes <- predict(umap_model, obj@archetypes$model$archetypes)
+
+  # # Combine results for plotting
+  # se_umap_df <- data.frame(umap_se, type = 'SE')
+  # archetypes_umap_df <- data.frame(umap_archetypes, type = 'Archetype')
+  # colnames(archetypes_umap_df) <- c("UMAP_1", "UMAP_2", "type")
+
+  # combined_df <- rbind(se_umap_df, archetypes_umap_df)
+
+  # # Plot for Approach 1
+  # plot1 <- ggplot(combined_df, aes(x = UMAP_1, y = UMAP_2, color = type)) +
+  #   geom_point() +
+  #   theme_minimal() +
+  #   labs(title = "UMAP Projection of SE with Archetypes", x = "UMAP 1", y = "UMAP 2")
+
+  # ggsave("umap_projection_1.png", plot1)
+  # if (debug) message("DEBUG: obj_umapArchetypes | Approach 1 plot saved")
   return(obj)
 })
 
@@ -407,13 +518,13 @@ setMethod("obj_assignAAClusters", "database", function(obj) {
   # k <- a$k
   message("LOG: obj_assingAACluster | creating aa_clusters metadata")
   # weights <- coef(obj@archetypes$model)
-  weights <- obj@archetypes$model$archetypes
+  weights <- coef(obj@archetypes$model)
   if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   weights <- as.data.frame(weights)
 
 
   if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
-  obj@se@meta.data$aa_clusters <- apply(weights, 2, which.max)
+  obj@se@meta.data$aa_clusters <- apply(weights, 1, which.max)
   message("LOG: obj_assingAACluster | finished aa_clusters metadata")
   return(obj)
 })
@@ -478,8 +589,8 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
 })
 
 ### obj_plotGoldUmap
-setGeneric("obj_plotGoldUmap", function(obj){
-  standardGeneric("obj_plotGoldUmap")
+setGeneric("obj_plotObjSpecifivUmap", function(obj){
+  standardGeneric("obj_plotObjSpecifivUmap")
 })
 
 source("/app/Rmd/class_Melanoma.R")
