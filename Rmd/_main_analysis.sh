@@ -12,9 +12,9 @@ INPUT_FILE=$2
 OUTPUT_FILE=$3
 
 # Export the environment variables for Singularity
-export SINGULARITYENV_FOLDER_PATH=$FOLDER_PATH
-export SINGULARITYENV_INPUT_FILE=$INPUT_FILE
-export SINGULARITYENV_OUTPUT_FILE=$OUTPUT_FILE
+export FOLDER_PATH=$FOLDER_PATH
+export INPUT_FILE=$INPUT_FILE
+export OUTPUT_FILE=$OUTPUT_FILE
 
 # Run the R script inside the Singularity container
-Rscript /path/to/your/analysis_script.R
+Rscript /app/Rmd/analysis.R

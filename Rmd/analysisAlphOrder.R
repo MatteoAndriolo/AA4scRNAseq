@@ -67,10 +67,8 @@ best_rss_index <- which.min(bestrssoverall)
 cat("Best RSS overall is", best_rss_overall, "for archetype", archetype_names[best_rss_index], "\n")
 
 # Create a data frame for plotting best RSS values
-# Convert archetype names to numeric values
-numeric_archetype_names <- as.numeric(gsub("Archetype", "", archetype_names))
 plot_data_rss <- data.frame(
-  Archetype = factor(numeric_archetype_names, levels = sort(numeric_archetype_names)),
+  Archetype = factor(archetype_names, levels = archetype_names),
   Best_RSS = bestrssoverall
 )
 
@@ -85,11 +83,11 @@ plot1 <- ggplot(plot_data_rss, aes(x = Archetype, y = Best_RSS, group = 1)) +
 
 # Combine all time values into a single data frame for plotting
 plot_data_time <- do.call(rbind, lapply(names(all_rss_times), function(name) {
-  cbind(Archetype = as.numeric(gsub("Archetype", "", name)), all_rss_times[[name]])
+  cbind(Archetype = name, all_rss_times[[name]])
 }))
 
 # Plot the time for each run grouped by archetype
-plot2 <- ggplot(plot_data_time, aes(x = factor(Archetype, levels = sort(unique(Archetype))), y = Time)) +
+plot2 <- ggplot(plot_data_time, aes(x = Archetype, y = Time)) +
   geom_point(alpha = 0.6) +
   theme_minimal() +
   labs(title = "Run Times",
@@ -98,7 +96,7 @@ plot2 <- ggplot(plot_data_time, aes(x = factor(Archetype, levels = sort(unique(A
   scale_y_continuous(limits = c(0, NA))
 
 # Plot the RSS for each run grouped by archetype
-plot3 <- ggplot(plot_data_time, aes(x = factor(Archetype, levels = sort(unique(Archetype))), y = RSS)) +
+plot3 <- ggplot(plot_data_time, aes(x = Archetype, y = RSS)) +
   geom_point(alpha = 0.6) +
   theme_minimal() +
   labs(title = "RSS",
