@@ -179,26 +179,26 @@ setMethod("obj_furthestSum", "database", function(obj, k = 5) {
 
 ### obj_performArchetypes ----
 # Method to perform archetypal analysis
-setGeneric("obj_performArchetypes", function(obj, kappas=NULL, k = NULL, doparallel = TRUE) {
+setGeneric("obj_performArchetypes", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
   standardGeneric("obj_performArchetypes")
 })
 
-setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = NULL, doparallel = FALSE) {
-  if(debug){
-    message("DEBUG: obj_performArchetypes | k=",k)
-    message("DEBUG: obj_performArchetypes | kappas=",kappas)
-    message("DEBUG: obj_performArchetypes | obj@params$k=",obj@params$k)
-    message("DEBUG: obj_performArchetypes | obj@params$kappas=",obj@params$kappas)
+setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
+  if (debug) {
+    message("DEBUG: obj_performArchetypes | k=", k)
+    message("DEBUG: obj_performArchetypes | kappas=", kappas)
+    message("DEBUG: obj_performArchetypes | obj@params$k=", obj@params$k)
+    message("DEBUG: obj_performArchetypes | obj@params$kappas=", obj@params$kappas)
   }
-  if(is.null(obj@params$kappas) & is.null(obj@params$k)){
+  if (is.null(obj@params$kappas) & is.null(obj@params$k)) {
     stop("ERROR: obj_performArchetypes | k and kappas are null")
   }
-  if(is.null(obj@params$kappas) & !is.null(obj@params$k)){
-    obj@params$kappas=obj@params$k
+  if (is.null(obj@params$kappas) & !is.null(obj@params$k)) {
+    obj@params$kappas <- obj@params$k
   }
 
-  if(is.null(obj@params$which.aa)){
-    obj_updateParams(obj, which.aa="robust")
+  if (is.null(obj@params$which.aa)) {
+    obj_updateParams(obj, which.aa = "robust")
   }
 
   # SETUP matrices
@@ -252,25 +252,25 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
   family <- archetypes::archetypesFamily(which = obj@params$which.aa) # , initfn = make.fix.initfn(irows[1]))
   obj@params$family <- family
 
-  for(k in obj@params$kappas){
-    history.restarts.k =list()
-    best_rss=Inf
-    #best_model=NULL
-    best_restart_index=-1
+  for (k in obj@params$kappas) {
+    history.restarts.k <- list()
+    best_rss <- Inf
+    # best_model=NULL
+    best_restart_index <- -1
 
     for (i in 1:obj@params$num_restarts) {
       # If you want to use function instead of explicit code uncomment this
       # obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations)
-      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=",k)
+      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
       temp <- list()
 
       tstart <- Sys.time()
       temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = obj@params$max_iterations, saveHistory = TRUE, family = family)
       tend <- Sys.time()
-      message("Archetypes Computed in ", difftime(tend, tstart,units="secs"))
+      message("Archetypes Computed in ", difftime(tend, tstart, units = "secs"))
 
       temp$rss <- temp$a$rss
-      temp$time <- difftime(tend, tstart,units="secs")
+      temp$time <- difftime(tend, tstart, units = "secs")
       # },
       # error = function(e) {
       #   temp$a <- NULL
@@ -282,39 +282,39 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
       history.restarts.k[[i]] <- temp
 
       message("DEBUG: obj_performArchetypes | best_rss is ", best_rss, " and temp$rss is ", temp$rss)
-      if(is.na(temp$rss)){
-        temp$rss=Inf
+      if (is.na(temp$rss)) {
+        temp$rss <- Inf
       }
       if (temp$rss < best_rss) {
-        best_rss = temp$rss
-        #best_model = temp$a
-        best_restart_index = i
-        if(debug) message("DEBUG: obj_performArchetypes | best_rss chosen is ", best_rss)
+        best_rss <- temp$rss
+        # best_model = temp$a
+        best_restart_index <- i
+        if (debug) message("DEBUG: obj_performArchetypes | best_rss chosen is ", best_rss)
       }
     }
     history.restarts.k$best.run <- history.restarts.k[[best_restart_index]]
     obj@archetypes$aa.kappas[[as.character(k)]] <- history.restarts.k
   }
   # }
-  tendReruns <- Sys.time() 
-  message("OUTPUT: obj_performArchetypes | Reruns completed in ", difftime(tendReruns, tstartReruns, units="secs"), " seconds")
+  tendReruns <- Sys.time()
+  message("OUTPUT: obj_performArchetypes | Reruns completed in ", difftime(tendReruns, tstartReruns, units = "secs"), " seconds")
 
   # Now find the best model across all kappas
-  best_overall_run = NULL
-  best_overall_rss = Inf
+  best_overall_run <- NULL
+  best_overall_rss <- Inf
 
   for (k in obj@params$kappas) {
-    best_k_run = obj@archetypes$aa.kappas[[as.character(k)]]$best.run
+    best_k_run <- obj@archetypes$aa.kappas[[as.character(k)]]$best.run
     if (best_k_run$rss < best_overall_rss) {
-      best_overall_rss = best_k_run$rss
-      best_overall_run = best_k_run
+      best_overall_rss <- best_k_run$rss
+      best_overall_run <- best_k_run
     }
   }
   # obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   obj@archetypes$bestrun <- best_overall_run
-  obj@archetypes$model = best_overall_run$a
-  if(debug) message("DEBUG: obj_performArchetypes | dim archetypes ", dim(parameters(best_overall_run$a))[1]," ",dim(parameters(best_overall_run$a))[2] )
-  #obj@archetypes$screeplot <- screeplot()
+  obj@archetypes$model <- best_overall_run$a
+  if (debug) message("DEBUG: obj_performArchetypes | dim archetypes ", dim(parameters(best_overall_run$a))[1], " ", dim(parameters(best_overall_run$a))[2])
+  # obj@archetypes$screeplot <- screeplot()
   # obj@archetypes$model <- obj@archetypes$bestrun$a
 
   # obj@archetypes$restarts <- list()
@@ -323,11 +323,11 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas=NULL , k = N
 })
 
 # obj_performStepArchetypes
-setGeneric("obj_performStepArchetypes", function(obj, kappas=NULL, k = NULL, doparallel = TRUE) {
+setGeneric("obj_performStepArchetypes", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
   standardGeneric("obj_performStepArchetypes")
 })
 
-setMethod("obj_performStepArchetypes", "database", function(obj, kappas=NULL , k = NULL, doparallel = FALSE) {
+setMethod("obj_performStepArchetypes", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
 
 })
 
@@ -372,9 +372,9 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.01) {
   if (debug) message("DEBUG: obj_umapArchetypes | umap_data dimension is ", dim(umap_data)[[1]], " ", dim(umap_data)[[2]])
 
   plot_list <- list()
-  
+
   for (i in 1:obj@params$k) {
-    if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", length(weights[,i]))
+    if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", length(weights[, i]))
     umap_data$weight <- weights[, i]
     plot_title <- sprintf("UMAP Archetype %d", i)
     umap_plot <- ggplot(umap_data, aes(x = UMAP1, y = UMAP2, color = weight)) +
@@ -402,27 +402,27 @@ setGeneric("obj_umapWithArchetypes", function(obj, treshold = 0.1) {
 setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
   if (debug) message("DEBUG: obj_umapWithArchetypes | entering function ")
   if (debug) message("DEBUG: obj_umapWithArchetypes | archetypes dimension is ", dim(parameters(obj@archetypes$model))[[1]], " ", dim(parameters(obj@archetypes$model))[[2]])
-  archetypes_sparse <- as(parameters(obj@archetypes$model),"dgCMatrix")
+  archetypes_sparse <- as(parameters(obj@archetypes$model), "dgCMatrix")
   if (debug) message("DEBUG: obj_umapWithArchetypes | archetypes_sparse dimension is ", dim(archetypes_sparse)[[1]], " ", dim(archetypes_sparse)[[2]])
 
 
-  expanded_se=cbind(obj@se, t(archetypes_sparse))
+  expanded_se <- cbind(obj@se, t(archetypes_sparse))
   if (debug) message("DEBUG: obj_umapWithArchetypes | expanded_se dimension is ", dim(expanded_se)[[1]], " ", dim(expanded_se)[[2]])
   # Create a temporary Seurat object with the combined matrix
   combined_obj <- CreateSeuratObject(counts = expanded_se)
-  combined_obj <- ScaleData(combined_obj, layer="counts")
+  combined_obj <- ScaleData(combined_obj, layer = "counts")
   if (debug) message("DEBUG: obj_umapWithArchetypes | objdim ", dim(combined_obj)[[1]], " ", dim(combined_obj)[[2]])
   combined_obj <- RunPCA(combined_obj, features = rownames(combined_obj))
 
   # UMAP on combined matrix
-  combined_obj <- RunUMAP(combined_obj, dims = 1:20)  # Adjust dimensions as needed
+  combined_obj <- RunUMAP(combined_obj, dims = 1:20) # Adjust dimensions as needed
 
   # Extract UMAP embeddings
   umap_combined <- Embeddings(combined_obj, "umap")
 
   # Separate the combined results for plotting
   combined_umap_df <- data.frame(umap_combined)
-  combined_umap_df$type <- rep(c('SE', 'Archetype'), c(ncol(obj@se), ncol(archetypes_transposed)))
+  combined_umap_df$type <- rep(c("SE", "Archetype"), c(ncol(obj@se), ncol(archetypes_transposed)))
 
   # Plot for Approach 2
   plot2 <- ggplot(combined_umap_df, aes(x = UMAP_1, y = UMAP_2, color = type)) +
@@ -430,12 +430,12 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
     theme_minimal() +
     labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
 
-  #ggsave("umap_projection_2.png", plot2)
+  # ggsave("umap_projection_2.png", plot2)
   # if (debug) message("DEBUG: obj_umapArchetypes | Approach 2 plot saved")
 
   obj@plots$umap_withArchetypes <- plot2
 
-  #obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
+  # obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
 
 
   #   # Approach 2: Combine SE and Archetypes, Then Perform UMAP
@@ -477,7 +477,7 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
 
   # obj@plots$umap_withArchetypes <- plot2
 
-  #obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
+  # obj <- obj_updateParams(obj, updateCurrent = TRUE, umap_threshold = treshold)
 
   # # Approach 1: UMAP of SE and then Add Archetypes
   # # Assuming obj@se has UMAP embeddings already computed
@@ -547,13 +547,13 @@ setMethod("obj_nameFiles", "database", function(obj, name, ext) {
   } else {
     h <- ""
   }
-  if(is.null(obj@params$pathw)){
+  if (is.null(obj@params$pathw)) {
     p <- ""
-  }else{
-    p <- sprintf("%s%s","_",substr(obj@params$pathw,1,4))
+  } else {
+    p <- sprintf("%s%s", "_", substr(obj@params$pathw, 1, 4))
   }
 
-  return(sprintf("%s/%s%s%s%s_%s.%s", obj@params$out_path, class(obj), p,t, h, name, ext))
+  return(sprintf("%s/%s%s%s%s_%s.%s", obj@params$out_path, class(obj), p, t, h, name, ext))
 })
 
 ### obj_seuratCluster ----
@@ -577,7 +577,7 @@ setGeneric("obj_saveObj", function(obj, namefile = "final", keep.org = FALSE) {
 })
 
 setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FALSE) {
-  #filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
+  # filename <- sprintf("%s/%s_%s.rds", obj@params$out_path, class(obj), substr(obj@params$pathw, 1, 4))
   filename <- obj_nameFiles(obj, namefile, "rds")
   message(sprintf("LOG: obj_saveObj | Saving object to %s", filename))
   t <- obj
@@ -589,7 +589,7 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
 })
 
 ### obj_plotGoldUmap
-setGeneric("obj_plotObjSpecifivUmap", function(obj){
+setGeneric("obj_plotObjSpecifivUmap", function(obj) {
   standardGeneric("obj_plotObjSpecifivUmap")
 })
 

@@ -77,12 +77,12 @@ for (pathw in pathways) {
   message("LOG: aa.pipeline | assign AA clusters")
   obj <- obj_assignAAClusters(obj)
   message("LOG: aa.pipeline | assign AA clusters Done")
-  
+
   # Seurat Clusterizatoin
   message("LOG: aa.pipeline | Seurat Clustering")
   obj <- obj_seuratCluster(obj)
   message("LOG: aa.pipeline | Seurat Clustering Done")
-  
+
 
   # Compare aa_clusters and seurat_clasters with Ident()
   obj@compare$aa.orig <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
@@ -90,7 +90,7 @@ for (pathw in pathways) {
   obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
 
   message("LOG: aa.pipeline | Saving Object")
-  obj_saveObj(obj, name="allPathw")
+  obj_saveObj(obj, name = "allPathw")
   message("LOG: aa.pipeline | Saving Object Done")
 }
 

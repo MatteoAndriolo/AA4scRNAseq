@@ -9,7 +9,7 @@ setClass("Exp",
 # function(object, data, gene_names, cell_metadata, where.cell_names, pathw, test = FALSE, HVF = FALSE) {
 setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_metadata, where.cell_names) {
   if (debug) message("DEBUG: classExp | Entering in function")
-  
+
   # Creating new names for removing duplicated
   if (length(where.cell_names) == 2) {
     new.names <- paste0(cell_metadata[[where.cell_names[1]]], "_", cell_metadata[[where.cell_names[2]]])
@@ -34,7 +34,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
-  obj@se <- AddMetaData(obj@se, metadata=cell_metadata)
+  obj@se <- AddMetaData(obj@se, metadata = cell_metadata)
 
   # SAVE obj@se to obj@se.org
   obj@se.org <- obj@se
@@ -53,7 +53,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     # row_filter <- Matrix::rowSums(obj@se) > 0
     # col_filter <- Matrix::colSums(obj@se) > 0
     # obj@se <- obj@se[row_filter, col_filter]
-    obj@se=obj@se[Matrix::rowSums(obj@se)>0, Matrix::colSums(obj@se)>0]
+    obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
     if (debug) message("DEBUG: Seurat after test has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
   # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
@@ -63,19 +63,19 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
   obj@se <- ScaleData(obj@se, layer = "counts")
   obj@se <- FindVariableFeatures(obj@se)
-  #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-  #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+  # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
+  # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
   if (obj@params$hvf) {
-    if(debug) message("DEBUG: obj_createSeuratObject | number of genes with rank ", sum(which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0)))
+    if (debug) message("DEBUG: obj_createSeuratObject | number of genes with rank ", sum(which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0)))
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
 
     obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
     message("LOG: HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
-     obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-     obj@se <- FindVariableFeatures(obj@se)
-     obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-     obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+    obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+    obj@se <- FindVariableFeatures(obj@se)
+    obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+    obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
   }
 
   # if (!is.null(pathw)) {
@@ -111,11 +111,11 @@ setMethod(
     if (!is.null(obj@se.org)) {
       message("LOG: obj_loadData | Copy from original se")
       obj@se <- obj@se.org
-    } else{
+    } else {
       message("LOG: Full loading")
       cell_metadata <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_metadata.txt", header = TRUE, sep = "\t")
       gene_names <- read.table("/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_gene_names.txt")
-      
+
       se <- Matrix::readMM(data_path)
       se <- t(se)
 
@@ -235,7 +235,7 @@ setMethod(
       se <- t(se)
 
       obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"))
-      
+
       message("LOG: Seurat object created")
       obj@se.org <- obj@se
     }
@@ -246,7 +246,7 @@ setMethod(
       message("LOG: Number of genes: ", length(obj@params$genes))
       message("LOG: intersection pathw and genenames: ", sum(gene.flag))
       obj@se <- obj@se[gene.flag, ]
-    
+
       obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se))

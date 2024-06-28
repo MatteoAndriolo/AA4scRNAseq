@@ -4,7 +4,7 @@ source("/app/Rmd/classes.R")
 debug <- TRUE
 params <- list()
 params$classname <- Sys.getenv("CLASSNAME")
-params$debug <- debug 
+params$debug <- debug
 params$hvf <- as.logical(Sys.getenv("HVF", "FALSE"))
 params$k <- as.numeric(Sys.getenv("K", "8"))
 params$max_iterations <- as.numeric(Sys.getenv("MAX_ITERATIONS", "100"))
@@ -19,8 +19,8 @@ params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 # params$nworkers <- parallel::detectCores() - 2
 plan("multicore", workers = params$nworkers)
 
-################### FIXING PARAMETERS FOR PRESENTATION 
-#TODO remove this
+################### FIXING PARAMETERS FOR PRESENTATION
+# TODO remove this
 # FOR NOW WE WILL NOT USE PATHW BUT ONLY HVF!!!
 params$pathw <- -1
 if (params$pathw > 0) {
@@ -29,12 +29,12 @@ if (params$pathw > 0) {
   params$pathw <- NULL
 }
 
-#if(is.null(params$k) & classname=="Melanoma"){
-params$kappas<- 7:15
-#}
+# if(is.null(params$k) & classname=="Melanoma"){
+params$kappas <- 7:15
+# }
 
 params$hvf <- TRUE
-################### END FIXING PARAMETERS FOR PRESENTATION 
+################### END FIXING PARAMETERS FOR PRESENTATION
 
 for (k in names(params)) {
   message("LOG: main | param ", k, ": ", params[[k]])
@@ -90,18 +90,18 @@ message("LOG: main | Umap Archetypes Done")
 # message("LOG: main | Umap with Archetypes")
 # obj <- obj_umapWithArchetypes(obj)
 # message("LOG: main | Umap with Archetypes Done")
-# 
+#
 # obj@se@meta.data$seurat_clusters
 # obj@plots$umap_orig.ident <- DimPlot(obj@se, reduction = "umap", group.by = "orig.ident")
 # obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
 # obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
 # obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
-# 
+#
 # # Compare aa_clusters and seurat_clasters with Ident()
 # obj@compare$aa.orig <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
 # obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
 # obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
 
 message("LOG: main | Saving Object")
-obj_saveObj(obj, name="unique")
+obj_saveObj(obj, name = "unique")
 message("LOG: main | Saving Object Done")

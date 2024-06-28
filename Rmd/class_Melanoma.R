@@ -13,7 +13,7 @@ setMethod(
            ...) {
     if (debug) message("DEBUG:INITLOADMELANOMA pathw is ", obj@params$pathw)
 
-    if (!is.null(obj@se.org)) { 
+    if (!is.null(obj@se.org)) {
       message("LOG: Copy from original se")
       obj@se <- obj@se.org
     } else {
@@ -56,9 +56,9 @@ setMethod(
       if (debug) message("DEBUG: Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
       obj@se <- ScaleData(obj@se, layer = "counts")
       obj@se <- FindVariableFeatures(obj@se)
-      #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
+      # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
       obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+      # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
 
       # save obj@se
@@ -78,7 +78,6 @@ setMethod(
         obj@se <- RunPCA(obj@se, features = rownames(obj@se))
         obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
       }
-
     }
 
     if (!is.null(obj@params$pathw)) {
@@ -98,8 +97,8 @@ setMethod(
       # obj@se <- FindVariableFeatures(obj@se)
       # obj@se <- RunPCA(obj@se, features = rownames(obj@se))
       # obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-      #obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-      #obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+      # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
+      # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
       if (debug) message("DEBUG: UMAP done")
     }
 
@@ -114,9 +113,9 @@ setMethod("obj_getSeData", "Melanoma", function(obj) {
 })
 
 ### obj_plotGoldUmap
-setMethod("obj_plotObjSpecifivUmap", "Melanoma", function(obj){
-  ct="non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-  obj@plots$umap_celltypes = DimPlot(obj@se, reduction = "umap", group.by = ct)
-  obj@plots$umap_tumor = DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+setMethod("obj_plotObjSpecifivUmap", "Melanoma", function(obj) {
+  ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
+  obj@plots$umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = ct)
+  obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
   return(obj)
 })

@@ -1,11 +1,11 @@
-# Name: aaonly 
+# Name: aaonly
 source("/app/Rmd/imports.R")
 source("/app/Rmd/classes.R")
 params <- list()
 params$debug <- TRUE
 
 params$nworkers <- parallel::detectCores() - 1
-plan("multicore", workers = params$nworkers) 
+plan("multicore", workers = params$nworkers)
 
 # params$pathw <- Sys.getenv("pathw")
 params$classname <- Sys.getenv("CLASSNAME")
@@ -37,17 +37,17 @@ for (k in names(params)) {
 debug <- TRUE
 
 obj <- new(params$classname)
-if(grepl("Exp",params$classname)){
-  options(future.globals.maxSize= 5000*1024^2)
+if (grepl("Exp", params$classname)) {
+  options(future.globals.maxSize = 5000 * 1024^2)
 }
 obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 
 message("LOG: main | Loading Data")
-obj <- obj_updateParams(obj, pathw=NULL)
+obj <- obj_updateParams(obj, pathw = NULL)
 obj <- obj_loadData(obj)
 message("LOG: main | Loading Data Done")
 
-if(!is.null(params$pathw)){
+if (!is.null(params$pathw)) {
   message("LOG: main | starting with PATHW ", params$pathw)
   obj <- obj_updateParams(obj, pathw = params$pathw)
   message("LOG: main | reloading data with pathw")
@@ -65,19 +65,19 @@ message("LOG: main | Visualizing Data Done")
 
 # Perform Archetypes
 message("LOG: main | Performing Archetypes")
-main_tstart=Sys.time()
-allarchetypes=list()
-for(k in 4:6){
-    obj <- obj_performArchetypes(obj, k=k, doparallel = FALSE)
-    allarchetypes[[k]]=obj@archetypes
-    message("OUT: performArchetypes | ", obj@archetypes$bestrun$time)
+main_tstart <- Sys.time()
+allarchetypes <- list()
+for (k in 4:6) {
+  obj <- obj_performArchetypes(obj, k = k, doparallel = FALSE)
+  allarchetypes[[k]] <- obj@archetypes
+  message("OUT: performArchetypes | ", obj@archetypes$bestrun$time)
 }
-obj@other$aa=allarchetypes
+obj@other$aa <- allarchetypes
 
-main_tend=Sys.time()
-message("OUT: main | 10 runs of AA with k from 4 to 14 in ", difftime(main_tend, main_tstart, units="secs"), " seconds")
+main_tend <- Sys.time()
+message("OUT: main | 10 runs of AA with k from 4 to 14 in ", difftime(main_tend, main_tstart, units = "secs"), " seconds")
 message("LOG: main | Performing Archetypes Done")
 
 message("LOG: main | Saving Object")
-obj_saveObj(obj, name="aaonly")
+obj_saveObj(obj, name = "aaonly")
 message("LOG: main | Saving Object Done")
