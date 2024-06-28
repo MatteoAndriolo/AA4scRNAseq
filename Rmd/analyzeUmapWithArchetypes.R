@@ -10,7 +10,7 @@ class(obj) <- classname
 # Extract and transpose archetype parameters
 aspe <- t(parameters(obj@archetypes$model))
 rownames(aspe) <- rownames(obj@se@assays$RNA$counts)
-colnames(aspe) <- paste0("Archetype", 1:9)
+colnames(aspe) <- paste0("Archetype", 1:ncol(aspe))
 
 # Combine the original matrix and archetypes
 newse <- cbind(as.matrix(obj@se@assays$RNA$counts), aspe)
@@ -53,7 +53,7 @@ plot2 <- ggplot(combined_umap_df, aes(x = umap_1, y = umap_2, color = type)) +
   ) + # vjust = -1.5, size = 3) +
   scale_color_manual(values = c(cell_type_colors, rep(archetype_color, length(archetype_labels)))) +
   theme_minimal() +
-  labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
+  labs(title = "UMAP Projection with archetypes", x = "UMAP 1", y = "UMAP 2")
 
 plot2
 
