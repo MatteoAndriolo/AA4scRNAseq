@@ -15,6 +15,7 @@ params$pathw <- as.numeric(Sys.getenv("PATHW", unset = "-1"))
 params$test <- as.logical(Sys.getenv("TEST", "FALSE"))
 params$test_genes <- as.numeric(Sys.getenv("TEST_GENES", "300"))
 params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
+params$name <- "unique"
 
 # params$nworkers <- parallel::detectCores() - 2
 plan("multicore", workers = params$nworkers)
@@ -30,10 +31,12 @@ if (params$pathw > 0) {
 }
 
 # if(is.null(params$k) & classname=="Melanoma"){
-params$kappas <- 7:15
+params$kappas <- 5:13
 # }
 
 params$hvf <- TRUE
+params$name <- "5.13.FS.unique."
+params$doFurthestSum <- TRUE
 ################### END FIXING PARAMETERS FOR PRESENTATION
 
 for (k in names(params)) {
@@ -103,19 +106,11 @@ message("LOG: main | Umap Archetypes Done")
 # obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
 
 message("LOG: main | Saving Object")
-obj_saveObj(obj, name = "unique")
+obj_saveObj(obj, name = params$name)
 message("LOG: main | Saving Object Done")
 
 # FROM ANALYSIS --------------------------------------------------------
-# Fetch folder path, input file name, and output file name from environment variables
-
-# Check if environment variables are provided
-if (params$out_path == "" || input_file == "" || output_file == "") {
-  stop("params$out_path, INPUT_FILE, and OUTPUT_FILE environment variables must be provided.")
-}
-
 # Construct full paths for input and output files
-input_file_path <- file.path(params$out_path, input_file)
 # create namegile resultsAnalysisunique with date
 namefile <- paste0("resultsAnalysisunique_", format(Sys.time(), "%Y%m%d%H%M%S"), ".rds")
 output_file_path <- file.path(params$out_path, namefile)

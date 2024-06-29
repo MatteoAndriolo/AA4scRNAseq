@@ -259,7 +259,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
       temp <- list()
       message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
       # FURTHEST SUM ---------------------------------------------------------
-      if (!is.null(obj@params$FurthestSum) & obj@params$doFurthestSum) {
+      if (!is.null(obj@params$doFurthestSum) & obj@params$doFurthestSum) {
         message("LOG: obj_performArchetypes | Performing Furthest Sum")
         ttstart <- Sys.time()
         irow <- sample(1:nrow(m), 1)
@@ -270,6 +270,8 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
         temp$FSindices <- sort(irows)
 
         message("LOG: obj_performArchetypes | Furthest Sum Done in ", temp$FStime, " seconds")
+        
+        message("LOG: obj_performArchetypes | Furthest Sum Done found ", paste(temp$FSindices, collapse = ", "))
       }
 
 
