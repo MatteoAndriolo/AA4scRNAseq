@@ -1,6 +1,4 @@
-## General ----
-### obj_loadData ----
-# Define the 'database' Class
+# Define the 'database' Class ----
 setClass("database",
   slots = list(
     se = "Seurat",
@@ -14,30 +12,42 @@ setClass("database",
     other = "list"
   )
 )
+# DATA ----
+## generics ------
 
-### obj_areParamsEqual  ----
-# all but pathw that is ok if it changes
-# setGeneric("obj_areParamsEqual", function(obj, update = FALSE) {
-#  standardGeneric("obj_areParamsEqual")
-# })
-#
-# setMethod("obj_areParamsEqual", "database", function(obj, update = FALSE) {
-#  # check if all parameters (but pathw) are the same
-#  flag <- TRUE
-#  for (i in names(obj@params)) {
-#    if (i != "pathw") {
-#      if (!(is.null(obj@params[[i]]) | is.null(obj@curr.params[[i]])) & obj@params[[i]] != obj@curr.params[[i]]) {
-#        flag <- FALSE
-#        if (update) {
-#          obj@curr.params[[i]] <- obj@params[[i]]
-#        }
-#      }
-#    }
-#  }
-#  return(flag)
-# })
+### loadData ----
+# Generic method for loading data
+setGeneric("obj_loadData", function(obj,
+                                    data_path = NULL,
+                                    ...) {
+  standardGeneric("obj_loadData")
+})
 
-### obj_updateParams ----
+### createSeuratObject ----
+setGeneric("obj_createSeuratObject", function(obj, se, gene_names, cell_metadata, where.cell_names, pathw = NULL, test = FALSE, HVF = FALSE, test_genes = 300, test_samples = 500) {
+  standardGeneric("obj_createSeuratObject")
+})
+
+### getSeData ----
+setGeneric("obj_getSeData", function(obj) {
+  standardGeneric("obj_getSeData")
+})
+
+### getMatrixHVF ----
+setGeneric("obj_getMatrixHVF", function(obj) {
+  standardGeneric("obj_getMatrixHVF")
+})
+### getCellTypesList ----
+setGeneric("obj_getCellTypesList", function(obj) {
+  standardGeneric("obj_getCellTypesList")
+})
+
+### getCellTypesMetaDataName ----
+setGeneric("obj_getCellTypesMetaDataName", function(obj) {
+  standardGeneric("obj_getCellTypesMetaDataName")
+})
+
+## updateParams ----
 setGeneric("obj_updateParams", function(obj, updateCurrent = FALSE, ...) {
   standardGeneric("obj_updateParams")
 })
@@ -61,35 +71,10 @@ setMethod("obj_updateParams", "database", function(obj, updateCurrent = FALSE, .
     obj@params[[i]] <- list.params[[i]]
   }
 
-  # if (!is.logical(updateCurrent)) {
-  #  message("updateCurrent must be a logical value but it is ", updateCurrent, " setting it to FALSE")
-  #  updateCurrent <- FALSE
-  # }
-  # if (updateCurrent) {
-  #  obj@curr.params <- obj@params
-  # }
   return(obj)
 })
 
-### obj_loadData ----
-# Generic method for loading data
-setGeneric("obj_loadData", function(obj,
-                                    data_path = NULL,
-                                    ...) {
-  standardGeneric("obj_loadData")
-})
-
-### obj_createSeuratObject
-setGeneric("obj_createSeuratObject", function(obj, se, gene_names, cell_metadata, where.cell_names, pathw = NULL, test = FALSE, HVF = FALSE, test_genes = 300, test_samples = 500) {
-  standardGeneric("obj_createSeuratObject")
-})
-
-### obj_getSeData ----
-setGeneric("obj_getSeData", function(obj) {
-  standardGeneric("obj_getSeData")
-})
-
-### obj_setGenes ----
+## setGenes ----
 setGeneric("obj_setGenes", function(obj, pathGenes = "/app/data/list_genes_pathway.RData") {
   standardGeneric("obj_setGenes")
 })
@@ -131,53 +116,23 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
   )
   return(obj)
 })
-
-### obj_getMatrixHVF ----
-setGeneric("obj_getMatrixHVF", function(obj) {
-  standardGeneric("obj_getMatrixHVF")
-})
-
-### obj_visualizeData ----
-# Method to visualize data
-setGeneric("obj_visualizeData", function(obj) {
-  standardGeneric("obj_visualizeData")
-})
-
-setMethod("obj_visualizeData", "database", function(obj) {
-  obj@plots$pca <- PCAPlot(obj@se)
-
-  obj@plots$umap <- UMAPPlot(obj@se)
-
-  obj@plots$combined_plot <- plot_grid(
-    obj@plots$pca + theme(legend.position = "none"),
-    obj@plots$umap + theme(legend.position = "none"),
-    labels = c("A", "B"),
-    ncol = 2
-  )
-
-  obj@plots$elbowplot <- ElbowPlot(obj@se)
-
-  # obj@se@meta.data$seurat_clusters
-  obj <- obj_plotObjSpecificUmap(obj)
-  obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
-  obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
-  obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
-
-  return(obj)
-})
-
-### obj_furthestSum ----
+# Archetypal Analysis ----
+## furthestSum ----
 setGeneric("obj_furthestSum", function(obj, k = 5) {
   standardGeneric("obj_furthestSum")
 })
 
 # no obj@data
 setMethod("obj_furthestSum", "database", function(obj, k = 5) {
-  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k, nworkers = parallell::detectCores() / 2)
+  if (debug) {
+    message("DEBUG: furthest sum with nworkers= ", obj@params$nworkers)
+  }
+
+  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k, nworkers = obj@params$nworkers)
   return(irows)
 })
 
-### obj_performArchetypes ----
+## old.performArchetypes ----
 # Method to perform archetypal analysis
 setGeneric("obj_performArchetypes", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
   standardGeneric("obj_performArchetypes")
@@ -211,7 +166,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
   message("LOG: obj_performArchetypes | matrix dimension for archetypes is ", dim(m)[1], " ", dim(m)[2])
 
 
-  #### Archetypes Computation
+  # Archetypes Computation
   obj@archetypes$aa.kappas <- list()
 
   runArchetypes <- function(i, data, k, max_iterations) {
@@ -249,7 +204,6 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
   obj@params$family <- family
 
   for (k in obj@params$kappas) {
-    # Archetypal Analysis ---------------------------------------------------------
     history.restarts.k <- list()
     best_rss <- Inf
     # best_model=NULL
@@ -258,7 +212,6 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
     for (i in 1:obj@params$num_restarts) {
       temp <- list()
       message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
-      # FURTHEST SUM ---------------------------------------------------------
       if (!is.null(obj@params$doFurthestSum) & obj@params$doFurthestSum) {
         message("LOG: obj_performArchetypes | Performing Furthest Sum")
         ttstart <- Sys.time()
@@ -270,7 +223,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
         temp$FSindices <- sort(irows)
 
         message("LOG: obj_performArchetypes | Furthest Sum Done in ", temp$FStime, " seconds")
-        
+
         message("LOG: obj_performArchetypes | Furthest Sum Done found ", paste(temp$FSindices, collapse = ", "))
       }
 
@@ -337,7 +290,7 @@ setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = 
   return(obj)
 })
 
-# obj_performStepArchetypes
+# performStepArchetypes
 setGeneric("obj_performStepArchetypes", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
   standardGeneric("obj_performStepArchetypes")
 })
@@ -345,9 +298,63 @@ setGeneric("obj_performStepArchetypes", function(obj, kappas = NULL, k = NULL, d
 setMethod("obj_performStepArchetypes", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
 
 })
+## assignAAClusters ----
+setGeneric("obj_assignAAClusters", function(obj) {
+  standardGeneric("obj_assignAAClusters")
+})
+
+setMethod("obj_assignAAClusters", "database", function(obj) {
+  # se <- obj@se
+  # a <- obj@archetypes$model
+  # k <- a$k
+  message("LOG: obj_assingAACluster | creating aa_clusters metadata")
+  # weights <- coef(obj@archetypes$model)
+  weights <- coef(obj@archetypes$model)
+  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
+  weights <- as.data.frame(weights)
 
 
-### obj_visualizeArchetypes ----
+  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
+  obj@se@meta.data$aa_clusters <- apply(weights, 1, which.max)
+  message("LOG: obj_assingAACluster | finished aa_clusters metadata")
+  return(obj)
+})
+
+# Visualization ----
+
+## visualizeData ----
+# Method to visualize data
+setGeneric("obj_visualizeData", function(obj) {
+  standardGeneric("obj_visualizeData")
+})
+
+setMethod("obj_visualizeData", "database", function(obj) {
+  obj@plots$pca <- PCAPlot(obj@se)
+
+  obj@plots$umap <- UMAPPlot(obj@se)
+
+  obj@plots$combined_plot <- plot_grid(
+    obj@plots$pca + theme(legend.position = "none"),
+    obj@plots$umap + theme(legend.position = "none"),
+    labels = c("A", "B"),
+    ncol = 2
+  )
+
+  obj@plots$elbowplot <- ElbowPlot(obj@se)
+
+  # obj@se@meta.data$seurat_clusters
+  obj <- obj_plotObjSpecificUmap(obj)
+  obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+  obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
+  obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
+
+  return(obj)
+})
+
+
+
+
+## visualizeArchetypes ----
 setGeneric("obj_visualizeArchetypes", function(obj) {
   standardGeneric("obj_visualizeArchetypes")
 })
@@ -360,7 +367,7 @@ setMethod("obj_visualizeArchetypes", "database", function(obj) {
   return(obj)
 })
 
-### obj_umapArchetypes ----
+## umapArchetypes ----
 setGeneric("obj_umapArchetypes", function(obj, treshold = 0.1) {
   standardGeneric("obj_umapArchetypes")
 })
@@ -409,7 +416,7 @@ setMethod("obj_umapArchetypes", "database", function(obj, treshold = 0.01) {
   return(obj)
 })
 
-### obj_umapWithArchetypes ----
+## umapWithArchetypes ----
 setGeneric("obj_umapWithArchetypes", function(obj, treshold = 0.1) {
   standardGeneric("obj_umapWithArchetypes")
 })
@@ -418,7 +425,6 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
   message("LOG: obj_umapWithArchetypes | creating plot")
   if (debug) message("DEBUG: obj_umapWithArchetypes | entering function ")
   if (debug) message("DEBUG: obj_umapWithArchetypes | archetypes dimension is ", dim(parameters(obj@archetypes$model))[[1]], " ", dim(parameters(obj@archetypes$model))[[2]])
-  #################
   aspe <- t(parameters(obj@archetypes$model))
   rownames(aspe) <- rownames(obj@se@assays$RNA$counts)
   colnames(aspe) <- paste0("Archetype", 1:ncol(aspe))
@@ -430,7 +436,8 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
 
   # Create a temporary Seurat object with the combined matrix
   combined_obj <- CreateSeuratObject(counts = newse)
-  combined_obj <- ScaleData(combined_obj, layer = "counts")
+  # TODO check if this must be done!!!
+  # combined_obj <- ScaleData(combined_obj, layer = "counts")
   if (debug) message("DEBUG: obj_umapWithArchetypes | objdim ", dim(combined_obj)[[1]], " ", dim(combined_obj)[[2]])
   combined_obj <- RunPCA(combined_obj, features = rownames(combined_obj))
 
@@ -472,30 +479,9 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
   return(obj)
 })
 
-### obj_assignAAClusters ----
-setGeneric("obj_assignAAClusters", function(obj) {
-  standardGeneric("obj_assignAAClusters")
-})
 
-setMethod("obj_assignAAClusters", "database", function(obj) {
-  # se <- obj@se
-  # a <- obj@archetypes$model
-  # k <- a$k
-  message("LOG: obj_assingAACluster | creating aa_clusters metadata")
-  # weights <- coef(obj@archetypes$model)
-  weights <- coef(obj@archetypes$model)
-  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
-  weights <- as.data.frame(weights)
-
-
-  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
-  obj@se@meta.data$aa_clusters <- apply(weights, 1, which.max)
-  message("LOG: obj_assingAACluster | finished aa_clusters metadata")
-  return(obj)
-})
-
-
-### obj_nameFiles -----
+# General ----
+## nameFiles -----
 setGeneric("obj_nameFiles", function(obj, name, ext) {
   standardGeneric("obj_nameFiles")
 })
@@ -521,7 +507,7 @@ setMethod("obj_nameFiles", "database", function(obj, name, ext) {
   return(sprintf("%s/%s%s%s%s_%s.%s", obj@params$out_path, class(obj), p, t, h, name, ext))
 })
 
-### obj_seuratCluster ----
+## seuratCluster ----
 setGeneric("obj_seuratCluster", function(obj) {
   standardGeneric("obj_seuratCluster")
 })
@@ -535,7 +521,7 @@ setMethod("obj_seuratCluster", "database", function(obj) {
 })
 
 
-### obj_saveObj ----
+## saveObj ----
 # Method to save object
 setGeneric("obj_saveObj", function(obj, namefile = "final", keep.org = FALSE) {
   standardGeneric("obj_saveObj")
@@ -553,20 +539,11 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
   saveRDS(t, file = filename)
 })
 
-### obj_plotGoldUmap
+## plotGoldUmap
 setGeneric("obj_plotObjSpecificUmap", function(obj) {
   standardGeneric("obj_plotObjSpecificUmap")
 })
 
-### obj_getCellTypesList ----
-setGeneric("obj_getCellTypesList", function(obj) {
-  standardGeneric("obj_getCellTypesList")
-})
-
-### obj_getCellTypesMetaDataName ----
-setGeneric("obj_getCellTypesMetaDataName", function(obj) {
-  standardGeneric("obj_getCellTypesMetaDataName")
-})
 
 source("/app/Rmd/class_Melanoma.R")
 source("/app/Rmd/class_Exp.R")
