@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#_run_mainR.sh
 #TEST <- as.logical(Sys.getenv("TEST", "FALSE"))
 #HVF <- as.logical(Sys.getenv("HVF", "TRUE"))
 #TEST_genes <- as.numeric(Sys.getenv("TEST_genes", 300))
