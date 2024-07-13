@@ -5,7 +5,7 @@
 #   -g   Number of test genes (default: 300)"
 #   -s   Number of test samples (default: 500)"
 #   -H   High variance filter (default: FALSE)"
-#   -f   Path to Rmd file (default: /app/Rmd/unique.R)"
+#   -f   Path to Rmd file (default: /app/Rmd/main.R)"
 #   -p   Pathway name (default: NULL)"
 #   -c   Class name (required)"
 #   -r   Number of restarts (default: 10)"
