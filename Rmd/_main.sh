@@ -1,55 +1,43 @@
 #!/bin/bash
 
+#################################################
 # Default parameter values
+##################################################
+rscriptfile="/app/Rmd/main.R"
 classname="Melanoma"
 hvf=FALSE
+test=FALSE
+verbose=FALSE
+pathw=-1
+nworkers=10
 max_iterations=100
 num_restarts=10
-pathw=-1
-rscriptfile="/app/Rmd/unique.R"
-test=FALSE
 test_genes=300
 test_samples=500
 
-echo $@
+##################################################
 # Display usage
+##################################################
+echo $@
 usage() {
-    echo "Usage: $0 [-t test] [-g test_genes] [-s test_samples] [-H hvf] [-f rscriptfile] [-p pathw] -c classname"
+    echo "Usage: $0 [-t test] [-H hvf] [-f rscriptfile] [-p pathw] [-g test_genes] [-s test_samples] [-w nworkers] [-h] [-v] -c classname"
+    echo "  -c   Class name (required)"
+    echo "  -f   Path to Rmd file (default: /app/Rmd/main.R)"
+    echo "  -H   High variance filter (default: FALSE)"
     echo "  -t   Test mode (default: FALSE)"
     echo "  -g   Number of test genes (default: 300)"
     echo "  -s   Number of test samples (default: 500)"
-    echo "  -H   High variance filter (default: FALSE)"
-    echo "  -f   Path to Rmd file (default: /app/Rmd/unique.R)"
     echo "  -p   Pathway name (default: NULL)"
-    echo "  -c   Class name (required)"
     echo "  -r   Number of restarts (default: 10)"
     echo "  -i   Maximum number of iterations (default: 100)"
     echo "  -h   Show this help message and exit"
+    echo "  -v   Verbose mode (default: FALSE)"
+    echo "  -w   Number of workers (default: 1)"
 }
 
-## Parse and set parameters
-#while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
-#    case "${opt}" in
-#        t) test=${OPTARG} ;;
-#        g) test_genes=${OPTARG} ;;
-#        s) test_samples=${OPTARG} ;;
-#        H) hvf=${OPTARG} ;;
-#        f) rscriptfile=${OPTARG} ;;
-#        p) pathw=${OPTARG} ;;
-#        c) classname=${OPTARG} ;;
-#        r) num_restarts=${OPTARG} ;;
-#        i) max_iterations=${OPTARG} ;;
-#        h)
-#            usage
-#            exit 0
-#            ;;
-#        *)
-#            usage
-#            exit 1
-#            ;;
-#    esac
-#done
-
+##################################################
+# Parse command line arguments
+##################################################
 while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
     case "${opt}" in
         t)
@@ -88,6 +76,14 @@ while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
             max_iterations=${OPTARG}
             echo "Max iterations set to: ${max_iterations}"
             ;;
+        v) 
+            verbose=true
+            DEBUG="TRUE"
+            ;;
+        w)  
+            nworkers=${OPTARG}
+            echo "Number of workers set to: ${nworkers}"
+            ;;
         h)
             usage
             exit 0
@@ -99,20 +95,29 @@ while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
     esac
 done
 
+
 shift $((OPTIND - 1))
 
+##################################################
 # Display parameter values for debugging
-echo "LOG.sh:TEST=${test}"
-echo "LOG.sh:TEST_GENES=${test_genes}"
-echo "LOG.sh:TEST_SAMPLES=${test_samples}"
-echo "LOG.sh:HVF=${hvf}"
-echo "LOG.sh:RSCRIPTFILE=${rscriptfile}"
-echo "LOG.sh:PATHW=${pathw}"
-echo "LOG.sh:CLASSNAME=${classname}"
-echo "LOG.sh:NUM_RESTARTS=${num_restarts}"
-echo "LOG.sh:MAX_ITERATIONS=${max_iterations}"
+##################################################
+if [ "$verbose" ] then
+    echo "LOG.sh:TEST=${test}"
+    echo "LOG.sh:HVF=${hvf}"
+    echo "LOG.sh:RSCRIPTFILE=${rscriptfile}"
+    echo "LOG.sh:PATHW=${pathw}"
+    echo "LOG.sh:CLASSNAME=${classname}"
+    echo "LOG.sh:NUM_RESTARTS=${num_restarts}"
+    echo "LOG.sh:MAX_ITERATIONS=${max_iterations}"
+    echo "LOG.sh:TEST_GENES=${test_genes}"
+    echo "LOG.sh:TEST_SAMPLES=${test_samples}"
+    echo "LOG.sh:NWORKERS=${nworkers}"
+    echo "LOG.sh:VERBOSE=${verbose}"
+fi
 
+##################################################
 # Set output path based on classname
+##################################################
 case $classname in
     Exp1) output_path="out/AllonKleinLab/Experiment1" ;;
     Exp2) output_path="out/AllonKleinLab/Experiment2" ;;
@@ -121,15 +126,37 @@ case $classname in
     *) echo "Unknown classname: $classname" >&2; exit 1 ;;
 esac
 
-outpath="/app/$output_path/${classname}_files"
+##################################################
+# Set output folder
+##################################################
+prefix=""
+if [ "$test" = true ]; then
+    prefix+="T"
+fi
+if [ "$hvf" = true ]; then
+    prefix+="H"
+fi
+if [ "$pathw" != -1 ]; then
+    prefix+="${pathw}"
+fi
+timestamp=$(date +%m%d%H%M)
+outpath="/app/$output_path/${timestamp}_${prefix}"
 echo "LOG: Output path is $outpath"
 mkdir -p $outpath
+mkdir -p $outpath/figures
+mkdir -p $outpath/data
 
+##################################################
 # Initialize log file
-log_file="$outpath/RMSstat.log"
+##################################################
+log_file="$outpath/stat.log"
 touch $log_file
 echo "Timestamp, CPU%, MEM%" > $log_file
 
+##################################################
+# Set parameters for R script 
+# Set environment
+##################################################
 params=(
     "classname=$classname"
     "hvf=$hvf"
@@ -142,15 +169,16 @@ params=(
     "test=$test"
     "test_genes=$test_genes"
     "test_samples=$test_samples"
+    "nworkers=$nworkers"
 )
 
 export CLASSNAME=$classname
+export DEBUG=$DEBUG
 export HVF=$hvf
 export MAX_ITERATIONS=$max_iterations
 export NUM_RESTARTS=$num_restarts
+export NWORKERS=$nworkers
 export OUT_PATH=$outpath
-# if pathw null do ont export
-
 export PATHW="$pathw"
 export TEST=$test
 export TEST_genes=$test_genes

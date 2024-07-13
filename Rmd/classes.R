@@ -3,7 +3,6 @@ setClass("database",
   slots = list(
     se = "Seurat",
     se.org = "ANY",
-    # data = "list", # Group data matrices here
     plots = "list", # Group plots here
     archetypes = "list", # Group archetype analysis related stuff here
     params = "list", # Execution parameters
@@ -37,15 +36,16 @@ setGeneric("obj_getSeData", function(obj) {
 setGeneric("obj_getMatrixHVF", function(obj) {
   standardGeneric("obj_getMatrixHVF")
 })
-### getCellTypesList ----
-setGeneric("obj_getCellTypesList", function(obj) {
-  standardGeneric("obj_getCellTypesList")
-})
 
-### getCellTypesMetaDataName ----
-setGeneric("obj_getCellTypesMetaDataName", function(obj) {
-  standardGeneric("obj_getCellTypesMetaDataName")
-})
+# ### getCellTypesList ----
+# setGeneric("obj_getCellTypesList", function(obj) {
+#   standardGeneric("obj_getCellTypesList")
+# })
+#
+# ### getCellTypesMetaDataName ----
+# setGeneric("obj_getCellTypesMetaDataName", function(obj) {
+#   standardGeneric("obj_getCellTypesMetaDataName")
+# })
 
 ## updateParams ----
 setGeneric("obj_updateParams", function(obj, updateCurrent = FALSE, ...) {
@@ -53,7 +53,7 @@ setGeneric("obj_updateParams", function(obj, updateCurrent = FALSE, ...) {
 })
 
 setMethod("obj_updateParams", "database", function(obj, updateCurrent = FALSE, ...) {
-  message("LOG: obj_updateParams | entered")
+  if (debug) message("DEBUG: obj_updateParams | entered")
   # for each key=value in ... do obj@params$key <- value
   list.params <- list(...)
   list.params
@@ -89,17 +89,21 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
 
   if (inherits(obj, "Melanoma")) {
     if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
+      # If only one pathwas
       genes <- list_genes_human_pathway[[obj@params$pathw]]
       if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
     } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
+      # if more than one
       genes <- lapply(obj@params$pathw, function(p) list_genes_human_pathway[[p]])
       if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", sapply(genes, length))
     }
   } else {
     if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
+      # If only one pathwas
       genes <- list_genes_mouse_pathway[[obj@params$pathw]]
       if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
     } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
+      # if more than one
       genes <- lapply(obj@params$pathw, function(p) list_genes_mouse_pathway[[p]])
       if (debug) message("DEBUG: obj_setGenes | Number genes in ", pathw, " is ", sapply(genes, length))
     }
@@ -116,209 +120,6 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
   )
   return(obj)
 })
-# Archetypal Analysis ----
-## furthestSum ----
-setGeneric("obj_furthestSum", function(obj, k = 5) {
-  standardGeneric("obj_furthestSum")
-})
-
-# no obj@data
-setMethod("obj_furthestSum", "database", function(obj, k = 5) {
-  if (debug) {
-    message("DEBUG: furthest sum with nworkers= ", obj@params$nworkers)
-  }
-
-  irows <- archetypal::find_furthestsum_points(obj@data$m, k = k, nworkers = obj@params$nworkers)
-  return(irows)
-})
-
-## old.performArchetypes ----
-# Method to perform archetypal analysis
-setGeneric("obj_performArchetypes", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
-  standardGeneric("obj_performArchetypes")
-})
-
-setMethod("obj_performArchetypes", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
-  if (debug) {
-    message("DEBUG: obj_performArchetypes | k=", k)
-    message("DEBUG: obj_performArchetypes | kappas=", kappas)
-    message("DEBUG: obj_performArchetypes | obj@params$k=", obj@params$k)
-    message("DEBUG: obj_performArchetypes | obj@params$kappas=", obj@params$kappas)
-  }
-  if (is.null(obj@params$kappas) & is.null(obj@params$k)) {
-    stop("ERROR: obj_performArchetypes | k and kappas are null")
-  }
-  if (is.null(obj@params$kappas) & !is.null(obj@params$k)) {
-    obj@params$kappas <- obj@params$k
-  }
-
-  if (is.null(obj@params$which.aa)) {
-    obj_updateParams(obj, which.aa = "robust")
-  }
-
-  # SETUP matrices
-  message("LOG: obj_performArchetypes | Performing Archetypes on pathw ", obj@params$pathw)
-  message("LOG: obj_performArchetypes | Number of archetypes is ", obj@params$kappas)
-
-  # IMPORTANT !!!! column <-> features, row <-> samples
-  m <- as.matrix(t(obj_getSeData(obj)))
-  m <- m[Matrix::rowSums(m) > 0, Matrix::colSums(m) > 0]
-  message("LOG: obj_performArchetypes | matrix dimension for archetypes is ", dim(m)[1], " ", dim(m)[2])
-
-
-  # Archetypes Computation
-  obj@archetypes$aa.kappas <- list()
-
-  runArchetypes <- function(i, data, k, max_iterations) {
-    message("LOG: obj_performArchetypes | Starting rerun ", i, "/", num_restarts)
-    temp <- list()
-    # tryCatch(
-    #  {
-    tstart <- Sys.time()
-    family <- archetypes::archetypesFamily(which = "robust")
-    temp$a <- archetypes::archetypes(data, k = k, verbose = TRUE, maxIterations = max_iterations, saveHistory = FALSE, family = family)
-    tend <- Sys.time()
-    message(sprintf("Archetypes Computed in %s", tend - tstart))
-
-    temp$rss <- temp$a$rss
-    temp$time <- tend - tstart
-    #  },
-    #  error = function(e) {
-    #    temp$a <- NULL
-    #    temp$rss <- Inf
-    #    temp$time <- NA
-    #    message(sprintf("Error in archetypes: %s", e$message))
-    #  }
-    # )
-    return(temp)
-  }
-
-  tstartReruns <- Sys.time()
-  # if (doparallel) {
-  #   nworkers <- parallel::detectCores() - 1
-  #   # results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations, mc.cores = 3)
-  #   results <- mclapply(1:num_restarts, runArchetypes, data = m, k = k, max_iterations = obj@params$max_iterations, mc.cores = nworkers)
-  #   obj@archetypes$restarts <- results
-  # } else {
-  family <- archetypes::archetypesFamily(which = obj@params$which.aa)
-  obj@params$family <- family
-
-  for (k in obj@params$kappas) {
-    history.restarts.k <- list()
-    best_rss <- Inf
-    # best_model=NULL
-    best_restart_index <- -1
-
-    for (i in 1:obj@params$num_restarts) {
-      temp <- list()
-      message("LOG: obj_performArchetypes | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
-      if (!is.null(obj@params$doFurthestSum) & obj@params$doFurthestSum) {
-        message("LOG: obj_performArchetypes | Performing Furthest Sum")
-        ttstart <- Sys.time()
-        irow <- sample(1:nrow(m), 1)
-        irows <- FurthestSum(m, irow = irow, k = k)
-        family$initfn <- archetypes:::make.fix.initfn(irows)
-        ttend <- Sys.time()
-        temp$FStime <- difftime(ttend, ttstart, units = "secs")
-        temp$FSindices <- sort(irows)
-
-        message("LOG: obj_performArchetypes | Furthest Sum Done in ", temp$FStime, " seconds")
-
-        message("LOG: obj_performArchetypes | Furthest Sum Done found ", paste(temp$FSindices, collapse = ", "))
-      }
-
-
-      # If you want to use function instead of explicit code uncomment this
-      # obj@archetypes$restarts[[i]] <- runArchetypes(i, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations)
-
-      tstart <- Sys.time()
-      temp$a <- archetypes::archetypes(m, k = k, verbose = TRUE, maxIterations = obj@params$max_iterations, saveHistory = TRUE, family = family)
-      tend <- Sys.time()
-      message("Archetypes Computed in ", difftime(tend, tstart, units = "secs"))
-
-      temp$rss <- temp$a$rss
-      temp$time <- difftime(tend, tstart, units = "secs")
-      # },
-      # error = function(e) {
-      #   temp$a <- NULL
-      #   temp$rss <- Inf
-      #   temp$time <- NA
-      #   message(sprintf("Error in archetypes: %s", e$message))
-      # }
-      # )
-      history.restarts.k[[i]] <- temp
-
-      # MISC
-      message("DEBUG: obj_performArchetypes | best_rss is ", best_rss, " and temp$rss is ", temp$rss)
-      if (is.na(temp$rss)) {
-        temp$rss <- Inf
-      }
-      if (temp$rss < best_rss) {
-        best_rss <- temp$rss
-        # best_model = temp$a
-        best_restart_index <- i
-        if (debug) message("DEBUG: obj_performArchetypes | best_rss chosen is ", best_rss)
-      }
-    }
-    history.restarts.k$best.run <- history.restarts.k[[best_restart_index]]
-    obj@archetypes$aa.kappas[[as.character(k)]] <- history.restarts.k
-  }
-  # }
-  tendReruns <- Sys.time()
-  message("OUTPUT: obj_performArchetypes | Reruns completed in ", difftime(tendReruns, tstartReruns, units = "secs"), " seconds")
-
-  # Now find the best model across all kappas
-  best_overall_run <- NULL
-  best_overall_rss <- Inf
-
-  for (k in obj@params$kappas) {
-    best_k_run <- obj@archetypes$aa.kappas[[as.character(k)]]$best.run
-    if (best_k_run$rss < best_overall_rss) {
-      best_overall_rss <- best_k_run$rss
-      best_overall_run <- best_k_run
-    }
-  }
-  # obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
-  obj@archetypes$bestrun <- best_overall_run
-  obj@archetypes$model <- best_overall_run$a
-  if (debug) message("DEBUG: obj_performArchetypes | dim archetypes ", dim(parameters(best_overall_run$a))[1], " ", dim(parameters(best_overall_run$a))[2])
-  # obj@archetypes$screeplot <- screeplot()
-  # obj@archetypes$model <- obj@archetypes$bestrun$a
-
-  # obj@archetypes$restarts <- list()
-
-  return(obj)
-})
-
-# performStepArchetypes
-setGeneric("obj_performStepArchetypes", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
-  standardGeneric("obj_performStepArchetypes")
-})
-
-setMethod("obj_performStepArchetypes", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
-
-})
-## assignAAClusters ----
-setGeneric("obj_assignAAClusters", function(obj) {
-  standardGeneric("obj_assignAAClusters")
-})
-
-setMethod("obj_assignAAClusters", "database", function(obj) {
-  # se <- obj@se
-  # a <- obj@archetypes$model
-  # k <- a$k
-  message("LOG: obj_assingAACluster | creating aa_clusters metadata")
-  # weights <- coef(obj@archetypes$model)
-  weights <- coef(obj@archetypes$model)
-  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
-  weights <- as.data.frame(weights)
-
-
-  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
-  obj@se@meta.data$aa_clusters <- apply(weights, 1, which.max)
-  message("LOG: obj_assingAACluster | finished aa_clusters metadata")
-  return(obj)
-})
 
 # Visualization ----
 
@@ -329,8 +130,10 @@ setGeneric("obj_visualizeData", function(obj) {
 })
 
 setMethod("obj_visualizeData", "database", function(obj) {
-  obj@plots$pca <- PCAPlot(obj@se)
+  path_figures <- obj@params$path_figures
 
+  # PCA UMAP
+  obj@plots$pca <- PCAPlot(obj@se)
   obj@plots$umap <- UMAPPlot(obj@se)
 
   obj@plots$combined_plot <- plot_grid(
@@ -340,18 +143,34 @@ setMethod("obj_visualizeData", "database", function(obj) {
     ncol = 2
   )
 
-  obj@plots$elbowplot <- ElbowPlot(obj@se)
+  ggsave(filename = file.path(path_figures, "PCAPlot.png"), plot = obj@plots$pca)
+  ggsave(filename = file.path(path_figures, "UMAPPlot.png"), plot = obj@plots$umap)
+  ggplot2::ggsave(filename = file.path(path_figures, "combined_plot.png"), plot = obj@plots$combined_plot)
 
-  # obj@se@meta.data$seurat_clusters
-  obj <- obj_plotObjSpecificUmap(obj)
-  obj@plots$umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+  # ELBOWPLOT
+  obj@plots$elbowplot <- ElbowPlot(obj@se)
+  ggsave(filename = file.path(path_figures, "ElbowPlot.png"), plot = obj@plots$elbowplot)
+
+  # GOLD
+  # setMethod("obj_plotGoldUmap", "Melanoma", function(obj) {
+  #   ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
+  #   umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = ct)
+  #   umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+  #   return(list(umap_celltypes=umap_celltypes, umap_tumor=umap_tumor))
+  # })
+  newplots <- obj_plotGoldUmap(obj)
+  do.call(function(...) {
+    for (plot_name in names(list(...))) {
+      obj@plots[[plot_name]] <- list(...)[[plot_name]]
+      ggsave(filename = file.path(path_figures, paste0(plot_name, ".png")), plot = obj@plots[[plot_name]])
+    }
+  }, newplots)
+
   obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
   obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
 
   return(obj)
 })
-
-
 
 
 ## visualizeArchetypes ----
@@ -362,8 +181,10 @@ setGeneric("obj_visualizeArchetypes", function(obj) {
 setMethod("obj_visualizeArchetypes", "database", function(obj) {
   # a <- obj@archetypes$model
   # k <- a$k
+  path_figures <- obj@params$path_figures
   plotarchetyps <- xyplot(obj@archetypes$model, as.matrix(obj_getSeData(obj)))
   obj@plots$xyplot <- plotarchetyps
+  ggsave(filename = file.path(path_figures, "archetypes_xyplot.png"), plot = obj@plots$xyplot)
   return(obj)
 })
 
@@ -479,6 +300,10 @@ setMethod("obj_umapWithArchetypes", "database", function(obj, treshold = 0.01) {
   return(obj)
 })
 
+### plotGoldUmap - generic ----
+setGeneric("obj_plotGoldUmap", function(obj) {
+  standardGeneric("obj_plotGoldUmap")
+})
 
 # General ----
 ## nameFiles -----
@@ -515,8 +340,6 @@ setGeneric("obj_seuratCluster", function(obj) {
 setMethod("obj_seuratCluster", "database", function(obj) {
   obj@se <- Seurat::FindNeighbors(obj@se, dims = 1:10)
   obj@se <- Seurat::FindClusters(obj@se, method = "igraph", resolution = 1, n.start = 10, n.iter = 10, verbose = TRUE)
-  names(obj@se)
-  obj@plots$clusterplot <- Seurat::DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
   return(obj)
 })
 
@@ -539,12 +362,10 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
   saveRDS(t, file = filename)
 })
 
-## plotGoldUmap
-setGeneric("obj_plotObjSpecificUmap", function(obj) {
-  standardGeneric("obj_plotObjSpecificUmap")
-})
 
-
+# Other sources ----
 source("/app/Rmd/class_Melanoma.R")
 source("/app/Rmd/class_Exp.R")
+source("/app/Rmd/class_archetypes.R")
+# source("/app/Rmd/class_archetypal.R")
 # source("/app/Rmd/class_Other.R")
