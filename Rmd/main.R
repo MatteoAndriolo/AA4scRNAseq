@@ -12,7 +12,7 @@ params$max_iterations <- as.numeric(Sys.getenv("MAX_ITERATIONS", "100"))
 params$num_restarts <- as.numeric(Sys.getenv("NUM_RESTARTS", "10"))
 params$nworkers <- as.numeric(Sys.getenv("NWORKERS", "1"))
 params$out_path <- Sys.getenv("OUT_PATH")
-params$pathw <- as.numeric(Sys.getenv("PATHW", "-1"))
+params$pathw <- as.numeric(Sys.getenv("PATHW", "0"))
 params$test <- as.logical(Sys.getenv("TEST", "FALSE"))
 params$test_genes <- as.numeric(Sys.getenv("TEST_GENES", "300"))
 params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
@@ -23,14 +23,14 @@ params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 debug <- params$debug
 params$path_figures <- file.path(params$out_path, "figures")
 plan("multicore", workers = params$nworkers)
-if (params$pathw == -1) {
+if (params$pathw == 0) {
   params$pathw <- NULL
 }
 
 ################### FIXING PARAMETERS FOR PRESENTATION
 # TODO remove this
 # FOR NOW WE WILL NOT USE PATHW BUT ONLY HVF!!!
-# params$pathw <- -1
+# params$pathw <- 0
 # if (params$pathw > 0) {
 #  params$pathw <- pathways[[params$pathw]]
 # } else {

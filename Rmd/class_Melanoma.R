@@ -88,7 +88,7 @@ setMethod(
       message("LOG: obj_loadData | Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
-      obj@se <- obj@se[obj@params$genes, ]
+      obj@se <- obj@se[gene.flag , ]
       if (debug) {
         message("DEBUG: obj_loadData | intersection pathw and genenames: ", sum(gene.flag))
         message("DEBUG: obj_loadData | dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])

@@ -61,10 +61,10 @@ setMethod("obj_updateParams", "database", function(obj, updateCurrent = FALSE, .
     message("DEBUG: obj_updateParams | Updating ", i, " with ", list.params[[i]])
     if (i == "pathw" & is.numeric(list.params[[i]])) {
       if (list.params[[i]] > 0) {
-        if (debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], ">0")
-        obj@params$pathw <- pathways[[obj@params$pathw]]
+        if (debug) message("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], " >0 ")
+        obj@params$pathw <- pathways[[list.params[[i]]]]
       } else {
-        if (debug) warning("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], "<=0")
+        if (debug) message("DEGBUG: obj_updateParams | Entering in is numeric with pathw ", list.params[[i]], "<=0")
         obj@params$pathw <- NULL
       }
     }

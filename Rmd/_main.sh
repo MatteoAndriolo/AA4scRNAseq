@@ -8,7 +8,7 @@ classname="Melanoma"
 hvf=FALSE
 test=FALSE
 verbose=FALSE
-pathw=-1
+pathw=0
 nworkers=10
 max_iterations=100
 num_restarts=10
@@ -38,7 +38,7 @@ usage() {
 ##################################################
 # Parse command line arguments
 ##################################################
-while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
+while getopts ":t:g:s:H:f:p:c:r:i:v:w:h" opt; do
     case "${opt}" in
         t)
             test=${OPTARG}
@@ -85,10 +85,12 @@ while getopts ":t:g:s:H:f:p:c:r:i:h" opt; do
             echo "Number of workers set to: ${nworkers}"
             ;;
         h)
+            echo "help invocked"
             usage
             exit 0
             ;;
         *)
+            echo "Invalid option: -${OPTARG}" >&2
             usage
             exit 1
             ;;
@@ -101,7 +103,7 @@ shift $((OPTIND - 1))
 ##################################################
 # Display parameter values for debugging
 ##################################################
-if [ "$verbose" ] then
+if [ "$verbose" ]; then
     echo "LOG.sh:TEST=${test}"
     echo "LOG.sh:HVF=${hvf}"
     echo "LOG.sh:RSCRIPTFILE=${rscriptfile}"
@@ -130,17 +132,17 @@ esac
 # Set output folder
 ##################################################
 prefix=""
-if [ "$test" = true ]; then
+if [ "$test" = "TRUE" ]; then
     prefix+="T"
 fi
-if [ "$hvf" = true ]; then
+if [ "$hvf" = "TRUE" ]; then
     prefix+="H"
 fi
-if [ "$pathw" != -1 ]; then
+if [ "$pathw" != 0 ]; then
     prefix+="${pathw}"
 fi
 timestamp=$(date +%m%d%H%M)
-outpath="/app/$output_path/${timestamp}_${prefix}"
+outpath="/app/$output_path/${timestamp}_${prefix}_$SLURM_JOB_ID"
 echo "LOG: Output path is $outpath"
 mkdir -p $outpath
 mkdir -p $outpath/figures
