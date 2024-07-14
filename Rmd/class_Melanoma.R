@@ -53,6 +53,7 @@ setMethod(
 
       obj@se <- CreateSeuratObject(counts = se, meta.data = metadata)
       if (debug) message("DEBUG: obj_loadData | Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
+      obj@se$ctype <- obj@se$non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK.
       obj@se <- ScaleData(obj@se, layer = "counts")
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se))
@@ -88,15 +89,15 @@ setMethod(
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
 
-      if(debug){
-        message("DEBUG: obj_loadData | pathw | number genes pathw = ", length(obj@params$genes) )
+      if (debug) {
+        message("DEBUG: obj_loadData | pathw | number genes pathw = ", length(obj@params$genes))
         message("DEBUG: obj_loadData | pathw | first 5 ", toString(obj@params$genes[1:5]))
-        message("DEBUG: obj_loadData | pathw | number genes data = ", length(gene_names ))
+        message("DEBUG: obj_loadData | pathw | number genes data = ", length(gene_names))
         message("DEBUG: obj_loadData | pathw | first 5 ", toString(gene_names[1:5]))
         message("DEBUG: obj_loadData | pathw | intersectoin gives ", sum(gene.flag), " genes")
       }
 
-      obj@se <- obj@se[gene.flag , ]
+      obj@se <- obj@se[gene.flag, ]
       message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
       # message("LOG: obj_loadData | rescale, hvf, reduce after pathw")
@@ -116,7 +117,10 @@ setMethod(
 ## obj_getSeData ----
 setMethod("obj_getSeData", "Melanoma", function(obj) {
   if (debug) message("DEBUG: obj_getSeData | return counts")
-  return(obj@se@assays$RNA@layers$counts)
+  tm <- obj@se@assays$RNA@layers$counts
+  rownames(tm) <- rownames(obj@se)
+  colnames(tm) <- colnames(obj@se)
+  return(tm)
 })
 
 ## obj_plotGoldUmap
@@ -135,7 +139,7 @@ setMethod("obj_plotGoldUmap", "Melanoma", function(obj) {
 #
 ### obj_getCellTypesMetaDataName ----
 # setMethod("obj_getCellTypesMetaDataName", "Melanoma", function(obj) {
-#  ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-#  return(ct)
+# ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
+# return(ct)
 # })
 #

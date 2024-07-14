@@ -11,7 +11,7 @@ params$debug <- as.logical(Sys.getenv("DEBUG", "FALSE"))
 params$hvf <- as.logical(Sys.getenv("HVF", "FALSE"))
 params$max_iterations <- as.numeric(Sys.getenv("MAX_ITERATIONS", "100"))
 params$num_restarts <- as.numeric(Sys.getenv("NUM_RESTARTS", "10"))
-params$method <- Sys.getenv("METHOD")
+params$method <- Sys.getenv("METHOD", "archetypal")
 params$nworkers <- as.numeric(Sys.getenv("NWORKERS", "1"))
 params$out_path <- Sys.getenv("OUT_PATH")
 params$pathw <- as.numeric(Sys.getenv("PATHW", "0"))
@@ -23,29 +23,28 @@ params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 # params$k <- as.numeric(Sys.getenv("K", "8"))
 # params$nworkers <- parallel::detectCores() - 2
 debug <- params$debug
+params$rseed <- 2024
 params$path_figures <- file.path(params$out_path, "figures")
 plan("multicore", workers = params$nworkers)
 if (params$pathw == 0) {
   params$pathw <- NULL
 }
 
-################### FIXING PARAMETERS FOR PRESENTATION
-# TODO remove this
-# FOR NOW WE WILL NOT USE PATHW BUT ONLY HVF!!!
-# params$pathw <- 0
-# if (params$pathw > 0) {
-#  params$pathw <- pathways[[params$pathw]]
-# } else {
-#  params$pathw <- NULL
-# }
-#
-# if(is.null(params$k) & classname=="Melanoma"){
-params$kappas <- 4:8
-# }
-#
-# params$hvf <- TRUE
-# params$name <- "5.13.FS.unique."
-# params$doFurthestSum <- TRUE
+################### FIXING PARAMETERS FOR TESTING
+if (FALSE) {
+  params$debug <- TRUE
+  debug <- TRUE
+  params$classname <- "Melanoma"
+  params$pathw <- NULL
+  params$kappas <- 2:3
+  params$test <- TRUE
+  params$nworkers <- 10
+  params$num_restarts <- 2
+  params$max_iterations <- 5
+  params$method <- "archetypal"
+  params$out_path <- "/dev/null"
+  params$init_method <- "furthestsum"
+}
 ################### END FIXING PARAMETERS FOR PRESENTATION
 
 # CREATE OBJECT -----
@@ -58,23 +57,29 @@ obj <- obj_loadData(obj)
 if (debug) message("DEBUG: main | Loading Data Done")
 
 # PERFORM ARCHETYPES ---------------------------------
-## ARCHETYPES 
-if (obj@params$method == "archetypes"){
-message("LOG: main | Performing Archetypes")
-obj <- obj_performArchetypes(obj, doparallel = FALSE)
-message("LOG: main | Performing Archetypes Done")
+## ARCHETYPES----
+if (obj@params$method == "archetypes") {
+  # message("LOG: main | Performing Archetypes")
+  # obj <- obj_performArchetypes(obj, doparallel = FALSE)
+  # message("LOG: main | Performing Archetypes Done")
+  #
+  # message("LOG: main | assign AA clusters")
+  # obj <- obj_assignArchetypesClusters(obj)
+  # message("LOG: main | assign AA clusters Done")
 
-message("LOG: main | assign AA clusters")
-obj <- obj_assignArchetypesClusters(obj)
-message("LOG: main | assign AA clusters Done")
-}else if(obj@params$method == "archetypal"){
-message("LOG: main | Performing Archetypal")
-obj <- obj_performArchetypal(obj, doparallel = FALSE)
-message("LOG: main | Performing Archetypal Done")
+  ## ARCHETYPAL -----
+} else if (obj@params$method == "archetypal") {
+  message("LOG: main | Performing Archetypal")
+  source("/app/Rmd/imports.R")
+  source("/app/Rmd/classes.R")
+  obj <- obj_performArchetypal(obj, doparallel = FALSE)
+  message("LOG: main | Performing Archetypal Done")
 
-message("LOG: main | assign AA clusters")
-obj <- obj_assignArchetypalClusters(obj)
-message("LOG: main | assign AA clusters Done")
+  message("LOG: main | assign AA clusters")
+  obj <- obj_assignArchetypalClusters(obj)
+  obj@params$out_path <- "/dev/null"
+  message("LOG: main | assign AA clusters Done")
+  obj <- obj_visualizeArchetypal(obj)
 }
 
 # SEURAT CLUSTERIZATOIN -------------------------------
@@ -89,34 +94,34 @@ obj <- obj_visualizeData(obj)
 message("LOG: main | Visualizing Data Done")
 
 # Visualize Archetypes
-if(obj@params$method=="archetypes"){
-message("LOG: main | Visualizing Archetypes")
-obj <- obj_visualizeArchetypes(obj)
-message("LOG: main | Visualizing Archetypes Done")
+if (obj@params$method == "archetypes") {
+  message("LOG: main | Visualizing Archetypes")
+  obj <- obj_visualizeArchetypes(obj)
+  message("LOG: main | Visualizing Archetypes Done")
 
-# Umap Archetypes Plot
-message("LOG: main | Umap Archetypes")
-obj <- obj_umapArchetypes(obj)
-message("LOG: main | Umap Archetypes Done")
+  # Umap Archetypes Plot
+  message("LOG: main | Umap Archetypes")
+  obj <- obj_umapArchetypes(obj)
+  message("LOG: main | Umap Archetypes Done")
 
-# Archetypes Analysis
-message("LOG: main | Analysis Archetypes")
-obj_analysisArchetypes(obj)
-message("LOG: main | Analysis Archetypes Done")
-}else if(obj@params$method=="archetypal"){
-message("LOG: main | Visualizing Archetypal")
-obj <- obj_visualizeArchetypal(obj)
-message("LOG: main | Visualizing Archetypal Done")
+  # Archetypes Analysis
+  message("LOG: main | Analysis Archetypes")
+  obj_analysisArchetypes(obj)
+  message("LOG: main | Analysis Archetypes Done")
+} else if (obj@params$method == "archetypal") {
+  message("LOG: main | Visualizing Archetypal")
+  obj <- obj_visualizeArchetypal(obj)
+  message("LOG: main | Visualizing Archetypal Done")
 
-# Umap Archetypal Plot
-message("LOG: main | Umap Archetypal")
-obj <- obj_umapArchetypal(obj)
-message("LOG: main | Umap Archetypal Done")
+  # Umap Archetypal Plot
+  message("LOG: main | Umap Archetypal")
+  obj <- obj_umapArchetypal(obj)
+  message("LOG: main | Umap Archetypal Done")
 
-# Archetypal Analysis
-message("LOG: main | Analysis Archetypal")
-obj_analysisArchetypal(obj)
-message("LOG: main | Analysis Archetypal Done")
+  # Archetypal Analysis
+  message("LOG: main | Analysis Archetypal")
+  obj_analysisArchetypal(obj)
+  message("LOG: main | Analysis Archetypal Done")
 }
 
 # # Umap With Archetypes Plot
@@ -145,4 +150,3 @@ print(obj@compare$aa.se)
 # message("LOG: main | Saving Object")
 # obj_saveObj(obj, name = obj@params$name)
 # message("LOG: main | Saving Object Done")
-

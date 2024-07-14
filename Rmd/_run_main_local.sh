@@ -16,13 +16,16 @@ max_iterations=3
 num_restarts=2
 nworkers=2
 out_path="/app/out/Melanoma/$(date +%m%d_%H%M)"
-mkdir -p ${out_path:5}/figures
-mkdir -p ${out_path:5}/data
-pathw=-1
+pathw=0
 test=TRUE
 test_genes=300
 test_samples=500
 
+classname="Exp1"
+out_path="/app/out/AllonKleinLab/Experiment1/$(date +%m%d_%H%M)"
+
+mkdir -p ${out_path:5}/figures
+mkdir -p ${out_path:5}/data
 # run main.R script inside docker
 dockercontainer=myrubuntu:latest
 command="Rscript /app/Rmd/main.R"

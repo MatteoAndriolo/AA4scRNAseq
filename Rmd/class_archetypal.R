@@ -1,6 +1,6 @@
 library(archetypal)
 
-## old.performArchetypal ----
+# PERFORM ARCHETYPAL ------
 # Method to perform archetypal analysis with (archetypal)
 setGeneric("obj_performArchetypal", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
   standardGeneric("obj_performArchetypal")
@@ -19,21 +19,17 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
   if (is.null(obj@params$kappas) & !is.null(obj@params$k)) {
     obj@params$kappas <- obj@params$k
   }
-
-  if (is.null(obj@params$which.aa)) {
-    obj_updateParams(obj, which.aa = "robust")
-  }
-
   # SETUP matrices
   message("LOG: obj_performArchetypal | Performing Archetypes on pathw ", obj@params$pathw)
   message("LOG: obj_performArchetypal | Number of archetypes is ", obj@params$kappas)
 
   # IMPORTANT !!!! column <-> features, row <-> samples
-  m <- data.frame(t(obj_getSeData(obj)))
-  colnames(m) <- rownames(obj@se)
-  rownames(m) <- colnames(obj@se)
+  df <- data.frame(t(obj_getSeData(obj)))
+  colnames(df) <- rownames(obj@se)
+  rownames(df) <- colnames(obj@se)
 
-  obj@archetypes$aa.kappas <- list()
+  obj@archetypes$aa.bests <- list()
+  obj@archetypes$aa.history <- list()
 
   tstartReruns <- Sys.time()
   # if (doparallel) {
@@ -51,10 +47,10 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
     for (i in 1:obj@params$num_restarts) {
       message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
 
-      aa <- archetypal(df, opt_kappas$optimal_kappas, method = method, rseed = rseed + i * k, save_history = TRUE, nworkers = nworkers)
+      aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = TRUE, nworkers = obj@params$nworkers)
 
-      history.restarts.k[[i]] <- list(
-        aa = aa,
+      history.restarts.k[[as.character(i)]] <- list(
+        aa = aa
       )
     }
 
@@ -62,39 +58,191 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
       varexpt = sapply(history.restarts.k, function(x) x$aa$varexpl),
       sse = sapply(history.restarts.k, function(x) x$aa$SSE)
     )
-    t$rank_varexpl <- rank(data$varexpl, ties.method = "first")
-    t$rank_sse <- rank(-data$sse, ties.method = "first")
-    t$rank_sum <- data$rank_varexpl + data$rank_sse
+    t$rank_varexpl <- rank(t$varexpt, ties.method = "first")
+    t$rank_sse <- rank(-t$sse, ties.method = "first")
+    t$rank_sum <- t$rank_varexpl + t$rank_sse
     print(t)
-    best <- which.min(data$rank_sum)
+    best <- which.min(t$rank_sum)
     message("INFO: obj_performArchetypal | selected ", best)
 
-    history.restarts.k$best <- history.restarts.k[[best]]
-    obj@archetypes$aa.kappas[[as.character(k)]] <- history.restarts.k
+    history.restarts.k$best <- history.restarts.k[[best]]$aa
+    obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
+    obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k$best
   }
   # }
   tendReruns <- Sys.time()
   message("OUTPUT: obj_performArchetypal | Reruns completed in ", difftime(tendReruns, tstartReruns, units = "secs"), " seconds")
 
-  ## Now find the best model across all kappas
-  # best_overall_run <- NULL
-  # best_overall_rss <- Inf
-  #
-  # for (k in obj@params$kappas) {
-  #  best_k_run <- obj@archetypes$aa.kappas[[as.character(k)]]$best.run
-  #  if (best_k_run$rss < best_overall_rss) {
-  #    best_overall_rss <- best_k_run$rss
-  #    best_overall_run <- best_k_run
-  #  }
-  # }
-  ## obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
-  # obj@archetypes$bestrun <- best_overall_run
-  # obj@archetypes$model <- best_overall_run$a
-  # if (debug) message("DEBUG: obj_performArchetypal | dim archetypes ", dim(parameters(best_overall_run$a))[1], " ", dim(parameters(best_overall_run$a))[2])
-  ## obj@archetypes$screeplot <- screeplot()
-  ## obj@archetypes$model <- obj@archetypes$bestrun$a
-  #
-  ## obj@archetypes$restarts <- list()
+
+  return(obj)
+})
+
+# obj_assignArchetypalClusters -----
+setGeneric("obj_assignArchetypalClusters", function(obj) {
+  standardGeneric("obj_assignArchetypalClusters")
+})
+
+setMethod("obj_assignArchetypalClusters", "database", function(obj) {
+  message("LOG: obj_assignArchetypalClusters | creating aa_clusters metadata")
+  #  obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
+  #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
+
+  for (k in names(obj@archetypes$aa.bests)) {
+    model <- obj@archetypes$aa.bests[[k]]
+    weights <- as.data.frame(obj@archetypes$aa.bests[[k]]$A)
+    obj@archetypes$aa.bests[[k]]$cluster.id <- apply(weights, 1, which.max)
+    # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
+  }
+
+  message("LOG: obj_assignArchetypalClusters | finished aa_clusters metadata")
+  return(obj)
+})
+
+# obj_visualizeArchetypal -----
+setGeneric("obj_visualizeArchetypal", function(obj) {
+  standardGeneric("obj_visualizeArchetypal")
+})
+
+setMethod("obj_visualizeArchetypal", "database", function(obj) {
+  message("LOG: obj_visualizeArchetypal | Visualizing archetypes")
+  #  obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
+  #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
+
+  for (k in names(obj@archetypes$aa.bests)) {
+    ## Single plot with archetypes ----
+    archetypes <- obj@archetypes$aa.bests[[k]]$BY
+    aa.weights <- obj@archetypes$aa.bests[[k]]$A
+    aa.weights[aa.weights < .5] <- 0
+    rownames(archetypes) <- paste0("Archetype", 1:nrow(archetypes))
+    # archetypes=as.data.frame(t(archetypes))
+    tm <- obj_getSeData(obj)
+    tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
+
+    newse <- CreateSeuratObject(counts = tm)
+    newse <- NormalizeData(newse, scale.factor = 1)
+    newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
+    newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
+    newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
+    ctype <- as.vector(obj@se$ctype)
+    newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
+
+    emb <- as.data.frame(Embeddings(newse@reductions$umap))
+    emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
+    archetype_color <- "yellow"
+    ctype_colors <- scales::hue_pal()(length(unique(emb$ctypes)))
+
+    plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
+      geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
+      geom_point(data = subset(emb, ctypes %in% rownames(archetypes)), color = archetype_color, size = 4) +
+      geom_text(
+        data = subset(emb, ctypes %in% rownames(archetypes)), aes(label = as.numeric(gsub("Archetype", "", ctypes))),
+        color = "black", size = 3
+      ) + # vjust = -1.5, size = 3) +
+      scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(rownames(archetypes))))) +
+      theme_minimal() +
+      labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
+    plot
+    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), ".png")), plot = plot)
+
+    ## Multiple plot each with one archetype ----
+    temb <- head(emb, -2)
+    plot_list <- list()
+    for (i in 1:as.integer(k)) {
+      if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", length(aa.weights[, i]))
+      temb$weight <- aa.weights[, i]
+      plot_title <- sprintf("UMAP Archetype %d", i)
+      umap_plot <- ggplot(temb, aes(x = umap_1, y = umap_2, color = weight)) +
+        geom_point(size = 1) +
+        scale_color_gradient(low = "grey", high = "red") +
+        ggtitle(plot_title) +
+        labs(color = "Weight")
+      # print(umap_plot)
+
+      plot_list[[i]] <- umap_plot
+    }
+    combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
+    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_weights", sprintf("%02d", k), ".png")), plot = combined_plot)
+  }
+  ## Analysis ------
+  analysis_best <- data.frame(
+    sse = sapply(obj@archetypes$aa.bests, function(x) x$SSE),
+    varexpt = sapply(obj@archetypes$aa.bests, function(x) x$varexpl),
+    time = sapply(obj@archetypes$aa.bests, function(x) x$time)
+  )
+
+  plot_best_rss <- ggplot(analysis_best, aes(x = as.numeric(rownames(analysis_best)), y = sse)) +
+    geom_point() +
+    geom_line() +
+    theme_minimal() +
+    labs(
+      title = "Best RSS",
+      x = "#Archetypes",
+      y = "RSS"
+    )
+  plot_best_rss
+
+  analysis <- list()
+  for (k in names(obj@archetypes$aa.history)) {
+    r <- obj@archetypes$aa.history[[k]]
+    r <- r[names(r) != "best"]
+
+    t <- data.frame(
+      sse = sapply(r, function(x) x$aa$SSE),
+      varexpt = sapply(r, function(x) x$aa$varexpl),
+      time = sapply(r, function(x) x$aa$time)
+    )
+    analysis[[k]] <- t
+  }
+  binded <- do.call(rbind, analysis)
+  plot_times <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = time, )) +
+    geom_point() +
+    #geom_line() +
+    theme_minimal() +
+    labs(
+      title = "Run Times",
+      x = "#Archetypes",
+      y = "Time (sec)"
+    ) #+
+  # scale_y_continuous(limits = c(0, NA))
+  plot_times
+  ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_times.png"), plot = plot_times)
+
+
+  plot_sse <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = sse, )) +
+    geom_point() +
+    #geom_line() +
+    theme_minimal() +
+    labs(
+      title = "Run sse",
+      x = "#Archetypes",
+      y = "SSE"
+    ) #+
+  # scale_y_continuous(limits = c(0, NA))
+  ndeplot_sse
+  ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse.png"), plot = plot_sse)
+  
+  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt, )) +
+    geom_point() +
+    #geom_line() +
+    theme_minimal() +
+    labs(
+      title = "Run varexpt",
+      x = "#Archetypes",
+      y = "varexpt"
+    ) #+
+  # scale_y_continuous(limits = c(0, NA))
+  plot_varexpt
+  ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_varexpt.png"), plot = plot_varexpt)
+
+
+  ###################################################################
+
+
+  obj@archetypes$analysis <- analysis
+  obj@archetypes$analysis_best <- analysis_best
+
+
+
 
   return(obj)
 })

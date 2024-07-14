@@ -30,7 +30,6 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   # CREATE OBJECT
   obj@se <- CreateSeuratObject(counts = se) # , meta.data = cell_metadata)
   if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
-  if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
@@ -53,7 +52,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     # row_filter <- Matrix::rowSums(obj@se) > 0
     # col_filter <- Matrix::colSums(obj@se) > 0
     # obj@se <- obj@se[row_filter, col_filter]
-    obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
+    obj@se <- obj@se[Matrix::rowSums(obj) > 0, Matrix::colSums(obj_getSeData(obj)) > 0]
     if (debug) message("DEBUG: Seurat after test has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
   # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
@@ -70,7 +69,8 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     if (debug) message("DEBUG: obj_createSeuratObject | number of genes with rank ", sum(which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0)))
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
 
-    obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
+    # obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
+    obj@se <- obj@se[Matrix::rowSums(obj_getSeData(obj@se)) > 0, Matrix::colSums(obj@se) > 0]
     message("LOG: HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
     obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
     obj@se <- FindVariableFeatures(obj@se)
@@ -119,7 +119,7 @@ setMethod(
       se <- Matrix::readMM(data_path)
       se <- t(se)
 
-      obj <- obj_createSeuratObject(obj, se, gene_names$V1, cell_metadata, where.cell_names = c("Library", "Cell.barcode"))
+      obj <- obj_createSeuratObject(obj, se, gene_names = gene_names$V1, cell_metadata = cell_metadata, where.cell_names = c("Library", "Cell.barcode"))
 
       message("LOG: Seurat object created")
       obj@se.org <- obj@se
@@ -207,7 +207,7 @@ setMethod("obj_getSeData", "Exp2", function(obj) {
 
 # . #############################################################################
 # Exp3 ----
-## . ############################################################################
+# . ############################################################################
 # Define the 'Exp3' Class that inherits from 'database'
 setClass("Exp3",
   contains = "Exp"
