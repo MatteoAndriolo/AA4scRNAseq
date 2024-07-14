@@ -85,14 +85,19 @@ setMethod(
       }
       message("LOG: obj_loadData | Loading pathw ", obj@params$pathw)
       obj <- obj_setGenes(obj)
-      message("LOG: obj_loadData | Number of genes: ", length(obj@params$genes))
       gene_names <- rownames(obj@se)
       gene.flag <- gene_names %in% obj@params$genes
-      obj@se <- obj@se[gene.flag , ]
-      if (debug) {
-        message("DEBUG: obj_loadData | intersection pathw and genenames: ", sum(gene.flag))
-        message("DEBUG: obj_loadData | dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
+
+      if(debug){
+        message("DEBUG: obj_loadData | pathw | number genes pathw = ", length(obj@params$genes) )
+        message("DEBUG: obj_loadData | pathw | first 5 ", toString(obj@params$genes[1:5]))
+        message("DEBUG: obj_loadData | pathw | number genes data = ", length(gene_names ))
+        message("DEBUG: obj_loadData | pathw | first 5 ", toString(gene_names[1:5]))
+        message("DEBUG: obj_loadData | pathw | intersectoin gives ", sum(gene.flag), " genes")
       }
+
+      obj@se <- obj@se[gene.flag , ]
+      message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
       # message("LOG: obj_loadData | rescale, hvf, reduce after pathw")
       # obj@se <- ScaleData(obj@se, layer = "counts")

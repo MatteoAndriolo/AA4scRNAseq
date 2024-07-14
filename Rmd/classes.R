@@ -88,25 +88,25 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
   message("LOG: obj_setGenes | Setting Genes ", obj@params$pathw)
 
   if (inherits(obj, "Melanoma")) {
-    if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
+    #if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
       # If only one pathwas
       genes <- list_genes_human_pathway[[obj@params$pathw]]
       if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
-    } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
-      # if more than one
-      genes <- lapply(obj@params$pathw, function(p) list_genes_human_pathway[[p]])
-      if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", sapply(genes, length))
-    }
+    #} else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
+    #  # if more than one
+    #  genes <- lapply(obj@params$pathw, function(p) list_genes_human_pathway[[p]])
+    #  if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", sapply(genes, length))
+    #}
   } else {
-    if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
+    #if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
       # If only one pathwas
-      genes <- list_genes_mouse_pathway[[obj@params$pathw]]
+      genes <- list_genes_mouse_pathway[[obj@params$pathw]][[1]]
       if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
-    } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
-      # if more than one
-      genes <- lapply(obj@params$pathw, function(p) list_genes_mouse_pathway[[p]])
-      if (debug) message("DEBUG: obj_setGenes | Number genes in ", pathw, " is ", sapply(genes, length))
-    }
+    #} else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
+    #  # if more than one
+    #  genes <- lapply(obj@params$pathw, function(p) list_genes_mouse_pathway[[p]])
+    #  if (debug) message("DEBUG: obj_setGenes | Number genes in ", pathw, " is ", sapply(genes, length))
+    #}
   }
 
   if (is.null(genes)) {

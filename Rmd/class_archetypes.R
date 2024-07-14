@@ -165,25 +165,25 @@ setGeneric("obj_performStepArchetypes", function(obj, kappas = NULL, k = NULL, d
 setMethod("obj_performStepArchetypes", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
 
 })
-## assignAAClusters ----
-setGeneric("obj_assignAAClusters", function(obj) {
-  standardGeneric("obj_assignAAClusters")
+## assignArchetypesClusters ----
+setGeneric("obj_assignArchetypesClusters", function(obj) {
+  standardGeneric("obj_assignArchetypesClusters")
 })
 
-setMethod("obj_assignAAClusters", "database", function(obj) {
+setMethod("obj_assignArchetypesClusters", "database", function(obj) {
   # se <- obj@se
   # a <- obj@archetypes$model
   # k <- a$k
-  message("LOG: obj_assingAACluster | creating aa_clusters metadata")
+  message("LOG: obj_assignArchetypesClusters | creating aa_clusters metadata")
   # weights <- coef(obj@archetypes$model)
   weights <- coef(obj@archetypes$model)
-  if (debug) message("DEBUG: obj_assignAAClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
+  if (debug) message("DEBUG: obj_assignArchetypesClusters | dimension of weights is ", dim(weights)[[1]], " ", dim(weights)[[2]])
   weights <- as.data.frame(weights)
 
 
-  if (debug) message("LOG: obj_assignAAClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
+  if (debug) message("LOG: obj_assignArchetypesClusters | dimension of meta.data is ", dim(obj@se@meta.data)[[1]], " ", dim(obj@se@meta.data)[[2]])
   obj@se@meta.data$aa_clusters <- apply(weights, 1, which.max)
-  message("LOG: obj_assingAACluster | finished aa_clusters metadata")
+  message("LOG: obj_assignArchetypesClusters | finished aa_clusters metadata")
   return(obj)
 })
 

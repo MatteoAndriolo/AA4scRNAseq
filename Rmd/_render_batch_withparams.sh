@@ -22,7 +22,7 @@ fi
 #   -h   Show this help message and exit
 #   -v   Verbose mode (default: FALSE)
 #   -w   Number of workers (default: 1)
-PARAMS="-f /app/Rmd/main.R -w 20 -v TRUE -p 2 -c Melanoma "
+PARAMS="-f /app/Rmd/main.R -w 20 -v TRUE -p 2 -c Melanoma -m archetypes"
 
 # Loop over each file in the directory
 for FILE in "$DIRECTORY"/*; 

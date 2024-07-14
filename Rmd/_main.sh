@@ -9,6 +9,7 @@ hvf=FALSE
 test=FALSE
 verbose=FALSE
 pathw=0
+method="archetypal"
 nworkers=10
 max_iterations=100
 num_restarts=10
@@ -20,7 +21,7 @@ test_samples=500
 ##################################################
 echo $@
 usage() {
-    echo "Usage: $0 [-t test] [-H hvf] [-f rscriptfile] [-p pathw] [-g test_genes] [-s test_samples] [-w nworkers] [-h] [-v] -c classname"
+    echo "Usage: $0 [-t test] [-H hvf] [-f rscriptfile] [-p pathw] [-g test_genes] [-s test_samples] [-m method] [-w nworkers] [-h] [-v] -c classname"
     echo "  -c   Class name (required)"
     echo "  -f   Path to Rmd file (default: /app/Rmd/main.R)"
     echo "  -H   High variance filter (default: FALSE)"
@@ -32,13 +33,14 @@ usage() {
     echo "  -i   Maximum number of iterations (default: 100)"
     echo "  -h   Show this help message and exit"
     echo "  -v   Verbose mode (default: FALSE)"
+    echo "  -m   Archetypal Analysis method (default: archetypal)"
     echo "  -w   Number of workers (default: 1)"
 }
 
 ##################################################
 # Parse command line arguments
 ##################################################
-while getopts ":t:g:s:H:f:p:c:r:i:v:w:h" opt; do
+while getopts ":t:g:s:H:f:p:c:r:i:v:w:m:h" opt; do
     case "${opt}" in
         t)
             test=${OPTARG}
@@ -84,6 +86,10 @@ while getopts ":t:g:s:H:f:p:c:r:i:v:w:h" opt; do
             nworkers=${OPTARG}
             echo "Number of workers set to: ${nworkers}"
             ;;
+        m) 
+            method=${OPTARG}
+            echo "Method selected is ${method}"
+            ;;
         h)
             echo "help invocked"
             usage
@@ -104,17 +110,18 @@ shift $((OPTIND - 1))
 # Display parameter values for debugging
 ##################################################
 if [ "$verbose" ]; then
-    echo "LOG.sh:TEST=${test}"
-    echo "LOG.sh:HVF=${hvf}"
-    echo "LOG.sh:RSCRIPTFILE=${rscriptfile}"
-    echo "LOG.sh:PATHW=${pathw}"
-    echo "LOG.sh:CLASSNAME=${classname}"
-    echo "LOG.sh:NUM_RESTARTS=${num_restarts}"
-    echo "LOG.sh:MAX_ITERATIONS=${max_iterations}"
-    echo "LOG.sh:TEST_GENES=${test_genes}"
-    echo "LOG.sh:TEST_SAMPLES=${test_samples}"
-    echo "LOG.sh:NWORKERS=${nworkers}"
-    echo "LOG.sh:VERBOSE=${verbose}"
+    echo "LOG: _main.sh | env | TEST=${test}"
+    echo "LOG: _main.sh | env | HVF=${hvf}"
+    echo "LOG: _main.sh | env | RSCRIPTFILE=${rscriptfile}"
+    echo "LOG: _main.sh | env | PATHW=${pathw}"
+    echo "LOG: _main.sh | env | CLASSNAME=${classname}"
+    echo "LOG: _main.sh | env | NUM_RESTARTS=${num_restarts}"
+    echo "LOG: _main.sh | env | MAX_ITERATIONS=${max_iterations}"
+    echo "LOG: _main.sh | env | TEST_GENES=${test_genes}"
+    echo "LOG: _main.sh | env | TEST_SAMPLES=${test_samples}"
+    echo "LOG: _main.sh | env | METHOD=${method}"
+    echo "LOG: _main.sh | env | NWORKERS=${nworkers}"
+    echo "LOG: _main.sh | env | VERBOSE=${verbose}"
 fi
 
 ##################################################
@@ -171,6 +178,7 @@ params=(
     "test=$test"
     "test_genes=$test_genes"
     "test_samples=$test_samples"
+    "method=$method"
     "nworkers=$nworkers"
 )
 
@@ -179,6 +187,7 @@ export DEBUG=$DEBUG
 export HVF=$hvf
 export MAX_ITERATIONS=$max_iterations
 export NUM_RESTARTS=$num_restarts
+export METHOD=$method
 export NWORKERS=$nworkers
 export OUT_PATH=$outpath
 export PATHW="$pathw"

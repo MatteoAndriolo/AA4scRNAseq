@@ -2,19 +2,19 @@ library(archetypal)
 
 ## old.performArchetypal ----
 # Method to perform archetypal analysis with (archetypal)
-setGeneric("obj_performArchatypal", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
-  standardGeneric("obj_performArchatypal")
+setGeneric("obj_performArchetypal", function(obj, kappas = NULL, k = NULL, doparallel = TRUE) {
+  standardGeneric("obj_performArchetypal")
 })
 
-setMethod("obj_performArchatypal", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
+setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = NULL, doparallel = FALSE) {
   if (debug) {
-    message("DEBUG: obj_performArchatypal | k=", k)
-    message("DEBUG: obj_performArchatypal | kappas=", kappas)
-    message("DEBUG: obj_performArchatypal | obj@params$k=", obj@params$k)
-    message("DEBUG: obj_performArchatypal | obj@params$kappas=", obj@params$kappas)
+    message("DEBUG: obj_performArchetypal | k=", k)
+    message("DEBUG: obj_performArchetypal | kappas=", kappas)
+    message("DEBUG: obj_performArchetypal | obj@params$k=", obj@params$k)
+    message("DEBUG: obj_performArchetypal | obj@params$kappas=", obj@params$kappas)
   }
   if (is.null(obj@params$kappas) & is.null(obj@params$k)) {
-    stop("ERROR: obj_performArchatypal | k and kappas are null")
+    stop("ERROR: obj_performArchetypal | k and kappas are null")
   }
   if (is.null(obj@params$kappas) & !is.null(obj@params$k)) {
     obj@params$kappas <- obj@params$k
@@ -25,8 +25,8 @@ setMethod("obj_performArchatypal", "database", function(obj, kappas = NULL, k = 
   }
 
   # SETUP matrices
-  message("LOG: obj_performArchatypal | Performing Archetypes on pathw ", obj@params$pathw)
-  message("LOG: obj_performArchatypal | Number of archetypes is ", obj@params$kappas)
+  message("LOG: obj_performArchetypal | Performing Archetypes on pathw ", obj@params$pathw)
+  message("LOG: obj_performArchetypal | Number of archetypes is ", obj@params$kappas)
 
   # IMPORTANT !!!! column <-> features, row <-> samples
   m <- data.frame(t(obj_getSeData(obj)))
@@ -49,7 +49,7 @@ setMethod("obj_performArchatypal", "database", function(obj, kappas = NULL, k = 
     best_restart_index <- -1
 
     for (i in 1:obj@params$num_restarts) {
-      message("LOG: obj_performArchatypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
+      message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
 
       aa <- archetypal(df, opt_kappas$optimal_kappas, method = method, rseed = rseed + i * k, save_history = TRUE, nworkers = nworkers)
 
@@ -74,7 +74,7 @@ setMethod("obj_performArchatypal", "database", function(obj, kappas = NULL, k = 
   }
   # }
   tendReruns <- Sys.time()
-  message("OUTPUT: obj_performArchatypal | Reruns completed in ", difftime(tendReruns, tstartReruns, units = "secs"), " seconds")
+  message("OUTPUT: obj_performArchetypal | Reruns completed in ", difftime(tendReruns, tstartReruns, units = "secs"), " seconds")
 
   ## Now find the best model across all kappas
   # best_overall_run <- NULL
@@ -90,7 +90,7 @@ setMethod("obj_performArchatypal", "database", function(obj, kappas = NULL, k = 
   ## obj@archetypes$bestrun <- obj@archetypes$restarts[[which.min(sapply(obj@archetypes$restarts, function(x) x$rss))]]
   # obj@archetypes$bestrun <- best_overall_run
   # obj@archetypes$model <- best_overall_run$a
-  # if (debug) message("DEBUG: obj_performArchatypal | dim archetypes ", dim(parameters(best_overall_run$a))[1], " ", dim(parameters(best_overall_run$a))[2])
+  # if (debug) message("DEBUG: obj_performArchetypal | dim archetypes ", dim(parameters(best_overall_run$a))[1], " ", dim(parameters(best_overall_run$a))[2])
   ## obj@archetypes$screeplot <- screeplot()
   ## obj@archetypes$model <- obj@archetypes$bestrun$a
   #

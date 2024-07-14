@@ -1,8 +1,9 @@
 # Name: unique
+sink(stdout(), type = "message")
+sink(stdout(), type = "output")
 # Import necessary R scripts
 source("/app/Rmd/imports.R")
 source("/app/Rmd/classes.R")
-
 # Fetch params from environment variables
 params <- list()
 params$classname <- Sys.getenv("CLASSNAME")
@@ -10,6 +11,7 @@ params$debug <- as.logical(Sys.getenv("DEBUG", "FALSE"))
 params$hvf <- as.logical(Sys.getenv("HVF", "FALSE"))
 params$max_iterations <- as.numeric(Sys.getenv("MAX_ITERATIONS", "100"))
 params$num_restarts <- as.numeric(Sys.getenv("NUM_RESTARTS", "10"))
+params$method <- Sys.getenv("METHOD")
 params$nworkers <- as.numeric(Sys.getenv("NWORKERS", "1"))
 params$out_path <- Sys.getenv("OUT_PATH")
 params$pathw <- as.numeric(Sys.getenv("PATHW", "0"))
@@ -56,13 +58,24 @@ obj <- obj_loadData(obj)
 if (debug) message("DEBUG: main | Loading Data Done")
 
 # PERFORM ARCHETYPES ---------------------------------
+## ARCHETYPES 
+if (obj@params$method == "archetypes"){
 message("LOG: main | Performing Archetypes")
 obj <- obj_performArchetypes(obj, doparallel = FALSE)
 message("LOG: main | Performing Archetypes Done")
 
 message("LOG: main | assign AA clusters")
-obj <- obj_assignAAClusters(obj)
+obj <- obj_assignArchetypesClusters(obj)
 message("LOG: main | assign AA clusters Done")
+}else if(obj@params$method == "archetypal"){
+message("LOG: main | Performing Archetypal")
+obj <- obj_performArchetypal(obj, doparallel = FALSE)
+message("LOG: main | Performing Archetypal Done")
+
+message("LOG: main | assign AA clusters")
+obj <- obj_assignArchetypalClusters(obj)
+message("LOG: main | assign AA clusters Done")
+}
 
 # SEURAT CLUSTERIZATOIN -------------------------------
 message("LOG: main | Seurat Clustering")
@@ -76,6 +89,7 @@ obj <- obj_visualizeData(obj)
 message("LOG: main | Visualizing Data Done")
 
 # Visualize Archetypes
+if(obj@params$method=="archetypes"){
 message("LOG: main | Visualizing Archetypes")
 obj <- obj_visualizeArchetypes(obj)
 message("LOG: main | Visualizing Archetypes Done")
@@ -85,7 +99,25 @@ message("LOG: main | Umap Archetypes")
 obj <- obj_umapArchetypes(obj)
 message("LOG: main | Umap Archetypes Done")
 
-# archetypes analysis
+# Archetypes Analysis
+message("LOG: main | Analysis Archetypes")
+obj_analysisArchetypes(obj)
+message("LOG: main | Analysis Archetypes Done")
+}else if(obj@params$method=="archetypal"){
+message("LOG: main | Visualizing Archetypal")
+obj <- obj_visualizeArchetypal(obj)
+message("LOG: main | Visualizing Archetypal Done")
+
+# Umap Archetypal Plot
+message("LOG: main | Umap Archetypal")
+obj <- obj_umapArchetypal(obj)
+message("LOG: main | Umap Archetypal Done")
+
+# Archetypal Analysis
+message("LOG: main | Analysis Archetypal")
+obj_analysisArchetypal(obj)
+message("LOG: main | Analysis Archetypal Done")
+}
 
 # # Umap With Archetypes Plot
 # message("LOG: main | Umap with Archetypes")
@@ -114,4 +146,3 @@ print(obj@compare$aa.se)
 # obj_saveObj(obj, name = obj@params$name)
 # message("LOG: main | Saving Object Done")
 
-obj_analysisArchetypes(obj)
