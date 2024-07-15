@@ -23,12 +23,18 @@ params$init_method <- Sys.getenv("INIT_METHOD", "furthestsum")
 
 mink <- as.numeric(Sys.getenv("MINK"))
 maxk <- as.numeric(Sys.getenv("MAXK"))
-k <- as.numeric(Sys.getenv("K"))
-if (!is.na(k)) {
+k <- as.numeric(Sys.getenv("K",0))
+message("k ", k, " mink ",mink," maxk ",maxk)
+if(k!=0){
+  message("entered in correct k")
   params$kappas <- k
-} else if (!(is.na(mink) | is.na(maxk))) {
-  params$kappas <- seq(params$mink, params$maxk)
-} else {
+} else if(!(is.na(mink) | is.na(maxk))){
+  message("entered in range")
+  message("mink ",mink, "maxk ", maxk)
+  message("mink ",mink, "maxk ", maxk)
+  message("mink ",typeof(mink), "maxk ", typeof(maxk))
+  params$kappas <- mink:maxk
+} else{
   stop("ERROR: main | No k or mink&maxk provided")
 }
 
@@ -97,38 +103,45 @@ message("LOG: main | Seurat Clustering Done")
 
 # VISUALIZE -------------------------------------------
 # Visualize Dataset
-message("LOG: main | Visualizing Data")
-obj <- obj_visualizeData(obj)
-message("LOG: main | Visualizing Data Done")
+#message("LOG: main | Visualizing Data")
+#obj <- obj_visualizeData(obj)
+#message("LOG: main | Visualizing Data Done")
+#
+## Visualize Archetypes
+#if (obj@params$method == "archetypes") {
+#  message("LOG: main | Visualizing Archetypes")
+#  obj <- obj_visualizeArchetypes(obj)
+#  message("LOG: main | Visualizing Archetypes Done")
+#
+#  # Umap Archetypes Plot
+#  message("LOG: main | Umap Archetypes")
+#  obj <- obj_umapArchetypes(obj)
+#  message("LOG: main | Umap Archetypes Done")
+#
+#  # Archetypes Analysis
+#  message("LOG: main | Analysis Archetypes")
+#  obj_analysisArchetypes(obj)
+#  message("LOG: main | Analysis Archetypes Done")
+#} 
 
-# Visualize Archetypes
-if (obj@params$method == "archetypes") {
-  message("LOG: main | Visualizing Archetypes")
-  obj <- obj_visualizeArchetypes(obj)
-  message("LOG: main | Visualizing Archetypes Done")
 
-  # Umap Archetypes Plot
-  message("LOG: main | Umap Archetypes")
-  obj <- obj_umapArchetypes(obj)
-  message("LOG: main | Umap Archetypes Done")
-
-  # Archetypes Analysis
-  message("LOG: main | Analysis Archetypes")
-  obj_analysisArchetypes(obj)
-  message("LOG: main | Analysis Archetypes Done")
-}
-
-
+# obj@archetypes$aa.bests[[k]]$cluster.id <- apply(weights, 1, which.max)
 # Compare aa_clusters and seurat_clasters with Ident()
-obj@compare$aa.orig <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
-obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
-obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
-
-# Display this results
-message("LOG: main | Comparison of clusters")
-print(obj@compare$aa.orig)
-print(obj@compare$se.orig)
-print(obj@compare$aa.se)
+for( k in names(obj@archetypes$aa.bests)){
+  message("OUTPUT: main.R | looking at ",k)
+  obj@compare$aa.orig <- table(obj@archetypes$aa.bests[[k]], obj@se@meta.data$orig.ident)
+  obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
+  obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
+}
+# obj@compare$aa.orig <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
+# obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
+# obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
+# 
+# # Display this results
+# message("LOG: main | Comparison of clusters")
+# print(obj@compare$aa.orig)
+# print(obj@compare$se.orig)
+# print(obj@compare$aa.se)
 
 # FIXME manage save obj and in particular name has been removed
 # message("LOG: main | Saving Object")

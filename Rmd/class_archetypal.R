@@ -111,9 +111,15 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   for (k in names(obj@archetypes$aa.bests)) {
     ## Single plot with archetypes ----
     archetypes <- obj@archetypes$aa.bests[[k]]$BY
+    names_archetypes = paste0("Archetype", 1:nrow(archetypes))
+    rownames(archetypes) <- names_archetypes
+
     aa.weights <- obj@archetypes$aa.bests[[k]]$A
+    t <- rbind(aa.weights,diag(dim(aa.weights)[2]))
+    rownames(t) <- c(rownames(aa.weights), names_archetypes)
+    aa.weights <- t
     aa.weights[aa.weights < .5] <- 0
-    rownames(archetypes) <- paste0("Archetype", 1:nrow(archetypes))
+
     # archetypes=as.data.frame(t(archetypes))
     tm <- obj_getSeData(obj)
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
@@ -125,7 +131,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
-
+    
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
     archetype_color <- "yellow"
@@ -145,10 +151,16 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), ".png")), plot = plot)
 
     ## Multiple plot each with one archetype ----
+    message("LOG -> MULTIPLEPLOTS")
     temb <- head(emb, -2)
+    temb <- emb
     plot_list <- list()
     for (i in 1:as.integer(k)) {
-      if (debug) message("DEBUG: obj_umapArchetypes | weights dimension is ", length(aa.weights[, i]))
+      if (debug) {
+        message("DEBUG: obj_umapArchetypes | weights dimension is ", length(aa.weights[, i]))
+        message("DEBUG: obj_umapArchetypes | temb dimension are ", dim(temb)[1]," ", dim(temb)[2])
+      }
+
       temb$weight <- aa.weights[, i]
       plot_title <- sprintf("UMAP Archetype %d", i)
       umap_plot <- ggplot(temb, aes(x = umap_1, y = umap_2, color = weight)) +
@@ -161,7 +173,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
       plot_list[[i]] <- umap_plot
     }
     combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_weights", sprintf("%02d", k), ".png")), plot = combined_plot)
+    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_weights", sprintf("%02d", as.numeric(k)), ".png")), plot = combined_plot)
   }
   ## Analysis ------
   analysis_best <- data.frame(
@@ -218,7 +230,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
       y = "SSE"
     ) #+
   # scale_y_continuous(limits = c(0, NA))
-  ndeplot_sse
+  plot_sse
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse.png"), plot = plot_sse)
 
   plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt, )) +
