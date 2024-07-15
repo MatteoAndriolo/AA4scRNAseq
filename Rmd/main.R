@@ -24,11 +24,11 @@ params$init_method <- Sys.getenv("INIT_METHOD", "furthestsum")
 mink <- as.numeric(Sys.getenv("MINK"))
 maxk <- as.numeric(Sys.getenv("MAXK"))
 k <- as.numeric(Sys.getenv("K"))
-if(!is.na(k)){
+if (!is.na(k)) {
   params$kappas <- k
-} else if(!(is.na(mink) | is.na(maxk))){
+} else if (!(is.na(mink) | is.na(maxk))) {
   params$kappas <- seq(params$mink, params$maxk)
-} else{
+} else {
   stop("ERROR: main | No k or mink&maxk provided")
 }
 
@@ -73,7 +73,7 @@ if (obj@params$method == "archetypes") {
   message("LOG: main | Performing Archetypes")
   obj <- obj_performArchetypes(obj, doparallel = FALSE)
   message("LOG: main | Performing Archetypes Done")
- 
+
   message("LOG: main | assign AA clusters")
   obj <- obj_assignArchetypesClusters(obj)
   message("LOG: main | assign AA clusters Done")
@@ -116,7 +116,7 @@ if (obj@params$method == "archetypes") {
   message("LOG: main | Analysis Archetypes")
   obj_analysisArchetypes(obj)
   message("LOG: main | Analysis Archetypes Done")
-} 
+}
 
 
 # Compare aa_clusters and seurat_clasters with Ident()

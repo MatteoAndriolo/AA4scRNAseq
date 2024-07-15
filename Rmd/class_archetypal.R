@@ -196,7 +196,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   binded <- do.call(rbind, analysis)
   plot_times <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = time, )) +
     geom_point() +
-    #geom_line() +
+    # geom_line() +
     theme_minimal() +
     labs(
       title = "Run Times",
@@ -210,7 +210,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
 
   plot_sse <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = sse, )) +
     geom_point() +
-    #geom_line() +
+    # geom_line() +
     theme_minimal() +
     labs(
       title = "Run sse",
@@ -220,10 +220,10 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   # scale_y_continuous(limits = c(0, NA))
   ndeplot_sse
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse.png"), plot = plot_sse)
-  
+
   plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt, )) +
     geom_point() +
-    #geom_line() +
+    # geom_line() +
     theme_minimal() +
     labs(
       title = "Run varexpt",
