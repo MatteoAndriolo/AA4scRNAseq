@@ -47,7 +47,7 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
     for (i in 1:obj@params$num_restarts) {
       message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
 
-      aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = TRUE, nworkers = obj@params$nworkers)
+      aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = FALSE, nworkers = obj@params$nworkers)
 
       history.restarts.k[[as.character(i)]] <- list(
         aa = aa
@@ -87,13 +87,17 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
   #  obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
   #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
 
+  t <- list()
   for (k in names(obj@archetypes$aa.bests)) {
     model <- obj@archetypes$aa.bests[[k]]
     weights <- as.data.frame(obj@archetypes$aa.bests[[k]]$A)
-    obj@archetypes$aa.bests[[k]]$cluster.id <- apply(weights, 1, which.max)
+    tt <- apply(weights, 1, which.max)
+    obj@archetypes$aa.bests[[k]]$cluster.id <- tt
+    t[[k]] <- tt
     # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
   }
 
+  obj@other$aa.clusters <- t
   message("LOG: obj_assignArchetypalClusters | finished aa_clusters metadata")
   return(obj)
 })
@@ -206,6 +210,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     analysis[[k]] <- t
   }
   binded <- do.call(rbind, analysis)
+
   plot_times <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = time, )) +
     geom_point() +
     # geom_line() +
@@ -245,6 +250,21 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   # scale_y_continuous(limits = c(0, NA))
   plot_varexpt
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_varexpt.png"), plot = plot_varexpt)
+
+  # Creating the plot with dual y-axes
+  sse_varexpt_plot <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))))) +
+    geom_point(aes(y = sse), color = "blue") +
+    geom_point(aes(y = varexpt * max(sse) / max(varexpt)), color = "red") +  # Scale varexpt for plotting
+    scale_y_continuous(
+      name = "SSE",
+      sec.axis = sec_axis(~ . * max(varexpt) / max(sse), name = "Variance Explained")  # Scale back varexpt
+    ) +
+    theme_minimal() +
+    labs(
+      title = "Run SSE and Variance Explained",
+      x = "#Archetypes"
+    )
+  ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse_varexpt.png"), plot = sse_varexpt_plot)
 
 
   ###################################################################

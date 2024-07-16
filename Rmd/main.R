@@ -20,30 +20,29 @@ params$test <- as.logical(Sys.getenv("TEST", "FALSE"))
 params$test_genes <- as.numeric(Sys.getenv("TEST_GENES", "300"))
 params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 params$init_method <- Sys.getenv("INIT_METHOD", "furthestsum")
-
 mink <- as.numeric(Sys.getenv("MINK"))
 maxk <- as.numeric(Sys.getenv("MAXK"))
 k <- as.numeric(Sys.getenv("K",0))
-message("k ", k, " mink ",mink," maxk ",maxk)
+
+params$rseed <- 2024
+params$path_figures <- file.path(params$out_path, "figures")
+params$path_outdata <- file.path(params$out_path, "data")
+
 if(k!=0){
-  message("entered in correct k")
   params$kappas <- k
 } else if(!(is.na(mink) | is.na(maxk))){
-  message("entered in range")
-  message("mink ",mink, "maxk ", maxk)
-  message("mink ",mink, "maxk ", maxk)
-  message("mink ",typeof(mink), "maxk ", typeof(maxk))
   params$kappas <- mink:maxk
 } else{
   stop("ERROR: main | No k or mink&maxk provided")
 }
 
+
 debug <- params$debug
-params$rseed <- 2024
+
 if (params$pathw == 0) {
   params$pathw <- NULL
 }
-params$path_figures <- file.path(params$out_path, "figures")
+
 plan("multicore", workers = params$nworkers)
 
 ################### FIXING PARAMETERS FOR TESTING
@@ -56,6 +55,7 @@ if (FALSE) {
   params$kappas <- 4:8
   params$test <- TRUE
   params$nworkers <- 10
+  plan("multicore", workers = params$nworkers)
   params$num_restarts <- 2
   params$max_iterations <- 5
   params$method <- "archetypal"
@@ -71,44 +71,53 @@ obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 # LOADING DATA -----
 message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
-if (debug) message("DEBUG: main | Loading Data Done")
 
-# PERFORM ARCHETYPES ---------------------------------
-## ARCHETYPES----
-if (obj@params$method == "archetypes") {
-  message("LOG: main | Performing Archetypes")
-  obj <- obj_performArchetypes(obj, doparallel = FALSE)
-  message("LOG: main | Performing Archetypes Done")
+# ARCHETYPAL --------
+message("LOG: main | Performing Archetypal")
+obj <- obj_performArchetypal(obj, doparallel = FALSE)
 
-  message("LOG: main | assign AA clusters")
-  obj <- obj_assignArchetypesClusters(obj)
-  message("LOG: main | assign AA clusters Done")
+message("LOG: main | assign AA clusters")
+obj <- obj_assignArchetypalClusters(obj)
 
-  ## ARCHETYPAL -----
-} else if (obj@params$method == "archetypal") {
-  message("LOG: main | Performing Archetypal")
-  obj <- obj_performArchetypal(obj, doparallel = FALSE)
-  message("LOG: main | Performing Archetypal Done")
-
-  message("LOG: main | assign AA clusters")
-  obj <- obj_assignArchetypalClusters(obj)
-  message("LOG: main | assign AA clusters Done")
-  obj <- obj_visualizeArchetypal(obj)
-}
+message("LOG: main | assign AA clusters Done")
+obj <- obj_visualizeArchetypal(obj)
 
 # SEURAT CLUSTERIZATOIN -------------------------------
 message("LOG: main | Seurat Clustering")
 obj <- obj_seuratCluster(obj)
-message("LOG: main | Seurat Clustering Done")
 
-# VISUALIZE -------------------------------------------
-# Visualize Dataset
-#message("LOG: main | Visualizing Data")
-#obj <- obj_visualizeData(obj)
-#message("LOG: main | Visualizing Data Done")
-#
-## Visualize Archetypes
+
+# SAVE OBJECT -----------
+message("LOG: main | Saving objects")
+obj@archetypes$seurat_clusters <- obj@se$seurat_clusters
+obj@archetypes$ctypes <- obj@se$ctype
+obj@other$se.metadata <- obj@se@meta.data
+obj@other$genenames <- rownames(obj@se)
+obj@other$cellnames <- colnames(obj@se)
+
+saveRDS(obj@other, file = file.path(obj@params$path_outdata, "metadata.Rds"))
+saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rds"))
+
+
+# END HERE #############################################################
+
+
+
+
+
+
+
+# PERFORM ARCHETYPES ---------------------------------
+## ARCHETYPES----
 #if (obj@params$method == "archetypes") {
+#  message("LOG: main | Performing Archetypes")
+#  obj <- obj_performArchetypes(obj, doparallel = FALSE)
+#  message("LOG: main | Performing Archetypes Done")
+#
+#  message("LOG: main | assign AA clusters")
+#  obj <- obj_assignArchetypesClusters(obj)
+#  message("LOG: main | assign AA clusters Done")
+#
 #  message("LOG: main | Visualizing Archetypes")
 #  obj <- obj_visualizeArchetypes(obj)
 #  message("LOG: main | Visualizing Archetypes Done")
@@ -122,17 +131,30 @@ message("LOG: main | Seurat Clustering Done")
 #  message("LOG: main | Analysis Archetypes")
 #  obj_analysisArchetypes(obj)
 #  message("LOG: main | Analysis Archetypes Done")
+#  ## ARCHETYPAL -----
+#} else if (obj@params$method == "archetypal") {
+#  
+#}
+
+
+# VISUALIZE ------------------------------------------- # Visualize Dataset
+#message("LOG: main | Visualizing Data")
+#obj <- obj_visualizeData(obj)
+#message("LOG: main | Visualizing Data Done")
+#
+## Visualize Archetypes
+#if (obj@params$method == "archetypes") {
 #} 
 
 
 # obj@archetypes$aa.bests[[k]]$cluster.id <- apply(weights, 1, which.max)
 # Compare aa_clusters and seurat_clasters with Ident()
-for( k in names(obj@archetypes$aa.bests)){
-  message("OUTPUT: main.R | looking at ",k)
-  obj@compare$aa.orig <- table(obj@archetypes$aa.bests[[k]], obj@se@meta.data$orig.ident)
-  obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
-  obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
-}
+# for( k in names(obj@archetypes$aa.bests)){
+#   message("OUTPUT: main.R | looking at ",k)
+#   obj@compare$aa.orig <- table(obj@archetypes$aa.bests[[k]], obj@se@meta.data$orig.ident)
+#   obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
+#   obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
+# }
 # obj@compare$aa.orig <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
 # obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
 # obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)

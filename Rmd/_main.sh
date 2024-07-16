@@ -208,6 +208,13 @@ if [ "$init_method" == "furthestsum" ]; then
     prefix+="FS"
 elif [ "$init_method" == "convexhull" ]; then
     prefix+="CH"
+elif [ "$init_method" == "projected_convexhull"]; then
+    prefix+="PRCH"
+elif [ "$init_method" == "partitioned_convexhull"]; then
+    prefix+="PACH"
+elif [ "$init_method" == "random"]; then
+    prefix+="RND"
+
 else
     prefix+="${init_method:0:2}"
 fi

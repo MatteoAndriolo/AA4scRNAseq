@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=rMelanoma
-#SBATCH --mail-user=matteo.andriolo.2@studenti.unipd.it
+#SBATCH --mail-user=nomatteo.andriolo.2@studenti.unipd.it
 #SBATCH --mail-type=ALL
 #SBATCH --output=./out/Melanoma/_slurm/%j.out.txt
 #SBATCH --error=./out/Melanoma/_slurm/%j.err.txt
@@ -12,7 +12,8 @@
 #SBATCH --mem=100G
 
 container="containers/img/myrubuntu.sif"
-command="/app/Rmd/_main.sh -c Melanoma $@"
+command="/app/Rmd/_main.sh -c Melanoma --mink 3 --maxk 10 $@ "
+command="/app/Rmd/_main.sh -c Melanoma $@ "
 
 singularity exec \
   --env DISABLE_AUTH=true \
