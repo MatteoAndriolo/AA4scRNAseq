@@ -54,7 +54,8 @@ setMethod(
       obj@se <- CreateSeuratObject(counts = se, meta.data = metadata)
       if (debug) message("DEBUG: obj_loadData | Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
       obj@se$ctype <- obj@se$non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK.
-      obj@se <- ScaleData(obj@se, layer = "counts")
+      obj@se <- SetAssayData(object = obj@se, layer = 'scale.data', new.data = se)
+      # obj@se <- ScaleData(obj@se, layer = "counts")
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se))
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
