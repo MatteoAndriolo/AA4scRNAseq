@@ -214,8 +214,8 @@ elif [ "$init_method" == "partitioned_convexhull"]; then
     prefix+="PACH"
 elif [ "$init_method" == "random"]; then
     prefix+="RND"
-
 else
+
     prefix+="${init_method:0:2}"
 fi
 if [ "$pathw" != 0 ]; then

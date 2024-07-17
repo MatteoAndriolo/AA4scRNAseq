@@ -72,6 +72,8 @@ obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
 
+obj <- obj_visualizeData(obj)
+
 # ARCHETYPAL --------
 message("LOG: main | Performing Archetypal")
 obj <- obj_performArchetypal(obj, doparallel = FALSE)

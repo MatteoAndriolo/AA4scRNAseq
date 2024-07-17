@@ -95,7 +95,11 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
     obj@archetypes$aa.bests[[k]]$cluster.id <- tt
     t[[k]] <- tt
     # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
+    obj@se$temp_aa_clusters <- tt
+    tplot <- DimPlot(obj@se, reduction="umap", group.by="temp_aa_clusters" )
+    ggsave(filename=file.path(obj@params$path_figures, paste0("UMAP_AA_",k,"_orig.png")),tplot)
   }
+  obj@se$temp_aa_clusters <- NULL
 
   obj@other$aa.clusters <- t
   message("LOG: obj_assignArchetypalClusters | finished aa_clusters metadata")
@@ -126,16 +130,20 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
 
     # archetypes=as.data.frame(t(archetypes))
     tm <- obj_getSeData(obj)
+    message("DATA BEFORE 2")
+    print(tm[1:5,1:5])
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
 
     newse <- CreateSeuratObject(counts = tm)
     newse <- NormalizeData(newse, scale.factor = 1)
     newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
+    message("DATA BEFORE 3")
+    print(newse@assays$RNA@layers$counts[1:5,1:5])
     newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
-    
+
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
     archetype_color <- "yellow"
@@ -177,7 +185,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
       plot_list[[i]] <- umap_plot
     }
     combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_weights", sprintf("%02d", as.numeric(k)), ".png")), plot = combined_plot)
+    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_weights.png")), plot = combined_plot)
   }
   ## Analysis ------
   analysis_best <- data.frame(
@@ -238,7 +246,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   plot_sse
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse.png"), plot = plot_sse)
 
-  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt, )) +
+  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt,)) +
     geom_point() +
     # geom_line() +
     theme_minimal() +
@@ -251,20 +259,20 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   plot_varexpt
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_varexpt.png"), plot = plot_varexpt)
 
-  # Creating the plot with dual y-axes
-  sse_varexpt_plot <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))))) +
-    geom_point(aes(y = sse), color = "blue") +
-    geom_point(aes(y = varexpt * max(sse) / max(varexpt)), color = "red") +  # Scale varexpt for plotting
-    scale_y_continuous(
-      name = "SSE",
-      sec.axis = sec_axis(~ . * max(varexpt) / max(sse), name = "Variance Explained")  # Scale back varexpt
-    ) +
-    theme_minimal() +
-    labs(
-      title = "Run SSE and Variance Explained",
-      x = "#Archetypes"
-    )
-  ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse_varexpt.png"), plot = sse_varexpt_plot)
+  # # Creating the plot with dual y-axes
+  # sse_varexpt_plot <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded)))) ) +
+  #   geom_line(aes(y = sse), color = "blue") +
+  #   geom_line(aes(y = varexpt), color = "red") +  # Scale varexpt for plotting
+  #   scale_y_continuous(
+  #     name = "SSE",
+  #     sec.axis = sec_axis(~..), name = "Variance Explained")  # Scale back varexpt
+  #   ) +
+  #   theme_minimal() +
+  #   labs(
+  #     title = "Run SSE and Variance Explained",
+  #     x = "#Archetypes"
+  #   )
+  # ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse_varexpt.png"), plot = sse_varexpt_plot)
 
 
   ###################################################################
