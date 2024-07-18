@@ -119,26 +119,25 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   for (k in names(obj@archetypes$aa.bests)) {
     ## Single plot with archetypes ----
     archetypes <- obj@archetypes$aa.bests[[k]]$BY
-    names_archetypes = paste0("Archetype", 1:nrow(archetypes))
+    names_archetypes <- paste0("Archetype", 1:nrow(archetypes))
     rownames(archetypes) <- names_archetypes
 
     aa.weights <- obj@archetypes$aa.bests[[k]]$A
-    t <- rbind(aa.weights,diag(dim(aa.weights)[2]))
+    t <- rbind(aa.weights, diag(dim(aa.weights)[2]))
     rownames(t) <- c(rownames(aa.weights), names_archetypes)
     aa.weights <- t
     aa.weights[aa.weights < .5] <- 0
 
     # archetypes=as.data.frame(t(archetypes))
     tm <- obj_getSeData(obj)
-    message("DATA BEFORE 2")
     print(tm[1:5,1:5])
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
 
+    rownames(tm) <- str_replace_all(rownames(tm), "_", "-")
     newse <- CreateSeuratObject(counts = tm)
-    newse <- NormalizeData(newse, scale.factor = 1)
-    newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
-    message("DATA BEFORE 3")
-    print(newse@assays$RNA@layers$counts[1:5,1:5])
+    # newse <- NormalizeData(newse, scale.factor = 1)
+    newse <- SetAssayData(object = newse, layer = "scale.data", new.data = tm)
+    # newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
     newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
@@ -170,7 +169,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     for (i in 1:as.integer(k)) {
       if (debug) {
         message("DEBUG: obj_umapArchetypes | weights dimension is ", length(aa.weights[, i]))
-        message("DEBUG: obj_umapArchetypes | temb dimension are ", dim(temb)[1]," ", dim(temb)[2])
+        message("DEBUG: obj_umapArchetypes | temb dimension are ", dim(temb)[1], " ", dim(temb)[2])
       }
 
       temb$weight <- aa.weights[, i]
@@ -277,12 +276,8 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
 
   ###################################################################
 
-
   obj@archetypes$analysis <- analysis
   obj@archetypes$analysis_best <- analysis_best
-
-
-
 
   return(obj)
 })
