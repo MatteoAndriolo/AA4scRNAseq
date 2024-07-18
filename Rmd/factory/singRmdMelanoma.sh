@@ -7,13 +7,13 @@
 #SBATCH --error=./out/Melanoma/_slurm/%j.err.txt
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=20
-#SBATCH --time=2:00:00
-#SBATCH --mem=100G
+#SBATCH --cpus-per-task=16
+#SBATCH --time=3:00:00
+#SBATCH --mem=50G
 
 container="containers/img/myrubuntu.sif"
-command="/app/Rmd/_main.sh -c Melanoma --mink 3 --maxk 10 $@ "
 command="/app/Rmd/_main.sh -c Melanoma $@ "
+command="/app/Rmd/_main.sh -c Melanoma --mink 3 --maxk 10 $@ "
 
 singularity exec \
   --env DISABLE_AUTH=true \

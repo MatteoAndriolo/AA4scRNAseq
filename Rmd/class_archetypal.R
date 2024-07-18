@@ -136,7 +136,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     rownames(tm) <- str_replace_all(rownames(tm), "_", "-")
     newse <- CreateSeuratObject(counts = tm)
     # newse <- NormalizeData(newse, scale.factor = 1)
-    newse <- SetAssayData(object = newse, layer = "scale.data", new.data = tm)
+    newse <- SetAssayData(object = newse, layer = "scale.data", new.data = as.matrix(tm))
     # newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
     newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
