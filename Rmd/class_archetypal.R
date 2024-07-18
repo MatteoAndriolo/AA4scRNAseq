@@ -115,11 +115,11 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   for (k in names(obj@archetypes$aa.bests)) {
     ## Single plot with archetypes ----
     archetypes <- obj@archetypes$aa.bests[[k]]$BY
-    names_archetypes = paste0("Archetype", 1:nrow(archetypes))
+    names_archetypes <- paste0("Archetype", 1:nrow(archetypes))
     rownames(archetypes) <- names_archetypes
 
     aa.weights <- obj@archetypes$aa.bests[[k]]$A
-    t <- rbind(aa.weights,diag(dim(aa.weights)[2]))
+    t <- rbind(aa.weights, diag(dim(aa.weights)[2]))
     rownames(t) <- c(rownames(aa.weights), names_archetypes)
     aa.weights <- t
     aa.weights[aa.weights < .5] <- 0
@@ -128,14 +128,16 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     tm <- obj_getSeData(obj)
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
 
+    rownames(tm) <- str_replace_all(rownames(tm), "_","-")
     newse <- CreateSeuratObject(counts = tm)
-    newse <- NormalizeData(newse, scale.factor = 1)
-    newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
+    # newse <- NormalizeData(newse, scale.factor = 1)
+    newse <- SetAssayData(object = newse, layer = 'scale.data', new.data = tm)
+    #newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
     newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
-    
+
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
     archetype_color <- "yellow"
@@ -162,7 +164,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     for (i in 1:as.integer(k)) {
       if (debug) {
         message("DEBUG: obj_umapArchetypes | weights dimension is ", length(aa.weights[, i]))
-        message("DEBUG: obj_umapArchetypes | temb dimension are ", dim(temb)[1]," ", dim(temb)[2])
+        message("DEBUG: obj_umapArchetypes | temb dimension are ", dim(temb)[1], " ", dim(temb)[2])
       }
 
       temb$weight <- aa.weights[, i]
@@ -254,10 +256,10 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   # Creating the plot with dual y-axes
   sse_varexpt_plot <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))))) +
     geom_point(aes(y = sse), color = "blue") +
-    geom_point(aes(y = varexpt * max(sse) / max(varexpt)), color = "red") +  # Scale varexpt for plotting
+    geom_point(aes(y = varexpt * max(sse) / max(varexpt)), color = "red") + # Scale varexpt for plotting
     scale_y_continuous(
       name = "SSE",
-      sec.axis = sec_axis(~ . * max(varexpt) / max(sse), name = "Variance Explained")  # Scale back varexpt
+      sec.axis = sec_axis(~ . * max(varexpt) / max(sse), name = "Variance Explained") # Scale back varexpt
     ) +
     theme_minimal() +
     labs(

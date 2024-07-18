@@ -12,6 +12,7 @@ library(ggplot2)
 library(here)
 library(kneedle)
 library(tidyr)
+library(stringr)
 
 pathways <- list(
   "Glycolysis / Gluconeogenesis",

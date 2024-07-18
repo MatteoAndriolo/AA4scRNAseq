@@ -22,17 +22,17 @@ params$test_samples <- as.numeric(Sys.getenv("TEST_SAMPLES", "500"))
 params$init_method <- Sys.getenv("INIT_METHOD", "furthestsum")
 mink <- as.numeric(Sys.getenv("MINK"))
 maxk <- as.numeric(Sys.getenv("MAXK"))
-k <- as.numeric(Sys.getenv("K",0))
+k <- as.numeric(Sys.getenv("K", 0))
 
 params$rseed <- 2024
 params$path_figures <- file.path(params$out_path, "figures")
 params$path_outdata <- file.path(params$out_path, "data")
 
-if(k!=0){
+if (k != 0) {
   params$kappas <- k
-} else if(!(is.na(mink) | is.na(maxk))){
+} else if (!(is.na(mink) | is.na(maxk))) {
   params$kappas <- mink:maxk
-} else{
+} else {
   stop("ERROR: main | No k or mink&maxk provided")
 }
 
@@ -52,15 +52,15 @@ if (FALSE) {
   params$classname <- "Melanoma"
   params$pathw <- NULL
   params$kappas <- 2:3
-  params$kappas <- 4:8
   params$test <- TRUE
   params$nworkers <- 10
   plan("multicore", workers = params$nworkers)
   params$num_restarts <- 2
   params$max_iterations <- 5
   params$method <- "archetypal"
-  params$out_path <- "/dev/null"
   params$init_method <- "furthestsum"
+  params$out_path <- "/dev/null"
+  params$kappas <- 4:8
 }
 ################### END FIXING PARAMETERS FOR PRESENTATION
 
@@ -109,7 +109,7 @@ saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rd
 
 # PERFORM ARCHETYPES ---------------------------------
 ## ARCHETYPES----
-#if (obj@params$method == "archetypes") {
+# if (obj@params$method == "archetypes") {
 #  message("LOG: main | Performing Archetypes")
 #  obj <- obj_performArchetypes(obj, doparallel = FALSE)
 #  message("LOG: main | Performing Archetypes Done")
@@ -132,19 +132,19 @@ saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rd
 #  obj_analysisArchetypes(obj)
 #  message("LOG: main | Analysis Archetypes Done")
 #  ## ARCHETYPAL -----
-#} else if (obj@params$method == "archetypal") {
-#  
-#}
+# } else if (obj@params$method == "archetypal") {
+#
+# }
 
 
 # VISUALIZE ------------------------------------------- # Visualize Dataset
-#message("LOG: main | Visualizing Data")
-#obj <- obj_visualizeData(obj)
-#message("LOG: main | Visualizing Data Done")
+# message("LOG: main | Visualizing Data")
+# obj <- obj_visualizeData(obj)
+# message("LOG: main | Visualizing Data Done")
 #
 ## Visualize Archetypes
-#if (obj@params$method == "archetypes") {
-#} 
+# if (obj@params$method == "archetypes") {
+# }
 
 
 # obj@archetypes$aa.bests[[k]]$cluster.id <- apply(weights, 1, which.max)
@@ -158,7 +158,7 @@ saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rd
 # obj@compare$aa.orig <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$orig.ident)
 # obj@compare$se.orig <- table(obj@se@meta.data$seurat_clusters, obj@se@meta.data$orig.ident)
 # obj@compare$aa.se <- table(obj@se@meta.data$aa_clusters, obj@se@meta.data$seurat_clusters)
-# 
+#
 # # Display this results
 # message("LOG: main | Comparison of clusters")
 # print(obj@compare$aa.orig)
