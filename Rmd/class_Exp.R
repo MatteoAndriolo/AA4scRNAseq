@@ -1,6 +1,6 @@
 # . ##############################################################################
 # Exp genera ----
-## . ##############################################################################
+# . ##############################################################################
 setClass("Exp",
   contains = "database"
 )
@@ -34,6 +34,8 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
   obj@se <- AddMetaData(obj@se, metadata = cell_metadata)
+  obj@se$ctype <- cell_metadata$Cell.type.annotation
+  obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = obj@se)
 
   # SAVE obj@se to obj@se.org
   obj@se.org <- obj@se
@@ -49,21 +51,9 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     tsamples <- min(obj@params$test_samples, ncol(obj@se))
 
     obj@se <- obj@se[1:tgenes, 1:tsamples]
-    # row_filter <- Matrix::rowSums(obj@se) > 0
-    # col_filter <- Matrix::colSums(obj@se) > 0
-    # obj@se <- obj@se[row_filter, col_filter]
     obj@se <- obj@se[Matrix::rowSums(obj) > 0, Matrix::colSums(obj_getSeData(obj)) > 0]
     if (debug) message("DEBUG: Seurat after test has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
-  # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-  # obj@se <- FindVariableFeatures(obj@se)
-  # obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-  # obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-
-  obj@se <- ScaleData(obj@se, layer = "counts")
-  obj@se <- FindVariableFeatures(obj@se)
-  # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-  # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
   if (obj@params$hvf) {
     if (debug) message("DEBUG: obj_createSeuratObject | number of genes with rank ", sum(which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0)))
@@ -78,15 +68,19 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
   }
 
-  # if (!is.null(pathw)) {
-  #  obj@params$pathw <- pathw
-  #  obj <- obj_setGenes(obj, pathw)
-  #  message("LOG: Number of genes: ", length(obj@params$genes))
-  #  gene.flag <- gene_names %in% obj@genes
-  #  message("LOG: intersection pathw and seurat: ", sum(gene.flag))
-  #  se <- se[gene.flag, ]
-  #  gene_names <- gene_names[gene.flag]
-  # }
+  if (!is.null(obj@params$pathw)) {
+    obj <- obj_setGenes(obj)
+    gene.flag <- rownames(obj@se) %in% obj@params$genes
+    message("LOG: Number of genes: ", length(obj@params$genes))
+    message("LOG: intersection pathw and genenames: ", sum(gene.flag))
+    obj@se <- obj@se[gene.flag, ]
+
+    # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+  }
+
+  obj@se <- FindVariableFeatures(obj@se)
+  obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+  obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
 
   return(obj)
 })
@@ -105,7 +99,7 @@ setMethod(
            data_path = "/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx",
            ...) {
     # isnew <- obj_areParamsEqual(obj, update = TRUE)
-    if (FALSE) {
+    if (FALSE) { # TESTING
       data_path <- "/app/data/AllonKleinLab/Experiment1/stateFate_inVitro_normed_counts.mtx"
     }
     if (!is.null(obj@se.org)) {
@@ -125,19 +119,20 @@ setMethod(
       obj@se.org <- obj@se
     }
 
-    if (!is.null(obj@params$pathw)) {
-      # obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
-      obj <- obj_setGenes(obj)
-      gene.flag <- rownames(obj@se) %in% obj@params$genes
-      message("LOG: Number of genes: ", length(obj@params$genes))
-      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
-      obj@se <- obj@se[gene.flag, ]
+    # if (!is.null(obj@params$pathw)) {
+    #   # obj <- obj_updateParams(obj, updateCurrent = TRUE, pathw = pathw)
+    #   obj <- obj_setGenes(obj)
+    #   gene.flag <- rownames(obj@se) %in% obj@params$genes
+    #   message("LOG: Number of genes: ", length(obj@params$genes))
+    #   message("LOG: intersection pathw and genenames: ", sum(gene.flag))
+    #   obj@se <- obj@se[gene.flag, ]
 
-      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-      obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-    }
+    #   obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = obj@se)
+    #   # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+    #   obj@se <- FindVariableFeatures(obj@se)
+    #   obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+    #   obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+    # }
 
     message("Completed Loading")
     return(obj)
@@ -181,18 +176,19 @@ setMethod(
       obj@se.org <- obj@se
     }
 
-    if (!is.null(obj@params$pathw)) {
-      obj <- obj_setGenes(obj)
-      gene.flag <- rownames(obj@se) %in% obj@params$genes
-      message("LOG: Number of genes: ", length(obj@params$genes))
-      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
-      obj@se <- obj@se[gene.flag, ]
+    # if (!is.null(obj@params$pathw)) {
+    #   obj <- obj_setGenes(obj)
+    #   gene.flag <- rownames(obj@se) %in% obj@params$genes
+    #   message("LOG: Number of genes: ", length(obj@params$genes))
+    #   message("LOG: intersection pathw and genenames: ", sum(gene.flag))
+    #   obj@se <- obj@se[gene.flag, ]
 
-      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-      obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-    }
+    #   obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = obj@se)
+    #   # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+    #   obj@se <- FindVariableFeatures(obj@se)
+    #   obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+    #   obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+    # }
 
     message("Completed Loading")
     return(obj)
@@ -240,18 +236,19 @@ setMethod(
       obj@se.org <- obj@se
     }
 
-    if (!is.null(obj@params$pathw)) {
-      obj <- obj_setGenes(obj)
-      gene.flag <- rownames(obj@se) %in% obj@params$genes
-      message("LOG: Number of genes: ", length(obj@params$genes))
-      message("LOG: intersection pathw and genenames: ", sum(gene.flag))
-      obj@se <- obj@se[gene.flag, ]
+    # if (!is.null(obj@params$pathw)) {
+    #   obj <- obj_setGenes(obj)
+    #   gene.flag <- rownames(obj@se) %in% obj@params$genes
+    #   message("LOG: Number of genes: ", length(obj@params$genes))
+    #   message("LOG: intersection pathw and genenames: ", sum(gene.flag))
+    #   obj@se <- obj@se[gene.flag, ]
 
-      obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-      obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-    }
+    #   obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = obj@se)
+    #   # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+    #   obj@se <- FindVariableFeatures(obj@se)
+    #   obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+    #   obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+    # }
 
     message("Completed Loading")
     return(obj)
