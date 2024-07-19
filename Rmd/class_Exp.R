@@ -29,7 +29,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
 
 
   # CREATE OBJECT
-  obj@se <- CreateSeuratObject(counts = se , meta.data = cell_metadata)
+  obj@se <- CreateSeuratObject(counts = se, meta.data = cell_metadata)
   if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
   rownames(obj@se) <- gene_names

@@ -7,10 +7,10 @@ setClass("Mouse",
 setMethod(
   "obj_loadData", "Mouse",
   function(obj,
-             data_path = "/app/data/MouseCortex/MouseCortex.RData",
+           data_path = "/app/data/MouseCortex/MouseCortex.RData",
            ...) {
     if (debug) message("DEBUG: obj_loadData |init load mouse pathw is ", obj@params$pathw)
-    if(FALSE){
+    if (FALSE) {
       load(data_path)
     }
 
@@ -24,7 +24,7 @@ setMethod(
       load(data_path)
       head(rownames(MouseCortex))
       message("LOG: obj_loadData | updating MouseCortex")
-      
+
       obj@se <- UpdateSeuratObject(MouseCortex)
       rm(MouseCortex)
       message("LOG: obj_loadData | updated MouseCortex")

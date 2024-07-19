@@ -7,10 +7,10 @@ setClass("Myocardial",
 setMethod(
   "obj_loadData", "Myocardial",
   function(obj,
-             data_path = "/app/data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds",
+           data_path = "/app/data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds",
            ...) {
     if (debug) message("DEBUG: obj_loadData |init load mouse pathw is ", obj@params$pathw)
-    if(FALSE){
+    if (FALSE) {
       load(data_path)
     }
 
@@ -24,7 +24,7 @@ setMethod(
       load(data_path)
       head(rownames(MyocardialCortex))
       message("LOG: obj_loadData | updating MyocardialCortex")
-      
+
       obj@se <- UpdateSeuratObject(MyocardialCortex)
       rm(MyocardialCortex)
       message("LOG: obj_loadData | updated MyocardialCortex")

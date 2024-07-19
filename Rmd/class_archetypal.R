@@ -96,8 +96,8 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
     t[[k]] <- tt
     # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
     obj@se$temp_aa_clusters <- tt
-    tplot <- DimPlot(obj@se, reduction="umap", group.by="temp_aa_clusters" )
-    ggsave(filename=file.path(obj@params$path_figures, paste0("UMAP_AA_",k,"_orig.png")),tplot)
+    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "temp_aa_clusters")
+    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_orig.png")), tplot)
   }
   obj@se$temp_aa_clusters <- NULL
 
@@ -130,7 +130,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
 
     # archetypes=as.data.frame(t(archetypes))
     tm <- GetAssayData(obj@se)
-    print(tm[1:5,1:5])
+    print(tm[1:5, 1:5])
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
 
     rownames(tm) <- str_replace_all(rownames(tm), "_", "-")
@@ -245,7 +245,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
   plot_sse
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse.png"), plot = plot_sse)
 
-  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt,)) +
+  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt, )) +
     geom_point() +
     # geom_line() +
     theme_minimal() +
