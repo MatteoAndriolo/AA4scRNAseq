@@ -72,6 +72,7 @@ obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
 
+message("LOG: main | Visualize Data")
 obj <- obj_visualizeData(obj)
 
 # ARCHETYPAL --------

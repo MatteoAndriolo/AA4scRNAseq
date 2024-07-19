@@ -116,16 +116,7 @@ setMethod(
   }
 )
 
-## obj_getSeData ----
-setMethod("obj_getSeData", "Melanoma", function(obj) {
-  if (debug) message("DEBUG: obj_getSeData | return counts")
-  tm <- obj@se@assays$RNA@layers$counts
-  rownames(tm) <- rownames(obj@se)
-  colnames(tm) <- colnames(obj@se)
-  return(tm)
-})
-
-## obj_plotGoldUmap
+## obj_plotGoldUmap -----
 setMethod("obj_plotGoldUmap", "Melanoma", function(obj) {
   ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
   umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = ct)

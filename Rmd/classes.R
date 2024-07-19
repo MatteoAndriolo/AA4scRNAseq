@@ -27,10 +27,6 @@ setGeneric("obj_createSeuratObject", function(obj, se, gene_names, cell_metadata
   standardGeneric("obj_createSeuratObject")
 })
 
-### getSeData ----
-setGeneric("obj_getSeData", function(obj) {
-  standardGeneric("obj_getSeData")
-})
 
 ### getMatrixHVF ----
 setGeneric("obj_getMatrixHVF", function(obj) {
@@ -89,9 +85,11 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
 
   if (inherits(obj, "Melanoma")) {
     # if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
+
     # If only one pathwas
     genes <- list_genes_human_pathway[[obj@params$pathw]]
     if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
+
     # } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
     #  # if more than one
     #  genes <- lapply(obj@params$pathw, function(p) list_genes_human_pathway[[p]])
@@ -99,9 +97,11 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
     # }
   } else {
     # if (is.character(obj@params$pathw) && length(obj@params$pathw) == 1) {
+
     # If only one pathwas
-    genes <- list_genes_mouse_pathway[[obj@params$pathw]][[1]]
+    genes <- list_genes_mouse_pathway[[obj@params$pathw]]
     if (debug) message("DEBUG: obj_setGenes | Number genes in ", obj@params$pathw, " is ", length(genes))
+
     # } else if (is.list(obj@params$pathw) || is.vector(obj@params$pathw)) {
     #  # if more than one
     #  genes <- lapply(obj@params$pathw, function(p) list_genes_mouse_pathway[[p]])
@@ -239,6 +239,7 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
 # Other sources ----
 source("/app/Rmd/class_Melanoma.R")
 source("/app/Rmd/class_Exp.R")
+source("/app/Rmd/class_Mouse.R")
 source("/app/Rmd/class_archetypes.R")
 source("/app/Rmd/class_archetypal.R")
 # source("/app/Rmd/class_Other.R")

@@ -191,6 +191,7 @@ case $classname in
     Exp2) output_path="out/AllonKleinLab/Experiment2" ;;
     Exp3) output_path="out/AllonKleinLab/Experiment3" ;;
     Melanoma) output_path="out/Melanoma" ;;
+    Mouse) output_path="out/MouseCortex" ;;
     *) echo "Unknown classname: $classname" >&2; exit 1 ;;
 esac
 

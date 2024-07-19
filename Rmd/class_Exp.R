@@ -20,23 +20,27 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     stop("Invalid where.cell_names")
   }
 
-  if (debug) message("DEBUG: data matrix has dimension post rem0 ", dim(se)[[1]], " ", dim(se)[[2]])
+  if (debug) message("DEBUG: data matrix has dimension", dim(se)[[1]], " ", dim(se)[[2]])
 
   # REMOVE duplicates
   se <- se[!duplicated(gene_names), !duplicated(cell_metadata$new.names)]
   gene_names <- gene_names[!duplicated(gene_names)]
   cell_metadata <- cell_metadata[!duplicated(cell_metadata$new.names), ]
 
+
   # CREATE OBJECT
-  obj@se <- CreateSeuratObject(counts = se) # , meta.data = cell_metadata)
+  obj@se <- CreateSeuratObject(counts = se , meta.data = cell_metadata)
   if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
   obj@se <- AddMetaData(obj@se, metadata = cell_metadata)
   obj@se$ctype <- cell_metadata$Cell.type.annotation
-  obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = obj@se)
+  obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj@se)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
+  obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = as.matrix(GetAssayData(obj@se)))
+  if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
+  if (debug) message("DEBUG: Seurat object has dimension post rem0 post ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   # SAVE obj@se to obj@se.org
   obj@se.org <- obj@se
 
@@ -51,7 +55,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     tsamples <- min(obj@params$test_samples, ncol(obj@se))
 
     obj@se <- obj@se[1:tgenes, 1:tsamples]
-    obj@se <- obj@se[Matrix::rowSums(obj) > 0, Matrix::colSums(obj_getSeData(obj)) > 0]
+    obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
     if (debug) message("DEBUG: Seurat after test has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
 
@@ -60,27 +64,37 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
 
     # obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
-    obj@se <- obj@se[Matrix::rowSums(obj_getSeData(obj@se)) > 0, Matrix::colSums(obj@se) > 0]
+    obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj@se)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
     message("LOG: HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
     obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-    obj@se <- FindVariableFeatures(obj@se)
-    obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-    obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
   }
 
+  obj@se <- FindVariableFeatures(obj@se)
+  obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
+  obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+
+  str(obj@se)
   if (!is.null(obj@params$pathw)) {
+    message("LOG: obj_createSeu | setting up pathw ", obj@params$pathw)
     obj <- obj_setGenes(obj)
-    gene.flag <- rownames(obj@se) %in% obj@params$genes
+    gene_names <- rownames(obj@se)
+    gene.flag <- gene_names %in% obj@params$genes
+    if (debug) {
+      message("DEBUG: obj_createSeu | pathw | number genes pathw = ", length(obj@params$genes))
+      message("DEBUG: obj_createSeu | pathw | first 5 ", toString(obj@params$genes[1:5]))
+      message("DEBUG: obj_createSeu | pathw | number genes data = ", length(gene_names))
+      message("DEBUG: obj_createSeu | pathw | first 5 ", toString(gene_names[1:5]))
+      message("DEBUG: obj_createSeu | pathw | intersectoin gives ", sum(gene.flag), " genes")
+    }
     message("LOG: Number of genes: ", length(obj@params$genes))
     message("LOG: intersection pathw and genenames: ", sum(gene.flag))
     obj@se <- obj@se[gene.flag, ]
 
     # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
+    obj@se <- RunPCA(obj@se, features = rownames(obj@se))
   }
+  str(obj@se)
 
-  obj@se <- FindVariableFeatures(obj@se)
-  obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-  obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
 
   return(obj)
 })
@@ -139,10 +153,6 @@ setMethod(
   }
 )
 
-### obj_getSeData ----
-setMethod("obj_getSeData", "Exp1", function(obj) {
-  return(obj@se@assays$RNA@layers$counts)
-})
 
 # . #############################################################################
 # Exp2 ----
@@ -194,11 +204,6 @@ setMethod(
     return(obj)
   }
 )
-
-### obj_getSeData ----
-setMethod("obj_getSeData", "Exp2", function(obj) {
-  return(obj@se@assays$RNA@layers$counts)
-})
 
 
 # . #############################################################################
@@ -255,7 +260,9 @@ setMethod(
   }
 )
 
-### obj_getSeData ----
-setMethod("obj_getSeData", "Exp3", function(obj) {
-  return(obj@se@assays$RNA@layers$counts)
+
+## obj_plotGoldUmap -----
+setMethod("obj_plotGoldUmap", "Exp", function(obj) {
+  umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = "ctype")
+  return(list("umap_celltypes" = umap_celltypes))
 })
