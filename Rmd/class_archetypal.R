@@ -142,20 +142,31 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
+    newse$ctype <- c(ctype, names_archetypes)
 
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
     archetype_color <- "yellow"
     ctype_colors <- scales::hue_pal()(length(unique(emb$ctypes)))
 
+    #plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
+    #  geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
+    #  geom_point(data = subset(emb, ctypes %in% rownames(archetypes)), color = archetype_color, size = 4) +
+    #  geom_text(
+    #    data = subset(emb, ctypes %in% rownames(archetypes)), aes(label = as.numeric(gsub("Archetype", "", ctypes))),
+    #    color = "black", size = 3
+    #  ) + # vjust = -1.5, size = 3) +
+    #  scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(rownames(archetypes))))) +
+    #  theme_minimal() +
+    #  labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
     plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
-      geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
-      geom_point(data = subset(emb, ctypes %in% rownames(archetypes)), color = archetype_color, size = 4) +
+      geom_point(data = subset(emb, ctypes != 99), size = 1) +
+      geom_point(data = subset(emb, ctypes == 99), color = "black", size = 4) +
       geom_text(
-        data = subset(emb, ctypes %in% rownames(archetypes)), aes(label = as.numeric(gsub("Archetype", "", ctypes))),
-        color = "black", size = 3
-      ) + # vjust = -1.5, size = 3) +
-      scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(rownames(archetypes))))) +
+        data = subset(emb, ctypes == 99), aes(label = as.numeric(gsub("Archetype", "", names_archetypes))),
+        color = "white", size = 3
+      ) +
+      scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(names_archetypes)))) +
       theme_minimal() +
       labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
     plot
