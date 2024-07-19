@@ -24,7 +24,7 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
   message("LOG: obj_performArchetypal | Number of archetypes is ", obj@params$kappas)
 
   # IMPORTANT !!!! column <-> features, row <-> samples
-  df <- data.frame(t(obj_getSeData(obj)))
+  df <- data.frame(t(GetAssayData(obj@se)))
   colnames(df) <- rownames(obj@se)
   rownames(df) <- colnames(obj@se)
 
@@ -129,7 +129,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     aa.weights[aa.weights < .5] <- 0
 
     # archetypes=as.data.frame(t(archetypes))
-    tm <- obj_getSeData(obj)
+    tm <- GetAssayData(obj@se)
     print(tm[1:5,1:5])
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
 
