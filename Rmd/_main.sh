@@ -192,7 +192,7 @@ case $classname in
     Exp3) output_path="out/AllonKleinLab/Experiment3" ;;
     Melanoma) output_path="out/Melanoma" ;;
     Mouse) output_path="out/MouseCortex" ;;
-    Myoc) output_path="out/MyocardialInfarction" ;;
+    Myocardial) output_path="out/MyocardialInfarction" ;;
     *) echo "Unknown classname: $classname" >&2; exit 1 ;;
 esac
 
@@ -289,3 +289,11 @@ while kill -0 $pid 2>/dev/null; do
     echo "$(date +%F' '%T), $cpu, $mem" >> $log_file
     sleep 3
 done
+
+# while kill -0 $pid 2>/dev/null; do
+#     stats=$(top -b -n 1 -p $pid | tail -n 1)
+#     cpu=$(echo $stats | awk '{print $9}')
+#     mem=$(echo $stats | awk '{print $10}')
+#     echo "$(date +%F' '%T), $cpu, $mem" >> $log_file
+#     sleep 3
+# done

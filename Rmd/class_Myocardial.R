@@ -9,9 +9,9 @@ setMethod(
   function(obj,
            data_path = "/app/data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds",
            ...) {
-    if (debug) message("DEBUG: obj_loadData |init load mouse pathw is ", obj@params$pathw)
-    if (FALSE) {
-      load(data_path)
+    if (debug) message("DEBUG: obj_loadData |init load myocardial pathw is ", obj@params$pathw)
+    if(FALSE){
+      readRDS(data_path)
     }
 
     if (!is.null(obj@se.org)) {
@@ -21,17 +21,26 @@ setMethod(
       message("LOG: obj_loadData | Full loading")
 
       obj <- obj_updateParams(obj, updateCurrent = TRUE, data_path = data_path)
-      load(data_path)
-      head(rownames(MyocardialCortex))
-      message("LOG: obj_loadData | updating MyocardialCortex")
-
-      obj@se <- UpdateSeuratObject(MyocardialCortex)
-      rm(MyocardialCortex)
-      message("LOG: obj_loadData | updated MyocardialCortex")
+      obj@se <- readRDS(data_path)
+      str(obj@se)
+      # message("\n\n\n\n")
+      # # Show structure of each element in the new environment
+      # for (element in names(new_env)) {
+      #   cat(paste("Structure of element:", element, "\n"))
+      #   str(new_env[[element]])
+      #   cat("\n")
+      # }
+      
+      # obj@se <- UpdateSeuratObject(MyocardialCortex)
+      # rm(MyocardialCortex)
+      # message("LOG: obj_loadData | updated Myocardial")
+      options(future.globals.maxSize= 6*1024^3)
       obj@se$ctype <- Idents(obj@se)
+      obj@se <- ScaleData(obj@se)
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se))
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+      str(obj@s)
 
 
       if (obj@params$test) {

@@ -135,6 +135,8 @@ setMethod("obj_visualizeData", "database", function(obj) {
   # PCA UMAP
   obj@plots$pca <- PCAPlot(obj@se)
   obj@plots$umap <- UMAPPlot(obj@se)
+  obj@plots$umapctypes <- UMAPPlot(obj@se, group.by="ctype")
+  
 
   obj@plots$combined_plot <- plot_grid(
     obj@plots$pca + theme(legend.position = "none"),
@@ -145,6 +147,7 @@ setMethod("obj_visualizeData", "database", function(obj) {
 
   ggsave(filename = file.path(path_figures, "PCAPlot.png"), plot = obj@plots$pca)
   ggsave(filename = file.path(path_figures, "UMAPPlot.png"), plot = obj@plots$umap)
+  ggsave(filename = file.path(path_figures, "UMAPPlot_ctype.png"), plot = obj@plots$umapctypes)
   ggplot2::ggsave(filename = file.path(path_figures, "combined_plot.png"), plot = obj@plots$combined_plot)
 
   # ELBOWPLOT
