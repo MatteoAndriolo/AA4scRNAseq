@@ -240,6 +240,7 @@ setMethod("obj_saveObj", "database", function(obj, namefile = "", keep.org = FAL
 source("/app/Rmd/class_Melanoma.R")
 source("/app/Rmd/class_Exp.R")
 source("/app/Rmd/class_Mouse.R")
+source("/app/Rmd/class_Myocardial.R")
 source("/app/Rmd/class_archetypes.R")
 source("/app/Rmd/class_archetypal.R")
 # source("/app/Rmd/class_Other.R")
