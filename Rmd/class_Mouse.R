@@ -25,26 +25,32 @@ setMethod(
       head(rownames(MouseCortex))
       message("LOG: obj_loadData | updating MouseCortex")
       
-      MouseCortex <- UpdateSeuratObject(MouseCortex)
-      head(rownames(MouseCortex))
+      obj@se <- UpdateSeuratObject(MouseCortex)
+      rm(MouseCortex)
+      message("LOG: obj_loadData | updated MouseCortex")
+      obj@se$ctype <- Idents(obj@se)
+      obj@se <- FindVariableFeatures(obj@se)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+
 
       if (obj@params$test) {
         if (debug) message("DEBUG: obj_loadData | TEST selected -> reducing dataset")
         if (!is.null(obj@params$pathw)) {
-          tgenes <- nrow(se)
+          tgenes <- nrow(obj@se)
         } else {
-          tgenes <- min(obj@params$test_genes, nrow(se))
+          tgenes <- min(obj@params$test_genes, nrow(obj@se))
         }
-        tsamples <- min(obj@params$test_samples, ncol(se))
+        tsamples <- min(obj@params$test_samples, ncol(obj@se))
 
         metadata <- metadata[1:tsamples, ]
 
-        se <- se[1:tgenes, 1:tsamples]
-        se <- se[Matrix::rowSums(se) > 0, Matrix::colSums(se) > 0]
+        obj@se <- obj@se[1:tgenes, 1:tsamples]
+        obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
       }
 
       # save obj@se
-      obj@se.org <- obj@se
+      # obj@se.org <- obj@se
     }
 
     if (!is.null(obj@params$pathw)) {
@@ -80,6 +86,6 @@ setMethod(
 
 ## obj_plotGoldUmap
 setMethod("obj_plotGoldUmap", "Mouse", function(obj) {
-  umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = "idents")
+  umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = "ident")
   return(list(umap_celltypes = umap_celltypes))
 })
