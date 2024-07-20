@@ -283,10 +283,11 @@ setMethod("obj_analysisArchetypes", "database", function(obj, ...) {
   # Combine the original matrix and archetypes
   newse <- cbind(as.matrix(obj@se@assays$RNA$counts), aspe)
   newse <- as(newse, "dgCMatrix")
-
+  rownames(newse) <- str_replace_all(rownames(newse), "_", "-")
   # Create a temporary Seurat object with the combined matrix
   combined_obj <- CreateSeuratObject(counts = newse)
-  combined_obj <- ScaleData(combined_obj, layer = "counts")
+  combined_obj <- SetAssayData(combined_obj, layer = "scale.data", new.data = newse)
+  # combined_obj <- ScaleData(combined_obj, layer = "counts")
   combined_obj <- RunPCA(combined_obj, features = rownames(combined_obj))
 
   # UMAP on combined matrix

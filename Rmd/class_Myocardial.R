@@ -10,7 +10,7 @@ setMethod(
            data_path = "/app/data/MyocardialInfarction/e61af320-303a-4029-8500-db6636bba0d4.rds",
            ...) {
     if (debug) message("DEBUG: obj_loadData |init load myocardial pathw is ", obj@params$pathw)
-    if(FALSE){
+    if (FALSE) {
       readRDS(data_path)
     }
 
@@ -22,14 +22,14 @@ setMethod(
 
       obj <- obj_updateParams(obj, updateCurrent = TRUE, data_path = data_path)
       obj@se <- readRDS(data_path)
-      str(obj@se)
-      options(future.globals.maxSize= 6*1024^3)
+      options(future.globals.maxSize = 6 * 1024^3)
       obj@se$ctype <- Idents(obj@se)
       obj@se <- ScaleData(obj@se)
       obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-      str(obj@s)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      str(obj@se)
 
 
       if (obj@params$test) {
@@ -75,6 +75,10 @@ setMethod(
 
       obj@se <- obj@se[gene.flag, ]
       message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
+      obj@se <- FindVariableFeatures(obj@se)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
     }
 
     message("LOG: obj_loadData | Completed Loading")

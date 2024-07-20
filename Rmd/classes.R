@@ -125,30 +125,28 @@ setMethod("obj_setGenes", "database", function(obj, pathGenes = "/app/data/list_
 
 ## visualizeData ----
 # Method to visualize data
-setGeneric("obj_visualizeData", function(obj) {
+setGeneric("obj_visualizeData", function(obj, name = "") {
   standardGeneric("obj_visualizeData")
 })
 
-setMethod("obj_visualizeData", "database", function(obj) {
+setMethod("obj_visualizeData", "database", function(obj, name = "") {
   path_figures <- obj@params$path_figures
 
+  if (name == "org") {
+    obj@se <- obj@se.org
+  }
+
   # PCA UMAP
-  obj@plots$pca <- DimPlot(obj@se, reduction = "pca", group.by = "ctype") + ggtitle("PCA plot - cell types")
-  obj@plots$umap<- UMAPPlot(obj@se, group.by="ctype") + ggtitle("UMAP plot - cell types")
+  obj@plots$pca <- PCAPlot(obj@se, group.by = "ctype") + ggtitle("PCA plot - cell types")
+  obj@plots$umap <- UMAPPlot(obj@se, group.by = "ctype") + ggtitle("UMAP plot - cell types")
+  obj@plots$tsne <- TSNEPlot(obj@se, group.by = "ctype") + ggtitle("TSNE plot - cell types")
 
-  obj@plots$combined_plot <- plot_grid(
-    obj@plots$pca + theme(legend.position = "none"),
-    obj@plots$umap + theme(legend.position = "none"),
-    labels = c("A", "B"),
-    ncol = 2
-  )
-
-  ggsave(filename = file.path(path_figures, "PCAPlot.png"), plot = obj@plots$pca)
-  ggsave(filename = file.path(path_figures, "UMAPPlot.png"), plot = obj@plots$umap)
-  ggplot2::ggsave(filename = file.path(path_figures, "combined_plot.png"), plot = obj@plots$combined_plot)
+  ggsave(filename = file.path(path_figures, sprintf("ct_PCA%s.png", name)), plot = obj@plots$pca)
+  ggsave(filename = file.path(path_figures, sprintf("ct_UMAP%s.png", name)), plot = obj@plots$umap)
+  ggsave(filename = file.path(path_figures, sprintf("ct_TSNE%s.png", name)), plot = obj@plots$tsne)
 
   # ELBOWPLOT
-  obj@plots$elbowplot <- ElbowPlot(obj@se) 
+  obj@plots$elbowplot <- ElbowPlot(obj@se)
   ggsave(filename = file.path(path_figures, "ElbowPlot.png"), plot = obj@plots$elbowplot)
 
   # GOLD
@@ -168,8 +166,6 @@ setMethod("obj_visualizeData", "database", function(obj) {
 
   #  obj@plots$umap_seucl <- DimPlot(obj@se, reduction = "umap", group.by = "seurat_clusters")
   #  obj@plots$umap_aacl <- DimPlot(obj@se, reduction = "umap", group.by = "aa_clusters")
-
-  return(obj)
 })
 
 

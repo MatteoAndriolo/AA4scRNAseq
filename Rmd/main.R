@@ -50,6 +50,7 @@ if (FALSE) {
   params$debug <- TRUE
   debug <- TRUE
   params$classname <- "Melanoma"
+  params$pathw <- 1
   params$pathw <- NULL
   params$kappas <- 2:3
   params$test <- TRUE
@@ -73,7 +74,10 @@ message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
 
 message("LOG: main | Visualize Data")
-obj <- obj_visualizeData(obj)
+obj_visualizeData(obj)
+if (!is.null(obj@se.org)) {
+  obj_visualizeData(obj, name = "org")
+}
 
 # ARCHETYPAL --------
 message("LOG: main | Performing Archetypal")

@@ -101,44 +101,34 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
       }
     })
 
-
     obj@archetypes$aa.bests[[k]]$cluster.id <- tt
     t[[k]] <- tt
     # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
     obj@se$AA_clusters <- tt
+    obj@se.org$AA_clusters <- tt
 
     # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
     unique_tt <- unique(tt)
-    num_clusters <- length(unique_tt) - 1  # excluding "NA"
+    num_clusters <- length(unique_tt) - 1 # excluding "NA"
     palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_tt[unique_tt != "NA"]))
-    
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-      ggtitle("UMAP labelled by archetype if weight>0.6") + 
-      scale_color_manual(values = palette)  
+    for (red in c("umap", "pca", "tsne")) {
+      tplot <- DimPlot(obj@se, reduction = red, group.by = "AA_clusters") +
+        ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
+        scale_color_manual(values = palette)
 
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archetypes.png")), tplot)
+      filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), ".png")
+      ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
 
+      tplot <- DimPlot(obj@se.org, reduction = red, group.by = "AA_clusters") +
+        ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
+        scale_color_manual(values = palette)
 
-    # PLOT ALSO ARCHETYPES POINTS
-    # umap_coordinates <- Embeddings(obj@se, "umap")
-    # archetypes_umap <- t(weights %*% umap_coordinates)
-# 
-    # archetypes_df <- data.frame(
-    #   x = archetypes_umap[, 1],
-    #   y = archetypes_umap[, 2],
-    #   label = paste0("Archetype ", 1:nrow(archetypes_umap))
-    # )
-
-    # Plot UMAP with archetypes
-    # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-    #        ggtitle("UMAP labelled by AA_clusters") + 
-    #        scale_color_manual(values = palette) +
-    #        geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) + 
-    #        geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
-    #        
-    # ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archLabelaAndArch.png")), tplot)
+      filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), "_org.png")
+      ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
+    }
   }
   obj@se$AA_clusters <- NULL
+  obj@se.org$AA_clusters <- NULL
 
   obj@other$AA_clusters <- t
   message("LOG: obj_assignArchetypalClusters | finished aa_clusters metadata")
@@ -156,64 +146,54 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
   #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
 
   for (k in names(obj@archetypes$aa.bests)) {
+    # Archetypes
     archetypes <- obj@archetypes$aa.bests[[k]]$BY
-
     names_archetypes <- paste0("Archetype", 1:nrow(archetypes))
     rownames(archetypes) <- names_archetypes
 
+    # Weights
     aa.weights <- obj@archetypes$aa.bests[[k]]$A
     t <- rbind(aa.weights, diag(dim(aa.weights)[2]))
     rownames(t) <- c(rownames(aa.weights), names_archetypes)
     aa.weights <- t
     aa.weights[aa.weights < treshold] <- 0
 
-    # archetypes=as.data.frame(t(archetypes))
+    # Create new Seurat object with archetypes
     tm <- GetAssayData(obj@se)
-    print(tm[1:5, 1:5])
     tm <- cbind(tm, as(t(archetypes), "dgCMatrix"))
-
     rownames(tm) <- str_replace_all(rownames(tm), "_", "-")
+
     newse <- CreateSeuratObject(counts = tm)
     # newse <- NormalizeData(newse, scale.factor = 1)
-    newse <- SetAssayData(object = newse, layer = "scale.data", new.data = as.matrix(tm))
     # newse <- ScaleData(newse, features = rownames(newse), do.scale = FALSE, do.center = FALSE)
+    newse <- SetAssayData(object = newse, layer = "scale.data", new.data = as.matrix(tm))
     newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
+    newse <- RunTSNE(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
+    rm(ctype)
 
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctype <- factor(newse$ctype, levels = unique(newse$ctype))
-    emb$rown <- rownames(t)
+    emb$rown <- rownames(aa.weights)
     archetype_color <- "yellow"
     ctype_colors <- scales::hue_pal()(length(unique(emb$ctype)))
 
-
-    #plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
-    #  geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
-    #  geom_point(data = subset(emb, ctypes %in% rownames(archetypes)), color = archetype_color, size = 4) +
-    #  geom_text(
-    #    data = subset(emb, ctypes %in% rownames(archetypes)), aes(label = as.numeric(gsub("Archetype", "", ctypes))),
-    #    color = "black", size = 3
-    #  ) + # vjust = -1.5, size = 3) +
-    #  scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(rownames(archetypes))))) +
-    #  theme_minimal() +
-    #  labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
     plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctype)) +
       geom_point(data = subset(emb, ctype != 99), size = 1) +
       geom_point(data = subset(emb, ctype == 99), color = "black", size = 4) +
       geom_text(
-        data = subset(emb, ctype == 99), aes(label = as.numeric(gsub("Archetype", "", rown ))),
+        data = subset(emb, ctype == 99), aes(label = as.numeric(gsub("Archetype", "", rown))),
         color = "white", size = 3
       ) +
       scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(names_archetypes)))) +
       theme_minimal() +
       labs(title = "CellTypes and Archetypes found", x = "UMAP 1", y = "UMAP 2")
-    plot
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), ".png")), plot = plot)
+    ggsave(filename = file.path(obj@params$path_figures, paste0("aa_UMAP_", sprintf("%02d", as.numeric(k)), ".png")), plot = plot)
 
 
-    # WEIGHTS
+    # Plot WEIGHTS ------
     temb <- emb
     plot_list <- list()
     for (i in 1:as.integer(k)) {
@@ -234,9 +214,41 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
 
       plot_list[[i]] <- umap_plot
     }
-    combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_weights.png")), plot = combined_plot)
+
+    ncol <- 2
+    nrow <- ceiling(k / ncol)
+    individual_plot_width <- 5 # width of a single plot
+    individual_plot_height <- 4 # height of a single plot
+    combined_plot_width <- ncol * individual_plot_width
+    combined_plot_height <- nrow * individual_plot_height
+    combined_plot <- plot_grid(plotlist = plot_list, ncol = ncol)
+    output_filename <- file.path(obj@params$path_figures, paste0("aa_UMAP_", sprintf("%02d", k), "_weights.png"))
+    ggsave(filename = output_filename, plot = combined_plot, width = combined_plot_width, height = combined_plot_height)
+
+
+    # HEATMAP CELL TYPE VS ARCHETYPES
+    df <- data.frame(cell_type = obj@se$ctype, aa_clusters = obj@archetypes[[k]])
+    contingency_table <- table(df$cell_type, df$aa_clusters)
+
+    # Print the contingency table
+    print(contingency_table)
+
+    library(reshape2)
+
+    # Melt the contingency table for ggplot2
+    melted_table <- melt(contingency_table)
+
+    # Plot the heatmap
+    melted_plot <- ggplot(melted_table, aes(x = Var2, y = Var1, fill = value)) +
+      geom_tile() +
+      scale_fill_gradient(low = "white", high = "blue") +
+      labs(x = "Archetype", y = "Cell Type", fill = "Count") +
+      theme_minimal()
+
+    output_filename <- file.path(obj@params$path_figures, paste0("heatmap_", sprintf("%02d", k), ".png"))
+    ggsave(filename = output_filename, plot = melted_plot)
   }
+
   ## Analysis ------
   analysis_best <- data.frame(
     sse = sapply(obj@archetypes$aa.bests, function(x) x$SSE),
@@ -332,5 +344,3 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
 
   return(obj)
 })
-
-    

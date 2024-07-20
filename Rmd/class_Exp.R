@@ -1,6 +1,4 @@
-# . ##############################################################################
-# Exp genera ----
-# . ##############################################################################
+# Exp general ----
 setClass("Exp",
   contains = "database"
 )
@@ -68,8 +66,9 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   }
 
   obj@se <- FindVariableFeatures(obj@se)
-  obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-  obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+  obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+  obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+  obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
 
   obj@se.org <- obj@se
   str(obj@se)
@@ -90,7 +89,10 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     obj@se <- obj@se[gene.flag, ]
 
     # obj@se <- ScaleData(obj@se, features = rownames(obj@se), layer = "counts")
-    obj@se <- RunPCA(obj@se, features = rownames(obj@se))
+    obj@se <- FindVariableFeatures(obj@se)
+    obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+    obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+    obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
   }
   str(obj@se)
 
@@ -98,9 +100,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   return(obj)
 })
 
-# . ##############################################################################
 # Exp1 ----
-## . ##############################################################################
 setClass("Exp1",
   contains = "Exp"
 )
@@ -153,15 +153,13 @@ setMethod(
 )
 
 
-# . #############################################################################
-# Exp2 ----
-## . ############################################################################
+# Exp2 -------
 # Define the 'Exp2' Class that inherits from 'database'
 setClass("Exp2",
   contains = "Exp"
 )
 
-### obj_loadData ----
+## obj_loadData -------
 setMethod(
   "obj_loadData", "Exp2",
   function(obj,
@@ -205,15 +203,12 @@ setMethod(
 )
 
 
-# . #############################################################################
-# Exp3 ----
-# . ############################################################################
-# Define the 'Exp3' Class that inherits from 'database'
+# Exp3 ---------
 setClass("Exp3",
   contains = "Exp"
 )
 
-### obj_loadData ----
+## obj_loadData ----
 setMethod(
   "obj_loadData", "Exp3",
   function(obj,
@@ -260,7 +255,8 @@ setMethod(
 )
 
 
-## obj_plotGoldUmap -----
+
+# obj_plotGoldUmap -----
 setMethod("obj_plotGoldUmap", "Exp", function(obj) {
   umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = "ctype")
   return(list("umap_celltypes" = umap_celltypes))

@@ -30,8 +30,9 @@ setMethod(
       message("LOG: obj_loadData | updated MouseCortex")
       obj@se$ctype <- Idents(obj@se)
       obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
 
 
       if (obj@params$test) {
@@ -77,6 +78,10 @@ setMethod(
       }
 
       obj@se <- obj@se[gene.flag, ]
+      obj@se <- FindVariableFeatures(obj@se)
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
     }
 

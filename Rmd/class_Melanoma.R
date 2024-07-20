@@ -58,10 +58,12 @@ setMethod(
       obj@se <- SetAssayData(object = obj@se, layer = "scale.data", new.data = as.matrix(se))
       # obj@se <- ScaleData(obj@se, layer = "counts")
       obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
       # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
+
 
       # save obj@se
       obj@se.org <- obj@se
@@ -76,8 +78,8 @@ setMethod(
         # message("LOG: obj_loadData | obj_loadData | rescale, hvf, reduce after hvf")
         # obj@se <- ScaleData(obj@se, layer = "counts")
         # obj@se <- FindVariableFeatures(obj@se, features = rownames(obj@se))
-        obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-        obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
+        obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+        obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       }
     }
 
@@ -100,15 +102,10 @@ setMethod(
       }
 
       obj@se <- obj@se[gene.flag, ]
+      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
-
-      # message("LOG: obj_loadData | rescale, hvf, reduce after pathw")
-      # obj@se <- ScaleData(obj@se, layer = "counts")
-      # obj@se <- FindVariableFeatures(obj@se)
-      # obj@se <- RunPCA(obj@se, features = rownames(obj@se))
-      # obj@se <- RunUMAP(obj@se, features = rownames(obj@se))
-      # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
-      # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
     }
 
     message("LOG: obj_loadData | Completed Loading")
@@ -118,8 +115,7 @@ setMethod(
 
 ## obj_plotGoldUmap -----
 setMethod("obj_plotGoldUmap", "Melanoma", function(obj) {
-  ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-  umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = ct) + ggtitle("UMAP colored by celltype")
-  umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor") + ggtitle("UMAP colored by 'tumor'")
-  return(list(umap_celltypes = umap_celltypes, umap_tumor = umap_tumor))
+  # umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor") + ggtitle("UMAP colored by 'tumor'")
+  # return(list(, umap_tumor = umap_tumor))
+  return(list())
 })
