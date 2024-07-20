@@ -30,24 +30,13 @@ setMethod(
       message("LOG: obj_loadData | updated MouseCortex")
       obj@se$ctype <- Idents(obj@se)
       obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
 
 
       if (obj@params$test) {
-        if (debug) message("DEBUG: obj_loadData | TEST selected -> reducing dataset")
-        if (!is.null(obj@params$pathw)) {
-          tgenes <- nrow(obj@se)
-        } else {
-          tgenes <- min(obj@params$test_genes, nrow(obj@se))
-        }
-        tsamples <- min(obj@params$test_samples, ncol(obj@se))
-
-        metadata <- metadata[1:tsamples, ]
-
-        obj@se <- obj@se[1:tgenes, 1:tsamples]
-        obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
+        stop("test not implemented")
       }
 
       str(obj@se)

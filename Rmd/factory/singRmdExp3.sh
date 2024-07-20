@@ -8,16 +8,13 @@
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --time=10:00:00
+#SBATCH --time=20:00:00
 #SBATCH --mem=250G
 
 container="containers/img/myrubuntu.sif"
-command="/app/Rmd/_main.sh -c Exp3 $@"
+command="/app/Rmd/_main.sh -c Exp3 -w 20 --mink 12 --maxk 17 $@"
 
 singularity exec \
-  --env DISABLE_AUTH=true \
-  --env PASSWORD=psw \
   --bind .:/app \
     $container \
-    $command \
-  #&> ./out/AllonKleinLab/Experiment3/singularity.log
+    $command 

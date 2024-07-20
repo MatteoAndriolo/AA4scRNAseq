@@ -12,12 +12,9 @@
 #SBATCH --mem=250G
 
 container="containers/img/myrubuntu.sif"
-command="/app/Rmd/_main.sh -c Exp1 -w 20 --mink 11 --maxk 15 $@"
+command="/app/Rmd/_main.sh -c Exp1 -w 20 --mink 11 --maxk 16 $@"
 
 singularity exec \
-  --env DISABLE_AUTH=true \
-  --env PASSWORD=psw \
   --bind .:/app \
     $container \
-    $command \
-  #&> ./out/AllonKleinLab/Experiment1/singularity.log
+    $command 
