@@ -133,10 +133,9 @@ setMethod("obj_visualizeData", "database", function(obj) {
   path_figures <- obj@params$path_figures
 
   # PCA UMAP
-  obj@plots$pca <- PCAPlot(obj@se)
-  obj@plots$umap <- UMAPPlot(obj@se)
-  obj@plots$umapctypes <- UMAPPlot(obj@se, group.by="ctype")
-  
+  obj@plots$pca <- PCAPlot(obj@se) + ggtitle("PCA plot")
+  obj@plots$umap <- UMAPPlot(obj@se) + ggtitle("UMAP plot")
+  obj@plots$umapctypes <- UMAPPlot(obj@se, group.by="ctype") + ggtitle("UMAP plot colored by cell type")
 
   obj@plots$combined_plot <- plot_grid(
     obj@plots$pca + theme(legend.position = "none"),
@@ -151,7 +150,7 @@ setMethod("obj_visualizeData", "database", function(obj) {
   ggplot2::ggsave(filename = file.path(path_figures, "combined_plot.png"), plot = obj@plots$combined_plot)
 
   # ELBOWPLOT
-  obj@plots$elbowplot <- ElbowPlot(obj@se)
+  obj@plots$elbowplot <- ElbowPlot(obj@se) 
   ggsave(filename = file.path(path_figures, "ElbowPlot.png"), plot = obj@plots$elbowplot)
 
   # GOLD

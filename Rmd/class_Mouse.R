@@ -49,9 +49,10 @@ setMethod(
         obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
       }
 
-      # save obj@se
-      # obj@se.org <- obj@se
+      obj@se.org <- obj@se
     }
+
+
 
     if (!is.null(obj@params$pathw)) {
       if (debug) {
