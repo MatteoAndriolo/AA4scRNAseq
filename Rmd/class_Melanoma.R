@@ -119,20 +119,7 @@ setMethod(
 ## obj_plotGoldUmap -----
 setMethod("obj_plotGoldUmap", "Melanoma", function(obj) {
   ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-  umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = ct)
-  umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor")
+  umap_celltypes <- DimPlot(obj@se, reduction = "umap", group.by = ct) + ggtitle("UMAP colored by celltype")
+  umap_tumor <- DimPlot(obj@se, reduction = "umap", group.by = "tumor") + ggtitle("UMAP colored by 'tumor'")
   return(list(umap_celltypes = umap_celltypes, umap_tumor = umap_tumor))
 })
-
-### obj_getCellTypesList ----
-# setMethod("obj_getCellTypesList", "Melanoma", function(obj) {
-#  ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-#  return(obj@se[[ct]])
-# })
-#
-### obj_getCellTypesMetaDataName ----
-# setMethod("obj_getCellTypesMetaDataName", "Melanoma", function(obj) {
-# ct <- "non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK."
-# return(ct)
-# })
-#

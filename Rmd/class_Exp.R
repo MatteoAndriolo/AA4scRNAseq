@@ -41,8 +41,6 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
   if (debug) message("DEBUG: Seurat object has dimension post rem0 post ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
-  # SAVE obj@se to obj@se.org
-  obj@se.org <- obj@se
 
   # TEST
   if (obj@params$test) {
@@ -73,6 +71,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
+  obj@se.org <- obj@se
   str(obj@se)
   if (!is.null(obj@params$pathw)) {
     message("LOG: obj_createSeu | setting up pathw ", obj@params$pathw)

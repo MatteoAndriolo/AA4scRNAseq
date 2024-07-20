@@ -23,17 +23,6 @@ setMethod(
       obj <- obj_updateParams(obj, updateCurrent = TRUE, data_path = data_path)
       obj@se <- readRDS(data_path)
       str(obj@se)
-      # message("\n\n\n\n")
-      # # Show structure of each element in the new environment
-      # for (element in names(new_env)) {
-      #   cat(paste("Structure of element:", element, "\n"))
-      #   str(new_env[[element]])
-      #   cat("\n")
-      # }
-      
-      # obj@se <- UpdateSeuratObject(MyocardialCortex)
-      # rm(MyocardialCortex)
-      # message("LOG: obj_loadData | updated Myocardial")
       options(future.globals.maxSize= 6*1024^3)
       obj@se$ctype <- Idents(obj@se)
       obj@se <- ScaleData(obj@se)
@@ -59,7 +48,7 @@ setMethod(
       }
 
       # save obj@se
-      # obj@se.org <- obj@se
+      obj@se.org <- obj@se
     }
 
     if (!is.null(obj@params$pathw)) {
