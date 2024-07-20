@@ -133,9 +133,8 @@ setMethod("obj_visualizeData", "database", function(obj) {
   path_figures <- obj@params$path_figures
 
   # PCA UMAP
-  obj@plots$pca <- PCAPlot(obj@se) + ggtitle("PCA plot")
-  obj@plots$umap <- UMAPPlot(obj@se) + ggtitle("UMAP plot")
-  obj@plots$umapctypes <- UMAPPlot(obj@se, group.by="ctype") + ggtitle("UMAP plot colored by cell type")
+  obj@plots$pca <- DimPlot(obj@se, reduction = "pca", group.by = "ctype") + ggtitle("PCA plot - cell types")
+  obj@plots$umap<- UMAPPlot(obj@se, group.by="ctype") + ggtitle("UMAP plot - cell types")
 
   obj@plots$combined_plot <- plot_grid(
     obj@plots$pca + theme(legend.position = "none"),
@@ -146,7 +145,6 @@ setMethod("obj_visualizeData", "database", function(obj) {
 
   ggsave(filename = file.path(path_figures, "PCAPlot.png"), plot = obj@plots$pca)
   ggsave(filename = file.path(path_figures, "UMAPPlot.png"), plot = obj@plots$umap)
-  ggsave(filename = file.path(path_figures, "UMAPPlot_ctype.png"), plot = obj@plots$umapctypes)
   ggplot2::ggsave(filename = file.path(path_figures, "combined_plot.png"), plot = obj@plots$combined_plot)
 
   # ELBOWPLOT

@@ -120,23 +120,23 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
 
 
     # PLOT ALSO ARCHETYPES POINTS
-    umap_coordinates <- Embeddings(obj@se, "umap")
-    archetypes_umap <- t(weights %*% umap_coordinates)
-
-    archetypes_df <- data.frame(
-      x = archetypes_umap[, 1],
-      y = archetypes_umap[, 2],
-      label = paste0("Archetype ", 1:nrow(archetypes_umap))
-    )
+    # umap_coordinates <- Embeddings(obj@se, "umap")
+    # archetypes_umap <- t(weights %*% umap_coordinates)
+# 
+    # archetypes_df <- data.frame(
+    #   x = archetypes_umap[, 1],
+    #   y = archetypes_umap[, 2],
+    #   label = paste0("Archetype ", 1:nrow(archetypes_umap))
+    # )
 
     # Plot UMAP with archetypes
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-            ggtitle("UMAP labelled by AA_clusters") + 
-            scale_color_manual(values = palette) +
-            geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) + 
-            geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
-            
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archLabelaAndArch.png")), tplot)
+    # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
+    #        ggtitle("UMAP labelled by AA_clusters") + 
+    #        scale_color_manual(values = palette) +
+    #        geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) + 
+    #        geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
+    #        
+    # ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archLabelaAndArch.png")), tplot)
   }
   obj@se$AA_clusters <- NULL
 
@@ -181,13 +181,12 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
-    newse$ctype <- c(ctype, names_archetypes)
 
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
-    emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
-    emb$rown <- rownames(archetypes)
+    emb$ctype <- factor(newse$ctype, levels = unique(newse$ctype))
+    emb$rown <- rownames(t)
     archetype_color <- "yellow"
-    ctype_colors <- scales::hue_pal()(length(unique(emb$ctypes)))
+    ctype_colors <- scales::hue_pal()(length(unique(emb$ctype)))
 
 
     #plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
@@ -200,11 +199,11 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     #  scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(rownames(archetypes))))) +
     #  theme_minimal() +
     #  labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
-    plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
-      geom_point(data = subset(emb, ctypes != 99), size = 1) +
-      geom_point(data = subset(emb, ctypes == 99), color = "black", size = 4) +
+    plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctype)) +
+      geom_point(data = subset(emb, ctype != 99), size = 1) +
+      geom_point(data = subset(emb, ctype == 99), color = "black", size = 4) +
       geom_text(
-        data = subset(emb, ctypes == 99), aes(label = as.numeric(gsub("Archetype", "", emb$rown))),
+        data = subset(emb, ctype == 99), aes(label = as.numeric(gsub("Archetype", "", rown ))),
         color = "white", size = 3
       ) +
       scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(names_archetypes)))) +
@@ -333,3 +332,5 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
 
   return(obj)
 })
+
+    
