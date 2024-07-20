@@ -53,7 +53,8 @@ setMethod(
 
       rownames(se) <- str_replace_all(rownames(se), "_", "-")
       obj@se <- CreateSeuratObject(counts = se, meta.data = metadata)
-      obj@se$ctype <- obj@se$non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK.
+      ctype <- obj@se$non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK.
+      obj@se$ctype <- factor(ctype, levels=unique(ctype))
       if (debug) message("DEBUG: obj_loadData | Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
       obj@se <- SetAssayData(object = obj@se, layer = "scale.data", new.data = as.matrix(se))
       # obj@se <- ScaleData(obj@se, layer = "counts")

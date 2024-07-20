@@ -33,7 +33,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
   obj@se <- AddMetaData(obj@se, metadata = cell_metadata)
-  obj@se$ctype <- cell_metadata$Cell.type.annotation
+  obj@se$ctype <- factor(cell_metadata$Cell.type.annotation, levels=unique(cell_metadata$Cell.type.annotation))
   obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj@se)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
   obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = as.matrix(GetAssayData(obj@se)))
   if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
