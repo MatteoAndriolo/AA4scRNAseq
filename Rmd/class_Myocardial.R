@@ -26,10 +26,9 @@ setMethod(
       obj@se$ctype <- Idents(obj@se)
       obj@se <- ScaleData(obj@se)
       obj@se <- FindVariableFeatures(obj@se)
-      obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      str(obj@se)
+      obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
 
 
       if (obj@params$test) {
@@ -48,6 +47,7 @@ setMethod(
       }
 
       # save obj@se
+      str(obj@se)
       obj@se.org <- obj@se
     }
 

@@ -216,18 +216,18 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     }
 
     ncol <- 2
-    nrow <- ceiling(k / ncol)
+    nrow <- ceiling(as.numeric(k) / ncol)
     individual_plot_width <- 5 # width of a single plot
     individual_plot_height <- 4 # height of a single plot
     combined_plot_width <- ncol * individual_plot_width
     combined_plot_height <- nrow * individual_plot_height
     combined_plot <- plot_grid(plotlist = plot_list, ncol = ncol)
-    output_filename <- file.path(obj@params$path_figures, paste0("aa_UMAP_", sprintf("%02d", k), "_weights.png"))
+    output_filename <- file.path(obj@params$path_figures, paste0("aa_UMAP_", sprintf("%02d", as.numeric(k)), "_weights.png"))
     ggsave(filename = output_filename, plot = combined_plot, width = combined_plot_width, height = combined_plot_height)
 
 
     # HEATMAP CELL TYPE VS ARCHETYPES
-    df <- data.frame(cell_type = obj@se$ctype, aa_clusters = obj@archetypes[[k]])
+    df <- data.frame(cell_type = obj@se$ctype, aa_clusters =  obj@other$AA_clusters[[k]])
     contingency_table <- table(df$cell_type, df$aa_clusters)
 
     # Print the contingency table
@@ -245,7 +245,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
       labs(x = "Archetype", y = "Cell Type", fill = "Count") +
       theme_minimal()
 
-    output_filename <- file.path(obj@params$path_figures, paste0("heatmap_", sprintf("%02d", k), ".png"))
+    output_filename <- file.path(obj@params$path_figures, paste0("heatmap_", sprintf("%02d", as.numeric(k)), ".png"))
     ggsave(filename = output_filename, plot = melted_plot)
   }
 

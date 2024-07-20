@@ -50,6 +50,7 @@ setMethod(
         obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
       }
 
+      str(obj@se)
       obj@se.org <- obj@se
     }
 

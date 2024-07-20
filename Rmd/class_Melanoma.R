@@ -66,6 +66,7 @@ setMethod(
 
 
       # save obj@se
+      str(obj@se)
       obj@se.org <- obj@se
 
       # HVF

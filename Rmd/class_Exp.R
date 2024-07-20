@@ -51,7 +51,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     tsamples <- min(obj@params$test_samples, ncol(obj@se))
 
     obj@se <- obj@se[1:tgenes, 1:tsamples]
-    obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
+    obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj@se)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
     if (debug) message("DEBUG: Seurat after test has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
   }
 
@@ -70,6 +70,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
   obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
 
+  str(obj@se)
   obj@se.org <- obj@se
   str(obj@se)
   if (!is.null(obj@params$pathw)) {
