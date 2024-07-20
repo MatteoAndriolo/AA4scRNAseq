@@ -8,8 +8,8 @@
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --time=6:00:00
-#SBATCH --mem=200G
+#SBATCH --time=10:00:00
+#SBATCH --mem=250G
 
 container="containers/img/myrubuntu.sif"
 command="/app/Rmd/_main.sh -c Exp3 $@"

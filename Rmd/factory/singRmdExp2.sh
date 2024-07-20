@@ -8,11 +8,11 @@
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --time=4:00:00
-#SBATCH --mem=200G
+#SBATCH --time=10:00:00
+#SBATCH --mem=250G
 
 container="containers/img/myrubuntu.sif"
-command="/app/Rmd/_main.sh -c Exp2 $@"
+command="/app/Rmd/_main.sh -c Exp2 -w 20 --mink 10 --maxk 14 $@"
 
 singularity exec \
   --env DISABLE_AUTH=true \
