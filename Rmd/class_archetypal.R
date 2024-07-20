@@ -91,34 +91,52 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
   for (k in names(obj@archetypes$aa.bests)) {
     model <- obj@archetypes$aa.bests[[k]]
     weights <- as.data.frame(obj@archetypes$aa.bests[[k]]$A)
-    tt <- apply(weights, 1, which.max)
+    # tt <- apply(weights, 1, which.max)
+    tt <- apply(weights, 1, function(row) {
+      max_val <- max(row)
+      if (max_val > 0.6) {
+        return(which.max(row))
+      } else {
+        return("NA")
+      }
+    })
+
     obj@archetypes$aa.bests[[k]]$cluster.id <- tt
     t[[k]] <- tt
     # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
-    obj@se$temp_aa_clusters <- tt
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "temp_aa_clusters")
-    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_orig.png")), tplot)
-  }
-  obj@se$temp_aa_clusters <- NULL
+    obj@se$AA_clusters <- tt
 
-  obj@other$aa.clusters <- t
+    # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
+    unique_tt <- unique(tt)
+    num_clusters <- length(unique_tt) - 1  # excluding "NA"
+    palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_tt[unique_tt != "NA"]))
+    
+    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
+      ggtitle("UMAP labelled by archetype if weight>0.6") + 
+      scale_color_manual(values = palette)  
+
+    ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archetypes.png")), tplot)
+  }
+  obj@se$AA_clusters <- NULL
+
+  obj@other$AA_clusters <- t
   message("LOG: obj_assignArchetypalClusters | finished aa_clusters metadata")
   return(obj)
 })
 
 # obj_visualizeArchetypal -----
-setGeneric("obj_visualizeArchetypal", function(obj) {
+setGeneric("obj_visualizeArchetypal", function(obj, treshold = 0.5) {
   standardGeneric("obj_visualizeArchetypal")
 })
 
-setMethod("obj_visualizeArchetypal", "database", function(obj) {
+setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
   message("LOG: obj_visualizeArchetypal | Visualizing archetypes")
   #  obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
   #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
 
   for (k in names(obj@archetypes$aa.bests)) {
-    ## Single plot with archetypes ----
     archetypes <- obj@archetypes$aa.bests[[k]]$BY
+
     names_archetypes <- paste0("Archetype", 1:nrow(archetypes))
     rownames(archetypes) <- names_archetypes
 
@@ -126,7 +144,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
     t <- rbind(aa.weights, diag(dim(aa.weights)[2]))
     rownames(t) <- c(rownames(aa.weights), names_archetypes)
     aa.weights <- t
-    aa.weights[aa.weights < .5] <- 0
+    aa.weights[aa.weights < treshold] <- 0
 
     # archetypes=as.data.frame(t(archetypes))
     tm <- GetAssayData(obj@se)
@@ -146,8 +164,10 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
 
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctypes <- factor(newse$ctype, levels = unique(newse$ctype))
+    emb$rown <- rownames(newse)
     archetype_color <- "yellow"
     ctype_colors <- scales::hue_pal()(length(unique(emb$ctypes)))
+
 
     #plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
     #  geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
@@ -163,18 +183,17 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
       geom_point(data = subset(emb, ctypes != 99), size = 1) +
       geom_point(data = subset(emb, ctypes == 99), color = "black", size = 4) +
       geom_text(
-        data = subset(emb, ctypes == 99), aes(label = as.numeric(gsub("Archetype", "", names_archetypes))),
+        data = subset(emb, ctypes == 99), aes(label = as.numeric(gsub("Archetype", "", emb$rown))),
         color = "white", size = 3
       ) +
       scale_color_manual(values = c(ctype_colors, rep(archetype_color, length(names_archetypes)))) +
       theme_minimal() +
-      labs(title = "UMAP Projection of Combined SE and Archetypes", x = "UMAP 1", y = "UMAP 2")
+      labs(title = "CellTypes and Archetypes found", x = "UMAP 1", y = "UMAP 2")
     plot
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), ".png")), plot = plot)
 
-    ## Multiple plot each with one archetype ----
-    message("LOG -> MULTIPLEPLOTS")
-    temb <- head(emb, -2)
+
+    # WEIGHTS
     temb <- emb
     plot_list <- list()
     for (i in 1:as.integer(k)) {
@@ -188,6 +207,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj) {
       umap_plot <- ggplot(temb, aes(x = umap_1, y = umap_2, color = weight)) +
         geom_point(size = 1) +
         scale_color_gradient(low = "grey", high = "red") +
+        theme_minimal() +
         ggtitle(plot_title) +
         labs(color = "Weight")
       # print(umap_plot)
