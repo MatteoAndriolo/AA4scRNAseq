@@ -50,18 +50,17 @@ if (FALSE) {
   params$debug <- TRUE
   debug <- TRUE
   params$classname <- "Melanoma"
-  params$pathw <- 1
-  params$pathw <- NULL
-  params$kappas <- 2:3
-  params$test <- TRUE
+  params$pathw <- 2
+  params$kappas <- 7
   params$nworkers <- 10
   plan("multicore", workers = params$nworkers)
-  params$num_restarts <- 2
-  params$max_iterations <- 5
+  params$num_restarts <- 10
+  params$max_iterations <- 100
   params$method <- "archetypal"
   params$init_method <- "furthestsum"
-  params$out_path <- "/dev/null"
   params$kappas <- 4:8
+  params$test <- TRUE
+  params$out_path <- "/dev/null"
 }
 ################### END FIXING PARAMETERS FOR PRESENTATION
 
