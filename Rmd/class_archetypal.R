@@ -93,40 +93,45 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
     weights <- as.data.frame(obj@archetypes$aa.bests[[k]]$A)
     # tt <- apply(weights, 1, which.max)
     tt <- apply(weights, 1, function(row) {
+      return(which.max(row))
+    })
+    obj@archetypes$aa.bests[[k]]$cluster.id <- tt
+    tt <- apply(weights, 1, function(row) {
       max_val <- max(row)
       if (max_val > 0.6) {
         return(which.max(row))
       } else {
-        return("NA")
+        return("na")
       }
     })
 
-    obj@archetypes$aa.bests[[k]]$cluster.id <- tt
+    obj@archetypes$aa.bests[[k]]$cluster.id.treshold.5 <- tt
     t[[k]] <- tt
     # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
     obj@se$AA_clusters <- tt
     obj@se.org$AA_clusters <- tt
 
-    # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
-    unique_tt <- unique(tt)
-    num_clusters <- length(unique_tt) - 1 # excluding "NA"
-    palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_tt[unique_tt != "NA"]))
-    for (red in c("umap", "pca", "tsne")) {
-      tplot <- DimPlot(obj@se, reduction = red, group.by = "AA_clusters") +
-        ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
-        scale_color_manual(values = palette)
 
-      filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), ".png")
-      ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
-
-      tplot <- DimPlot(obj@se.org, reduction = red, group.by = "AA_clusters") +
-        ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
-        scale_color_manual(values = palette)
-
-      filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), "_org.png")
-      ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
-    }
+    #   # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
+    #   unique_tt <- unique(tt)
+    #   num_clusters <- length(unique_tt) - 1 # excluding "NA"
+    #   palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_tt[unique_tt != "NA"]))
+    #   for (red in c("umap", "pca", "tsne")) {
+    #     tplot <- DimPlot(obj@se, reduction = red, group.by = "AA_clusters") +
+    #       ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
+    #       scale_color_manual(values = palette)
+    #
+    #     filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), ".png")
+    #     ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
+    #
+    #     tplot <- DimPlot(obj@se.org, reduction = red, group.by = "AA_clusters") +
+    #       ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
+    #       scale_color_manual(values = palette)
+    #
+    #     filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), "_org.png")
+    #     ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
   }
+
   obj@se$AA_clusters <- NULL
   obj@se.org$AA_clusters <- NULL
 
@@ -174,6 +179,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
     rm(ctype)
 
+    # Plot UMAP
     emb <- as.data.frame(Embeddings(newse@reductions$umap))
     emb$ctype <- factor(newse$ctype, levels = unique(newse$ctype))
     emb$rown <- rownames(aa.weights)
@@ -227,7 +233,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
 
 
     # HEATMAP CELL TYPE VS ARCHETYPES
-    df <- data.frame(cell_type = obj@se$ctype, aa_clusters =  obj@other$AA_clusters[[k]])
+    df <- data.frame(cell_type = obj@se$ctype, aa_clusters = obj@other$AA_clusters[[k]])
     contingency_table <- table(df$cell_type, df$aa_clusters)
 
     # Print the contingency table

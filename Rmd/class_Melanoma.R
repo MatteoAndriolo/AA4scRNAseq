@@ -54,7 +54,7 @@ setMethod(
       rownames(se) <- str_replace_all(rownames(se), "_", "-")
       obj@se <- CreateSeuratObject(counts = se, meta.data = metadata)
       ctype <- obj@se$non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK.
-      obj@se$ctype <- factor(ctype, levels=unique(ctype), labels = c("Malignant","T","B","Macro","Endo","CAF","NK"))
+      obj@se$ctype <- factor(ctype, levels = unique(ctype), labels = c("Malignant", "T", "B", "Macro", "Endo", "CAF", "NK"))
       if (debug) message("DEBUG: obj_loadData | Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
       obj@se <- SetAssayData(object = obj@se, layer = "scale.data", new.data = as.matrix(se))
       # obj@se <- ScaleData(obj@se, layer = "counts")
@@ -69,10 +69,11 @@ setMethod(
       # save obj@se
       str(obj@se)
       obj@se.org <- obj@se
-      if(FALSE){
+
+      if (FALSE) {
         SaveSeuratRds(
           obj@se,
-          file = "data/Melanoma/MAPK.Rds",
+          file = "data/Melanoma/se.Rds",
           move = TRUE
         )
       }
@@ -92,11 +93,12 @@ setMethod(
       }
     }
 
-    if(FALSE){
+
+    if (FALSE) {
       obj@se <- obj@se.org
-      obj_updateParams(obj, pathw=3)
+      obj <- obj_updateParams(obj, pathw = 4)
     }
-    
+
     if (!is.null(obj@params$pathw)) {
       if (debug) {
         message("DEBUG: obj_loadData | pathw is ", obj@params$pathw)
@@ -118,13 +120,40 @@ setMethod(
       obj@se <- obj@se[gene.flag, ]
       obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      # obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      if (FALSE) {
+        # 1453 2254
+        see <- GetAssayData(obj@se)
+        rem <- c()
+        for (i in 1:(nrow(obj@se) - 1)) {
+          for (j in (i + 1):nrow(obj@se)) {
+            if (all(see[i, ] - see[j, ] == 0)) {
+              message("pair ", i, " ", j, " is duplicated")
+              r <- c(r, j)
+            }
+          }
+        }
+        obj@se <- obj@se[-r, ]
+        see <- see[-r, ]
+
+        r <- c()
+        for (i in 1:(ncol(obj@se) - 1)) {
+          for (j in (i + 1):ncol(obj@se)) {
+            if (all(see[, i] - see[, j] == 0)) {
+              message("pair ", i, " ", j, " is duplicated")
+              r <- c(r, j)
+            }
+          }
+        }
+        obj@se <- obj@se[, -r]
+        see <- see[, -r]
+      }
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
     }
-    if(FALSE){
+    if (FALSE) {
       SaveSeuratRds(
         obj@se,
-        file = "data/Melanoma/MTOR.Rds",
+        file = "data/Melanoma/CANCER.Rds",
         move = TRUE
       )
     }

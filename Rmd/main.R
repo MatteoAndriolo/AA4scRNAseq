@@ -51,7 +51,7 @@ if (FALSE) {
   debug <- TRUE
   params$classname <- "Melanoma"
   params$pathw <- 2
-  params$kappas <- 7
+  params$kappas <- c(7, 12)
   params$nworkers <- 10
   plan("multicore", workers = params$nworkers)
   params$num_restarts <- 10
@@ -61,6 +61,8 @@ if (FALSE) {
   params$kappas <- 4:8
   params$test <- TRUE
   params$out_path <- "/dev/null"
+  params$test <- FALSE
+  params$hvf <- TRUE
 }
 ################### END FIXING PARAMETERS FOR PRESENTATION
 
@@ -79,11 +81,19 @@ if (!is.null(obj@se.org)) {
 }
 
 # ARCHETYPAL --------
+if (FALSE) {
+  obj@se <- readRDS("data/Melanoma/TGF.Rds")
+  obj@params$kappas <- c(7, 12)
+}
 message("LOG: main | Performing Archetypal")
 obj <- obj_performArchetypal(obj, doparallel = FALSE)
 
 message("LOG: main | assign AA clusters")
 obj <- obj_assignArchetypalClusters(obj)
+
+if (FALSE) {
+  saveRDS(obj@archetypes, "data/Melanoma/TGF_AA.Rds")
+}
 
 message("LOG: main | assign AA clusters Done")
 obj <- obj_visualizeArchetypal(obj)
