@@ -22,6 +22,7 @@ name <- list(
   "TGF",
   "HVF"
 )
+
 pathw <- 1
 treshold <- FALSE
 out_path_base <- "out/Melanoma/images"
@@ -109,6 +110,18 @@ findClosestPoints <- function(se, se3D, aa, k) {
     distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, i])^2))
     which.min(distances)
   })
+  
+  while(any(duplicated(closestPoints))){
+    firstdup <- which(duplicated(closestPoints))[1]
+    firstduppoints <- closestPoints[5]
+    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, 5])^2))
+    while(which.min(distances) %in% closestPoints){
+      distances[which.min(distances)]=Inf
+    }
+    closestPoints[firstdup]=which.min(distances)
+  }
+  
+  message("Closest points are: ", print(closestPoints))
 
   newCtype <- as.character(se$ctype)
   newCtype[closestPoints] <- "Archetype"
@@ -140,10 +153,10 @@ if (FALSE) {
   red <- "umap"
   treshold <- FALSE
 }
-for (k in list("7", "12")) {
+for (k in c("7", "12")) {
   message("Using k=", k)
   num_archetypes <- as.integer(k)
-  for (i in 1:6) {
+  for (i in 1:length(name)) {
     pathw <- i
     namePathw <- name[pathw]
     message("Pathw ", namePathw, " with k ", k)
@@ -240,23 +253,46 @@ for (k in list("7", "12")) {
 
       for (treshold in c(TRUE, FALSE)) {
         plot_data$aa_clusters <- as.character(newse@misc$aa_clusters)
-        if (treshold) plot_data$aa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
+        mycolors=c(colors_types[1:length(unique(plot_data$aa_clusters))], "black")
+        if (treshold) {
+          plot_data$aa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
+          mycolors=c(colors_types[1:length(unique(plot_data$aa_clusters))-1], "black", "grey")
+        }
+        plot_data$aa_clusters[newse$ctype=="Archetype"] <- "Archetype"
         # aa clusters
         p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aa_clusters)) +
-          geom_point(data = plot_data, size = size_types) +
-          scale_color_manual(values = c(colors_types, "grey")) +
+          geom_point(data = subset(plot_data, aa_clusters != "Archetype"), size = size_types) +
+          geom_point(data = subset(plot_data, aa_clusters == "Archetype"), size = size_Archetype) +
+          scale_color_manual(values = mycolors) +
+         geom_text(
+            data = subset(plot_data, aa_clusters == "Archetype"),
+            aes(label = seq(1, num_archetypes)),
+            color = colors_text_Archetype, size = size_text_Archetype
+          ) +
           theme_classic()
         p1
 
         p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aa_clusters)) +
-          geom_point(data = plot_data, size = size_types) +
-          scale_color_manual(values = c(colors_types, "grey")) +
+          geom_point(data = subset(plot_data, aa_clusters != "Archetype"), size = size_types) +
+          geom_point(data = subset(plot_data, aa_clusters == "Archetype"), size = size_Archetype) +
+          scale_color_manual(values = mycolors) +
+         geom_text(
+            data = subset(plot_data, aa_clusters == "Archetype"),
+            aes(label = seq(1, num_archetypes)),
+            color = colors_text_Archetype, size = size_text_Archetype
+          ) +
           theme_classic()
         p2
 
         p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aa_clusters)) +
-          geom_point(data = plot_data, size = size_types) +
-          scale_color_manual(values = c(colors_types, "grey")) +
+          geom_point(data = subset(plot_data, aa_clusters != "Archetype"), size = size_types) +
+          geom_point(data = subset(plot_data, aa_clusters == "Archetype"), size = size_Archetype) +
+          scale_color_manual(values = mycolors) +
+         geom_text(
+            data = subset(plot_data, aa_clusters == "Archetype"),
+            aes(label = seq(1, num_archetypes)),
+            color = colors_text_Archetype, size = size_text_Archetype
+          ) +
           theme_classic()
         p3
 
@@ -318,13 +354,13 @@ for (k in list("7", "12")) {
     # Assuming newse$ctype and newse@misc$aa_clusters are vectors of the same length
     for (treshold in c(TRUE, FALSE)) {
       ctype <- plot_data$Label
-      aa_clusters <- as.character(newse@misc$aa_clusters)
-      if (treshold) aa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
+      taa_clusters <- as.character(newse@misc$aa_clusters)
+      if (treshold) taa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
 
       # Create a data frame with the required columns
       data <- as.data.frame(list(
-        type = ctype,
-        archetype = aa_clusters
+        type = plot_data$Label,
+        archetype = taa_clusters
       ))
       d <- data %>%
         make_long(colnames(data)) %>%
@@ -349,20 +385,21 @@ for (k in list("7", "12")) {
 
 
       pl
-      ggsave(
-        file.path(out_path, paste0(namePathw, ".sankey.", ifelse(treshold > 0, ".th", ""), ".png")),
+    prefixName <- paste(name[pathw], k, ifelse(treshold > 0, "th", ""), sep = ".")
+    ggsave(
+        file.path(out_path, paste0(prefixName, ".sankey.", ifelse(treshold > 0, ".th", ""), ".png")),
         pl,
         width = 8,
         height = 6
       )
 
       # HEATMAP
-      df <- table(ctype, aa_clusters)
+      df <- table(ctype, taa_clusters)
       df
 
       df_melt <- reshape2::melt(df, id.vars = "aa_clusters", variable.name = "ctype", value.name = "count")
 
-      plt_hm <- ggplot(df_melt, aes(x = aa_clusters, y = ctype, fill = count)) +
+      plt_hm <- ggplot(df_melt, aes(x = taa_clusters, y = ctype, fill = count)) +
         geom_tile(color = "white") +
         geom_text(aes(label = count), color = "black", size = 3) +
         scale_fill_gradient(low = "white", high = "blue") +
@@ -375,7 +412,7 @@ for (k in list("7", "12")) {
       plt_hm
       
       ggsave(
-        file.path(out_path, paste0(namePathw, ".heatmap.", ifelse(treshold > 0, ".th", ""), ".png")),
+        file.path(out_path, paste0(prefixName, ".heatmap.", ifelse(treshold > 0, ".th", ""), ".png")),
         plt_hm,
         width = 8,
         height = 6
