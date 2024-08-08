@@ -10,6 +10,7 @@ library(Seurat)
 library(scales)
 library(dplyr)
 if (!require(tidyverse)) install.packages("tidyverse")
+library(paletteer)
 
 set.seed(2024)
 
@@ -19,8 +20,8 @@ name <- list(
   "MAPK",
   "CANCER",
   "MTOR",
-  "TGF",
-  "HVF"
+  "TGF"
+  #"HVF"
 )
 
 pathw <- 1
@@ -110,17 +111,17 @@ findClosestPoints <- function(se, se3D, aa, k) {
     distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, i])^2))
     which.min(distances)
   })
-  
-  while(any(duplicated(closestPoints))){
+
+  while (any(duplicated(closestPoints))) {
     firstdup <- which(duplicated(closestPoints))[1]
     firstduppoints <- closestPoints[5]
     distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, 5])^2))
-    while(which.min(distances) %in% closestPoints){
-      distances[which.min(distances)]=Inf
+    while (which.min(distances) %in% closestPoints) {
+      distances[which.min(distances)] <- Inf
     }
-    closestPoints[firstdup]=which.min(distances)
+    closestPoints[firstdup] <- which.min(distances)
   }
-  
+
   message("Closest points are: ", print(closestPoints))
 
   newCtype <- as.character(se$ctype)
@@ -170,8 +171,23 @@ for (k in c("7", "12")) {
     # newse <- addArchetypesToSeurat(se, aa, "7")
     newse <- findClosestPoints(se, se3D, aa, k)
     ################################################################################
+    newse$ctype
+    length(newse$ctype)
+    nlev <- length(levels(newse$ctype))
+    all_colors <- paletteer_d("ggsci::default_ucscgb")
+    # colors_types=c(rainbow(nlev-1),"black")
+    colors_types <- t(as.data.frame(c(all_colors[1:(nlev - 1)],"black")))
+    rownames(colors_types) <- "colors"
+    colnames(colors_types)<- levels(newse$ctype)
+    colors_types
 
-    colors_types <- rainbow(length(unique(newse$ctype)) - 1)
+    
+    colors_types_archetype <- "black"
+    colors_archetypes <-t(data.frame(c(all_colors[nlev:(nlev + num_archetypes-1)],"black")))
+    colnames(colors_archetypes) <- c(as.character(seq(1:num_archetypes)), "Archetype")
+    rownames(colors_archetypes) <- "colors"
+    colors_archetypes
+
     size_types <- 1
     colors_Archetype <- "black"
     size_Archetype <- 4
@@ -194,7 +210,7 @@ for (k in c("7", "12")) {
           aes(label = seq(1, num_archetypes)),
           color = colors_text_Archetype, size = size_text_Archetype
         ) +
-        scale_color_manual(values = c(colors_types, colors_Archetype)) +
+        scale_color_manual(values = c(colors_types, colors_types_archetype)) +
         theme_classic()
       p1
 
@@ -206,7 +222,7 @@ for (k in c("7", "12")) {
           aes(label = seq(1, num_archetypes)),
           color = colors_text_Archetype, size = size_text_Archetype
         ) +
-        scale_color_manual(values = c(colors_types, colors_Archetype)) +
+        scale_color_manual(values = c(colors_types, colors_types_archetype)) +
         theme_classic()
       p2
 
@@ -218,7 +234,7 @@ for (k in c("7", "12")) {
           aes(label = seq(1, num_archetypes)),
           color = colors_text_Archetype, size = size_text_Archetype
         ) +
-        scale_color_manual(values = c(colors_types, colors_Archetype)) +
+        scale_color_manual(values = c(colors_types, colors_types_archetype)) +
         theme_classic()
       p3
 
@@ -253,22 +269,22 @@ for (k in c("7", "12")) {
 
       for (treshold in c(TRUE, FALSE)) {
         plot_data$aa_clusters <- as.character(newse@misc$aa_clusters)
-        mycolors=c(colors_types[1:length(unique(plot_data$aa_clusters))], "black")
+        mycolors <- c(colors_archetypes, "black")
         if (treshold) {
           plot_data$aa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
-          mycolors=c(colors_types[1:length(unique(plot_data$aa_clusters))-1], "black", "grey")
+          mycolors <- c(colors_archetypes, "black", "grey")
         }
-        plot_data$aa_clusters[newse$ctype=="Archetype"] <- "Archetype"
+        plot_data$aa_clusters[newse$ctype == "Archetype"] <- "Archetype"
         # aa clusters
         p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aa_clusters)) +
           geom_point(data = subset(plot_data, aa_clusters != "Archetype"), size = size_types) +
           geom_point(data = subset(plot_data, aa_clusters == "Archetype"), size = size_Archetype) +
-          scale_color_manual(values = mycolors) +
-         geom_text(
+          geom_text(
             data = subset(plot_data, aa_clusters == "Archetype"),
             aes(label = seq(1, num_archetypes)),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
+          scale_color_manual(values = mycolors) +
           theme_classic()
         p1
 
@@ -276,7 +292,7 @@ for (k in c("7", "12")) {
           geom_point(data = subset(plot_data, aa_clusters != "Archetype"), size = size_types) +
           geom_point(data = subset(plot_data, aa_clusters == "Archetype"), size = size_Archetype) +
           scale_color_manual(values = mycolors) +
-         geom_text(
+          geom_text(
             data = subset(plot_data, aa_clusters == "Archetype"),
             aes(label = seq(1, num_archetypes)),
             color = colors_text_Archetype, size = size_text_Archetype
@@ -288,7 +304,7 @@ for (k in c("7", "12")) {
           geom_point(data = subset(plot_data, aa_clusters != "Archetype"), size = size_types) +
           geom_point(data = subset(plot_data, aa_clusters == "Archetype"), size = size_Archetype) +
           scale_color_manual(values = mycolors) +
-         geom_text(
+          geom_text(
             data = subset(plot_data, aa_clusters == "Archetype"),
             aes(label = seq(1, num_archetypes)),
             color = colors_text_Archetype, size = size_text_Archetype
@@ -356,7 +372,9 @@ for (k in c("7", "12")) {
       ctype <- plot_data$Label
       taa_clusters <- as.character(newse@misc$aa_clusters)
       if (treshold) taa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
-
+      
+      color_mapping <- cbind(colors_types, colors_archetypes)
+      
       # Create a data frame with the required columns
       data <- as.data.frame(list(
         type = plot_data$Label,
@@ -381,12 +399,13 @@ for (k in c("7", "12")) {
         ) + # This determines if you want your legend to show
         geom_sankey_label(size = 3, color = "black", fill = "white") +
         labs(title = paste0("Sankey Tirosh - ", namePathw), subtitle = paste(ifelse(treshold, "With", "Without"), "treshold"), sep = " ") +
+        scale_fill_manual(values=color_mapping)+
         theme_classic()
 
 
       pl
-    prefixName <- paste(name[pathw], k, ifelse(treshold > 0, "th", ""), sep = ".")
-    ggsave(
+      prefixName <- paste(name[pathw], k, ifelse(treshold > 0, "th", ""), sep = ".")
+      ggsave(
         file.path(out_path, paste0(prefixName, ".sankey.", ifelse(treshold > 0, ".th", ""), ".png")),
         pl,
         width = 8,
@@ -394,7 +413,24 @@ for (k in c("7", "12")) {
       )
 
       # HEATMAP
+      #taa_clusters=taa_clusters[-which(ctype=="Archetype")]
+      #length(taa_clusters)
+      #taa_clusters= factor(taa_clusters, levels = unique(taa_clusters))
+      #taa_clusters
+      taa_clusters=taa_clusters[-which(ctype == "Archetype")]
+      taa_clusters = factor(
+        taa_clusters,
+        levels = unique(taa_clusters)
+      )
+      
+      #ctype=ctype[-which(ctype=="Archetype")]
+      ctype = factor(
+        ctype[-which(ctype=="Archetype")],
+        levels = levels(ctype)[-length(levels(ctype))]
+        )
+      
       df <- table(ctype, taa_clusters)
+      
       df
 
       df_melt <- reshape2::melt(df, id.vars = "aa_clusters", variable.name = "ctype", value.name = "count")
@@ -408,9 +444,10 @@ for (k in c("7", "12")) {
           title = "Heatmap of Cell Type Distribution Across Clusters", subtitle = paste(namePathw, "Tirosh", sep = " "),
           x = "Archetype", y = "Cell Type"
         ) +
+        #scale_x_continuous(labels=levels(taa_clusters), breaks = 1:length(levels(taa_clusters)))+
         theme(axis.text.x = element_text(hjust = 1))
       plt_hm
-      
+
       ggsave(
         file.path(out_path, paste0(prefixName, ".heatmap.", ifelse(treshold > 0, ".th", ""), ".png")),
         plt_hm,
@@ -422,3 +459,4 @@ for (k in c("7", "12")) {
     # Heatmap
   } # end i pathways
 } # end k
+
