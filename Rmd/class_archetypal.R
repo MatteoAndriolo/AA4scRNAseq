@@ -44,15 +44,29 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
     best_rss <- Inf
     best_restart_index <- -1
 
-    for (i in 1:obj@params$num_restarts) {
+    # for (i in 1:obj@params$num_restarts) {
+    #   message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
+
+    #   aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = FALSE, nworkers = obj@params$nworkers)
+
+    #   history.restarts.k[[as.character(i)]] <- list(
+    #     aa = aa
+    #   )
+    # }
+    cl2 <- makeCluster(obj@params$nworkers)
+    varexport <- c("df", "k", "obj@params$init_method", "obj@params$rseed")
+    clusterExport(cl2, varexport)
+    history.restarts.k <- parLapply(cl2, 1:obj@params$num_restarts, function(i) {
       message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
 
       aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = FALSE, nworkers = obj@params$nworkers)
 
-      history.restarts.k[[as.character(i)]] <- list(
-        aa = aa
-      )
-    }
+      return(setNames(list(aa), as.character(i)))
+      # history.restarts.k[[as.character(i)]] <- list(
+      #   aa = aa
+      # )
+    })
+    stopCluster(cl2)
 
     t <- data.frame(
       varexpt = sapply(history.restarts.k, function(x) x$aa$varexpl),
@@ -86,7 +100,7 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
   message("LOG: obj_assignArchetypalClusters | creating aa_clusters metadata")
   #  obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
   #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
-
+  treshold <- 0.5
   t <- list()
   for (k in names(obj@archetypes$aa.bests)) {
     model <- obj@archetypes$aa.bests[[k]]
@@ -94,7 +108,7 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
     # tt <- apply(weights, 1, which.max)
     tt <- apply(weights, 1, function(row) {
       max_val <- max(row)
-      if (max_val > 0.6) {
+      if (max_val > treshold) {
         return(which.max(row))
       } else {
         return("NA")
@@ -120,7 +134,7 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
       ggsave(filename = file.path(obj@params$path_figures, filename), tplot)
 
       tplot <- DimPlot(obj@se.org, reduction = red, group.by = "AA_clusters") +
-        ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.6")) +
+        ggtitle(paste0(toupper(red), " labelled by archetype if weight>0.5")) +
         scale_color_manual(values = palette)
 
       filename <- paste0("aa_", toupper(red), "_", sprintf("%02d", as.numeric(k)), "_org.png")
@@ -227,7 +241,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
 
 
     # HEATMAP CELL TYPE VS ARCHETYPES
-    df <- data.frame(cell_type = obj@se$ctype, aa_clusters =  obj@other$AA_clusters[[k]])
+    df <- data.frame(cell_type = obj@se$ctype, aa_clusters = obj@other$AA_clusters[[k]])
     contingency_table <- table(df$cell_type, df$aa_clusters)
 
     # Print the contingency table

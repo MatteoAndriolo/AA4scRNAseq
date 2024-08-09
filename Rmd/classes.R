@@ -132,9 +132,9 @@ setGeneric("obj_visualizeData", function(obj, name = "") {
 setMethod("obj_visualizeData", "database", function(obj, name = "") {
   path_figures <- obj@params$path_figures
 
-  if (name == "org") {
-    obj@se <- obj@se.org
-  }
+  # if (name == "org") {
+  #   obj@se <- obj@se.org
+  # }
 
   # PCA UMAP
   obj@plots$pca <- PCAPlot(obj@se, group.by = "ctype") + ggtitle("PCA plot - cell types")
@@ -145,9 +145,15 @@ setMethod("obj_visualizeData", "database", function(obj, name = "") {
   ggsave(filename = file.path(path_figures, sprintf("ct_UMAP%s.png", name)), plot = obj@plots$umap)
   ggsave(filename = file.path(path_figures, sprintf("ct_TSNE%s.png", name)), plot = obj@plots$tsne)
 
+  obj@plots$pca <- NULL
+  obj@plots$umap <- NULL
+  obj@plots$TSNE <- NULL
+
+
   # ELBOWPLOT
   obj@plots$elbowplot <- ElbowPlot(obj@se)
   ggsave(filename = file.path(path_figures, "ElbowPlot.png"), plot = obj@plots$elbowplot)
+  obj@plots$elbowplot <- NULL
 
   # GOLD
   # setMethod("obj_plotGoldUmap", "Melanoma", function(obj) {
@@ -161,6 +167,7 @@ setMethod("obj_visualizeData", "database", function(obj, name = "") {
     for (plot_name in names(list(...))) {
       obj@plots[[plot_name]] <- list(...)[[plot_name]]
       ggsave(filename = file.path(path_figures, paste0(plot_name, ".png")), plot = obj@plots[[plot_name]])
+      obj@plots[[plot_name]] <- NULL
     }
   }, newplots)
 
