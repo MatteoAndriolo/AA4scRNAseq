@@ -35,12 +35,18 @@ mink <- 6
 maxk <- 18
 k <- mink:maxk
 
+mink <- 5
+maxk <- 6
+k <- mink:maxk
+
 params$rseed <- 2024
+set.seed(params$rseed)
 params$path_figures <- file.path(params$out_path, "figures")
 params$path_outdata <- file.path(params$out_path, "data")
 
 params$pathw <- NULL
 params$HVF <- FALSE
+params$test <- FALSE
 params$test <- TRUE
 
 # Initialize object
@@ -50,15 +56,16 @@ obj <- obj_loadData(obj)
 obj_visualizeData(obj)
 
 plan("multicore", workers = params$nworkers)
+plan("multisession", workers = params$nworkers)
 # set memory limit to 30GB
-options("future.global.maxSize" = 100 * 1024^3)
+options("future.global.maxSize" = 100 * 1024 ^ 3)
 
 list_parallel_params <- list(
-  list(HVF = TRUE, pathw = NULL),
-  list(HVF = FALSE, pathw = 1),
-  list(HVF = FALSE, pathw = 2),
-  list(HVF = FALSE, pathw = 3),
-  list(HVF = FALSE, pathw = 4),
+#  list(HVF = TRUE, pathw = NULL),
+#  list(HVF = FALSE, pathw = 1),
+#  list(HVF = FALSE, pathw = 2),
+#  list(HVF = FALSE, pathw = 3),
+#  list(HVF = FALSE, pathw = 4),
   list(HVF = FALSE, pathw = 5)
 )
 
@@ -67,7 +74,8 @@ pathways <- list(
   "MAPK signaling pathway",
   "mTOR signaling pathway",
   "Pathways in cancer",
-  "TGF-beta signaling pathway"
+  "TGF-beta signaling pathway",
+  NULL
 )
 
 name_pathways <- list(
@@ -75,7 +83,8 @@ name_pathways <- list(
   "MAPK signaling pathway" = "MAPK",
   "mTOR signaling pathway" = "MTOR",
   "Pathways in cancer" = "CANC",
-  "TGF-beta signaling pathway" = "TGFB"
+  "TGF-beta signaling pathway" = "TGFB",
+  "HVF" = "HVF"
 )
 
 # Helper function to find closest points
@@ -87,17 +96,17 @@ findClosestPoints <- function(se, aa, k) {
   weights <- as.data.frame(aa$aa.bests[[k]]$A)
   common <- intersect(rownames(se), rownames(archetype))
 
-  small_se <- se[common, ]
+  small_se <- se[common,]
 
   closestPoints <- sapply(1:num_archetypes, function(i) {
-    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, i])^2))
+    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, i]) ^ 2))
     which.min(distances)
   })
 
   newCtype <- as.character(se$ctype)
   newCtype[closestPoints] <- "Archetype"
   newCtype <- factor(newCtype, levels = c(levels(se$ctype), "Archetype"))
-  weights[closestPoints, ] <- diag(num_archetypes)
+  weights[closestPoints,] <- diag(num_archetypes)
   rownames(weights) <- colnames(se)
   colnames(weights) <- paste("Archetype", 1:num_archetypes, sep = "_")
 
@@ -118,11 +127,11 @@ findClosestPoints <- function(se, aa, k) {
 }
 
 # Create cluster
-cl <- makeCluster(params$nworkers)
-clusterExport(cl, c("params", "list_parallel_params", "obj", "pathways", "name_pathways", "findClosestPoints"))
+# cl <- makeCluster(params$nworkers)
+# clusterExport(cl, c("params", "list_parallel_params", "obj", "pathways", "name_pathways", "findClosestPoints"))
 
 # Parallel execution
-res <- parSapply(cl, 1:length(list_parallel_params), function(i) {
+res <- future_apply(cl, 1:length(list_parallel_params), function(i) {
   paramsT <- params
   paramsT$HVF <- list_parallel_params[[i]]$HVF
   paramsT$pathw <- list_parallel_params[[i]]$pathw
@@ -158,38 +167,39 @@ res <- parSapply(cl, 1:length(list_parallel_params), function(i) {
   obj@other$genenames <- rownames(obj@se)
   obj@other$cellnames <- colnames(obj@se)
 
-  # Visualization
-  set.seed(2024)
-
+  # TODO kappas for analysis
   kappas <- list("7", "12")
-  ik <- 2
-  k <- kappas[[ik]]
-  num_archetypes <- as.integer(kappas[[ik]])
+  kappas <- list(mink) #TODO for testing only, remove this line
+  #ik <- 2
+  #k <- kappas[[ik]]
+  for (k in kappas) {
+    num_archetypes <- as.integer(k)
+    newse <- findClosestPoints(obj@se, obj@archetypes, k)
 
-  newse <- findClosestPoints(obj@se, obj@archetypes, kappas[[ik]])
+    # Setup parameters for plotting
+    colors_types <- viridis(length(unique(newse$ctype)) - 1)
+    size_types <- 1
+    colors_Archetype <- "black"
+    size_Archetype <- 4
+    colors_text_Archetype <- c("white")
+    size_text_Archetype <- 3
 
-  colors_types <- viridis(length(unique(newse$ctype)) - 1)
-  size_types <- 1
-  colors_Archetype <- "black"
-  size_Archetype <- 4
-  colors_text_Archetype <- c("white")
-  size_text_Archetype <- 3
+    # Setup data for plotting
+    plot_data <- as.data.frame(Embeddings(newse, reduction = "tsne"))
+    colnames(plot_data) <- c("X1", "X2", "X3")
+    plot_data$Label <- newse$ctype
+    plot_data$aa_clusters <- newse@misc$aa_clusters
+    plot_data$aa_clusters_treshold.5 <- newse@misc$aa_cluster_treshold.5
 
-  plot_data <- as.data.frame(Embeddings(newse, reduction = "tsne"))
-  colnames(plot_data) <- c("X1", "X2", "X3")
-  plot_data$Label <- newse$ctype
-  plot_data$aa_clusters <- newse@misc$aa_clusters
-  plot_data$aa_clusters_treshold.5 <- newse@misc$aa_cluster_treshold.5
+    # Generate and save plots
+    pairs <- list(c("X1", "X2"), c("X1", "X3"), c("X2", "X3"))
+    plots <- list()
 
-  # Generate and save plots
-  pairs <- list(c("X1", "X2"), c("X1", "X3"), c("X2", "X3"))
-  plots <- list()
+    for (p in pairs) {
+      x <- p[1]
+      y <- p[2]
 
-  for (p in pairs) {
-    x <- p[1]
-    y <- p[2]
-
-    p2d <- ggplot(plot_data, aes_string(x = x, y = y, color = "Label")) +
+      p2d <- ggplot(plot_data, aes_string(x = x, y = y, color = "Label")) +
       geom_point(data = subset(plot_data, Label != "Archetype"), size = size_types) +
       geom_point(data = subset(plot_data, Label == "Archetype"), color = "black", size = size_Archetype) +
       geom_text(
@@ -201,31 +211,28 @@ res <- parSapply(cl, 1:length(list_parallel_params), function(i) {
       theme_minimal() +
       ggtitle(paste(name, x, "vs", y))
 
-    plots[[length(plots) + 1]] <- p2d
+      plots[[length(plots) + 1]] <- p2d
 
-    ggsave(
+      ggsave(
       file.path(paramsT$out_path, paste0(name, ".tsne.", x, "vs", y, ".png")),
       p2d,
       width = 8,
       height = 6
     )
-  }
+    }
 
-  combined_plot <- plot_grid(plotlist = plots, ncol = 1)
-  ggsave(
+    combined_plot <- plot_grid(plotlist = plots, ncol = 1)
+    ggsave(
     file.path(paramsT$out_path, paste0(name, ".tsne.combined.png")),
     combined_plot,
     width = 8,
     height = 18
   )
-
+  }
   # Save results
   saveRDS(obj@other, file = file.path(paramsT$out_path, "metadata.Rds"))
   saveRDS(obj@archetypes, file = file.path(paramsT$out_path, "archetypes.Rds"))
 
-  if (!list_parallel_params[[i]]$HVF) {
-    Sys.sleep(1)
-  }
   return(list(HVF = list_parallel_params[[i]]$HVF, pathw = list_parallel_params[[i]]$pathw, name = name, out = paramsT$out_path))
 })
 
