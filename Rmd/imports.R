@@ -27,3 +27,12 @@ pathways <- list(
   "Pathways in cancer",
   "TGF-beta signaling pathway"
 )
+
+namePathw <- list(
+  "GLYK",
+  "MAPK",
+  "MTOR",
+  "CANCER",
+  "TGF",
+  "HVF"
+)

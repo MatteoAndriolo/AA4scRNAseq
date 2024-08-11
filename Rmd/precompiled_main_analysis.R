@@ -13,7 +13,9 @@ library(Rtsne)
 library(plotly)
 library(ggplot2)
 library(cowplot)
+devtools::install_github("davidsjoberg/ggsankey")
 library(ggsankey)
+install.packages("viridis")
 library(viridis)
 
 # Fetch params from environment variables
@@ -35,6 +37,7 @@ mink <- 6
 maxk <- 18
 k <- mink:maxk
 
+
 mink <- 5
 maxk <- 6
 k <- mink:maxk
@@ -45,7 +48,7 @@ params$path_figures <- file.path(params$out_path, "figures")
 params$path_outdata <- file.path(params$out_path, "data")
 
 params$pathw <- NULL
-params$HVF <- FALSE
+params$hvf<- FALSE
 params$test <- FALSE
 params$test <- TRUE
 
@@ -133,10 +136,10 @@ findClosestPoints <- function(se, aa, k) {
 # Parallel execution
 res <- future_apply(cl, 1:length(list_parallel_params), function(i) {
   paramsT <- params
-  paramsT$HVF <- list_parallel_params[[i]]$HVF
+  paramsT$hvf <- list_parallel_params[[i]]$HVF
   paramsT$pathw <- list_parallel_params[[i]]$pathw
 
-  if (paramsT$HVF) {
+  if (paramsT$hvf) {
     name <- "HVF"
   } else if (paramsT$pathw) {
     name <- name_pathways[[pathways[[paramsT$pathw]]]]
