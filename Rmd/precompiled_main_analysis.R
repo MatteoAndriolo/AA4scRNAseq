@@ -29,7 +29,7 @@ params$nworkers <- 20
 if (params$nworkers > parallel::detectCores()) {
   params$nworkers <- parallel::detectCores()
 }
-params$out_path <- "out/Melanoma"
+params$out_path <- "out/Melanoma/full"
 params$test_genes <- 300
 params$test_samples <- 500
 params$init_method <- "furthestsum"
@@ -45,7 +45,9 @@ k <- mink:maxk
 params$rseed <- 2024
 set.seed(params$rseed)
 params$path_figures <- file.path(params$out_path, "figures")
+dir.create(params$path_figures)
 params$path_outdata <- file.path(params$out_path, "data")
+dir.create(params$path_outdata)
 
 params$pathw <- NULL
 params$hvf<- FALSE
@@ -134,7 +136,7 @@ findClosestPoints <- function(se, aa, k) {
 # clusterExport(cl, c("params", "list_parallel_params", "obj", "pathways", "name_pathways", "findClosestPoints"))
 
 # Parallel execution
-res <- future_apply(cl, 1:length(list_parallel_params), function(i) {
+res <- future.apply::future_lapply(1:length(list_parallel_params), function(i) {
   paramsT <- params
   paramsT$hvf <- list_parallel_params[[i]]$HVF
   paramsT$pathw <- list_parallel_params[[i]]$pathw
@@ -243,4 +245,3 @@ res <- future_apply(cl, 1:length(list_parallel_params), function(i) {
 print(res)
 
 # Stop cluster
-stopCluster(cl)
