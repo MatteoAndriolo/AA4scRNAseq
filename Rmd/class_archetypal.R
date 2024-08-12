@@ -44,29 +44,32 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
     best_rss <- Inf
     best_restart_index <- -1
 
-    # for (i in 1:obj@params$num_restarts) {
-    #   message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
-
-    #   aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = FALSE, nworkers = obj@params$nworkers)
-
-    #   history.restarts.k[[as.character(i)]] <- list(
-    #     aa = aa
-    #   )
-    # }
-    cl2 <- makeCluster(obj@params$nworkers)
-    varexport <- c("df", "k", "obj@params$init_method", "obj@params$rseed")
-    clusterExport(cl2, varexport)
-    history.restarts.k <- parLapply(cl2, 1:obj@params$num_restarts, function(i) {
+    for (i in 1:obj@params$num_restarts) {
       message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
 
       aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = FALSE, nworkers = obj@params$nworkers)
 
-      return(setNames(list(aa), as.character(i)))
-      # history.restarts.k[[as.character(i)]] <- list(
-      #   aa = aa
-      # )
-    })
-    stopCluster(cl2)
+      history.restarts.k[[as.character(i)]] <- list(
+        aa = aa
+      )
+    }
+
+    ######## PAR
+    # cl2 <- makeCluster(obj@params$nworkers)
+    # varexport <- c("df", "k", "obj@params$init_method", "obj@params$rseed")
+    # clusterExport(cl2, varexport)
+    # history.restarts.k <- parLapply(cl2, 1:obj@params$num_restarts, function(i) {
+    #   message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
+
+    #   aa <- archetypal(df, kappas = k, method = obj@params$init_method, rseed = obj@params$rseed + i * k, save_history = FALSE, nworkers = obj@params$nworkers)
+
+    #   return(setNames(list(aa), as.character(i)))
+    #   # history.restarts.k[[as.character(i)]] <- list(
+    #   #   aa = aa
+    #   # )
+    # })
+    # stopCluster(cl2)
+    ######## PAR END
 
     t <- data.frame(
       varexpt = sapply(history.restarts.k, function(x) x$aa$varexpl),

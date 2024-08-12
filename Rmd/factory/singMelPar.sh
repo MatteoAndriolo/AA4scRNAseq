@@ -3,18 +3,18 @@
 #SBATCH --job-name=AAMel
 #SBATCH --mail-user=matteo.andriolo.2@studenti.unipd.it
 #SBATCH --mail-type=ALL
-#SBATCH --output=./out/Melanoma/PARALLEL/%j.%t.out.txt
-#SBATCH --error=./out/Melanoma/PARALLEL/%j.%t.err.txt
+#SBATCH --output=./out/Melanoma/out.%t.txt
+#SBATCH --error=./out/Melanoma/err.%t.txt
 #SBATCH --partition=allgroups
-#SBATCH --ntasks=5              
-#SBATCH --cpus-per-task=4       
-#SBATCH --mem=100G               
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=500G               
 #SBATCH --time=30:00:00
 
 container="containers/img/myrubuntu.sif"
 
 # Array of commands with different parameters
-command="/app/Rmd/_main.sh -c Mouse -w 4 --mink 6 --maxk 18"
+command="/app/Rmd/_main.sh -c Melanoma -w 4 --mink 6 --maxk 18"
 commands=(
   "$command -H TRUE"
   "$command -p 1"
@@ -25,14 +25,13 @@ commands=(
 )
 
 # Loop through the commands array and run each one as a separate task using srun
-for i in "${!commands[@]}"; do
-  srun --exclusive --ntasks=1 \
-    singularity exec \
-        --bind ./app \
-        $container \
-        ${commands[i]} \
-    &
+for i in "${!commands[@]}"; do 
+  echo ${commands[i]}
+  singularity exec --bind .:/app $container ${commands[i]} > ./out/Melanoma/Par/out.$i.txt  &
+  sleep 0.3
 done
 
 # Wait for all tasks to complete
 wait
+
+

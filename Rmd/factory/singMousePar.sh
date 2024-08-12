@@ -26,12 +26,7 @@ commands=(
 
 # Loop through the commands array and run each one as a separate task using srun
 for i in "${!commands[@]}"; do
-  srun --exclusive --ntasks=1 \
-    singularity exec \
-        --bind ./app \
-        $container \
-        ${commands[i]} \
-    &
+ srun --exclusive --ntasks=1  singularity exec  --bind .:/app $container  ${commands[i]}  &
 done
 
 # Wait for all tasks to complete
