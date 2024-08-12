@@ -50,7 +50,7 @@ setMethod(
 
       if (obj@params$hvf) {
         message("LOG: obj_loadData | HVF")
-        obj@se <- obj@se[which(obj@se@assays$RNA@meta.data$vf_vst_counts_rank > 0), ]
+        obj@se <- obj@se[VariableFeatures(obj@se),]
         obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
         message("LOG: obj_loadData | HVF: new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
 
@@ -89,7 +89,7 @@ setMethod(
         message("DEBUG: obj_loadData | pathw | intersectoin gives ", sum(gene.flag), " genes")
       }
 
-      obj@se <- obj@se[gene.flag, ]
+      obj@se <- obj@se[gene.flag,]
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
