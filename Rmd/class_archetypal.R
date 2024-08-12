@@ -30,8 +30,8 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
 
   obj@archetypes$aa.bests <- list()
   obj@archetypes$aa.history <- list()
+  obj@archetypes$time4k <- list()
 
-  tstartReruns <- Sys.time()
   # if (doparallel) {
   #   nworkers <- parallel::detectCores() - 1
   #   # results <- mclapply(1:num_restarts, runArchetypes, data = obj@data$m, k = k, max_iterations = obj@params$max_iterations, mc.cores = 3)
@@ -39,11 +39,14 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
   #   obj@archetypes$restarts <- results
   # } else {
 
+  tstartTot <- Sys.time()
   for (k in obj@params$kappas) {
     history.restarts.k <- list()
     best_rss <- Inf
     best_restart_index <- -1
 
+
+    tstartReruns <- Sys.time()
     for (i in 1:obj@params$num_restarts) {
       message("LOG: obj_performArchetypal | Starting rerun ", i, "/", obj@params$num_restarts, " with k=", k)
 
@@ -53,6 +56,7 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
         aa = aa
       )
     }
+    tendReruns <- Sys.time()
 
     ######## PAR
     # cl2 <- makeCluster(obj@params$nworkers)
@@ -85,10 +89,11 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
     history.restarts.k$best <- history.restarts.k[[best]]$aa
     obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
     obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k$best
+    obj@archetypes$time4k[[as.character(k)]] <- difftime(tendReruns, tstartReruns, units = "secs")
   }
+  tendTot <- Sys.time()
   # }
-  tendReruns <- Sys.time()
-  message("OUTPUT: obj_performArchetypal | Reruns completed in ", difftime(tendReruns, tstartReruns, units = "secs"), " seconds")
+  message("OUTPUT: obj_performArchetypal | Reruns completed in ", difftime(tendTot, tstartTot, units = "secs"), " seconds")
 
 
   return(obj)
