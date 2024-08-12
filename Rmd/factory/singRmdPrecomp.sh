@@ -3,8 +3,8 @@
 #SBATCH --job-name=rMelanoma
 #SBATCH --mail-user=matteo.andriolo.2@studenti.unipd.it
 #SBATCH --mail-type=ALL
-#SBATCH --output=./out/Melanoma/_slurm/F%j.out.txt
-#SBATCH --error=./out/Melanoma/_slurm/F%j.err.txt
+#SBATCH --output=./out/Melanoma/full/out.txt
+#SBATCH --error=./out/Melanoma/full/err.txt
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20

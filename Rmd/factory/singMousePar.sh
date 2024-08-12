@@ -3,13 +3,13 @@
 #SBATCH --job-name=AAMouse
 #SBATCH --mail-user=matteo.andriolo.2@studenti.unipd.it
 #SBATCH --mail-type=ALL
-#SBATCH --output=./out/MouseCortex/_slurm/%j.%t.out.txt
-#SBATCH --error=./out/MouseCortex/_slurm/%j.%t.err.txt
+#SBATCH --output=./out/MouseCortex/out.%t.txt
+#SBATCH --error=./out/MouseCortex/err.%t.txt
 #SBATCH --partition=allgroups
-#SBATCH --ntasks=5              
-#SBATCH --cpus-per-task=4       
-#SBATCH --mem=200G               
-#SBATCH --time=30:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=300G               
+#SBATCH --time=15:00:00
 
 container="containers/img/myrubuntu.sif"
 
@@ -26,7 +26,8 @@ commands=(
 
 # Loop through the commands array and run each one as a separate task using srun
 for i in "${!commands[@]}"; do
- srun --exclusive --ntasks=1  singularity exec  --bind .:/app $container  ${commands[i]}  &
+ singularity exec  --bind .:/app $container  ${commands[i]} > ./out/MouseCortex/Par/out.$i.txt  &
+ sleep 0.3
 done
 
 # Wait for all tasks to complete

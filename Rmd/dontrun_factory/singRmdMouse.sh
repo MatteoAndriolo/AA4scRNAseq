@@ -8,7 +8,7 @@
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --time=20:00:00
+#SBATCH --time=80:00:00
 #SBATCH --mem=150G
 
 container="containers/img/myrubuntu.sif"
