@@ -61,6 +61,7 @@ obj <- obj_loadData(obj)
 obj_visualizeData(obj)
 
 plan("multicore", workers = params$nworkers)
+plan("multicore", workers = 1)
 plan("multisession", workers = params$nworkers)
 # set memory limit to 30GB
 options("future.global.maxSize" = 100 * 1024 ^ 3)
@@ -132,18 +133,21 @@ findClosestPoints <- function(se, aa, k) {
 }
 
 # Create cluster
-# cl <- makeCluster(params$nworkers)
-# clusterExport(cl, c("params", "list_parallel_params", "obj", "pathways", "name_pathways", "findClosestPoints"))
+ cl <- makeCluster(params$nworkers)
+ cl <- makeCluster(1)
+ clusterExport(cl, c("params", "list_parallel_params", "obj", "pathways", "name_pathways", "findClosestPoints"))
 
 # Parallel execution
-res <- future.apply::future_lapply(1:length(list_parallel_params), function(i) {
+#res <- future.apply::future_lapply(1:length(list_parallel_params), function(i) {
+res <- parLapply(cl,1:length(list_parallel_params), function(i) {
   paramsT <- params
+  source("Rmd/classes.R")
   paramsT$hvf <- list_parallel_params[[i]]$HVF
   paramsT$pathw <- list_parallel_params[[i]]$pathw
 
   if (paramsT$hvf) {
     name <- "HVF"
-  } else if (paramsT$pathw) {
+  } else if (paramsT$pathw>0) {
     name <- name_pathways[[pathways[[paramsT$pathw]]]]
   } else {
     stop("Unexpected values")
@@ -157,6 +161,7 @@ res <- future.apply::future_lapply(1:length(list_parallel_params), function(i) {
   obj <- do.call(obj_updateParams, c(list(obj = obj), paramsT))
   obj <- obj_loadData(obj)
   obj_visualizeData(obj, name = paste0("_", name))
+  
 
   obj <- obj_performArchetypal(obj, doparallel = TRUE)
 
@@ -245,3 +250,4 @@ res <- future.apply::future_lapply(1:length(list_parallel_params), function(i) {
 print(res)
 
 # Stop cluster
+stopCluster(cl)
