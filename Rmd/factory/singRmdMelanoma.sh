@@ -8,8 +8,8 @@
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --time=10:00:00
-#SBATCH --mem=50G
+#SBATCH --time=30:00:00
+#SBATCH --mem=100G
 
 container="containers/img/myrubuntu.sif"
 command="/app/Rmd/_main.sh -c Melanoma -w 20 --mink 6 --maxk 18 $@ "

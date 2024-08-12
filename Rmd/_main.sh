@@ -16,13 +16,11 @@ num_restarts=10
 test_genes=300
 test_samples=500
 init_method="furthestsum"
+
 k=0
 mink=0
 maxk=0
 
-##################################################
-# Display usage
-##################################################
 ##################################################
 # Display usage
 ##################################################
@@ -158,8 +156,6 @@ while true; do
     esac
 done
 
-
-
 shift $((OPTIND - 1))
 
 ##################################################
@@ -217,7 +213,6 @@ elif [ "$init_method" == "partitioned_convexhull"]; then
 elif [ "$init_method" == "random"]; then
     prefix+="RND"
 else
-
     prefix+="${init_method:0:2}"
 fi
 if [ "$pathw" != 0 ]; then
@@ -225,7 +220,7 @@ if [ "$pathw" != 0 ]; then
 fi
 
 timestamp=$(date +%m%d_%H%M)
-outpath="/app/$output_path/${timestamp}_${prefix}_$SLURM_JOB_ID"
+outpath="/app/$output_path/${timestamp}/${prefix}_$SLURM_JOB_ID"
 echo "LOG: Output path is $outpath"
 mkdir -p $outpath
 mkdir -p $outpath/figures
@@ -289,11 +284,3 @@ while kill -0 $pid 2>/dev/null; do
     echo "$(date +%F' '%T), $cpu, $mem" >> $log_file
     sleep 3
 done
-
-# while kill -0 $pid 2>/dev/null; do
-#     stats=$(top -b -n 1 -p $pid | tail -n 1)
-#     cpu=$(echo $stats | awk '{print $9}')
-#     mem=$(echo $stats | awk '{print $10}')
-#     echo "$(date +%F' '%T), $cpu, $mem" >> $log_file
-#     sleep 3
-# done

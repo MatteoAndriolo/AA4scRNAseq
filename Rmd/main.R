@@ -38,6 +38,9 @@ if (k != 0) {
 
 
 debug <- params$debug
+debug <- TRUE
+params$method <- "archetypal"
+params$init_method <- "furthestsum"
 
 if (params$pathw == 0) {
   params$pathw <- NULL
@@ -102,8 +105,10 @@ obj@other$se.metadata <- obj@se@meta.data
 obj@other$genenames <- rownames(obj@se)
 obj@other$cellnames <- colnames(obj@se)
 
+message("LOG: main | Saving objects to ", obj@params$path_outdata)
 saveRDS(obj@other, file = file.path(obj@params$path_outdata, "metadata.Rds"))
 saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rds"))
+message("LOG: main | Saved Object")
 
 
 # END HERE #############################################################
