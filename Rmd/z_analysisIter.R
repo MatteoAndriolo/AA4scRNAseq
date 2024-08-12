@@ -21,7 +21,7 @@ name <- list(
   "CANCER",
   "MTOR",
   "TGF"
-  #"HVF"
+  # "HVF"
 )
 
 pathw <- 1
@@ -176,14 +176,14 @@ for (k in c("7", "12")) {
     nlev <- length(levels(newse$ctype))
     all_colors <- paletteer_d("ggsci::default_ucscgb")
     # colors_types=c(rainbow(nlev-1),"black")
-    colors_types <- t(as.data.frame(c(all_colors[1:(nlev - 1)],"black")))
+    colors_types <- t(as.data.frame(c(all_colors[1:(nlev - 1)], "black")))
     rownames(colors_types) <- "colors"
-    colnames(colors_types)<- levels(newse$ctype)
+    colnames(colors_types) <- levels(newse$ctype)
     colors_types
 
-    
+
     colors_types_archetype <- "black"
-    colors_archetypes <-t(data.frame(c(all_colors[nlev:(nlev + num_archetypes-1)],"black")))
+    colors_archetypes <- t(data.frame(c(all_colors[nlev:(nlev + num_archetypes - 1)], "black")))
     colnames(colors_archetypes) <- c(as.character(seq(1:num_archetypes)), "Archetype")
     rownames(colors_archetypes) <- "colors"
     colors_archetypes
@@ -372,9 +372,9 @@ for (k in c("7", "12")) {
       ctype <- plot_data$Label
       taa_clusters <- as.character(newse@misc$aa_clusters)
       if (treshold) taa_clusters <- as.character(newse@misc$aa_cluster_treshold.5)
-      
+
       color_mapping <- cbind(colors_types, colors_archetypes)
-      
+
       # Create a data frame with the required columns
       data <- as.data.frame(list(
         type = plot_data$Label,
@@ -399,7 +399,7 @@ for (k in c("7", "12")) {
         ) + # This determines if you want your legend to show
         geom_sankey_label(size = 3, color = "black", fill = "white") +
         labs(title = paste0("Sankey Tirosh - ", namePathw), subtitle = paste(ifelse(treshold, "With", "Without"), "treshold"), sep = " ") +
-        scale_fill_manual(values=color_mapping)+
+        scale_fill_manual(values = color_mapping) +
         theme_classic()
 
 
@@ -413,24 +413,24 @@ for (k in c("7", "12")) {
       )
 
       # HEATMAP
-      #taa_clusters=taa_clusters[-which(ctype=="Archetype")]
-      #length(taa_clusters)
-      #taa_clusters= factor(taa_clusters, levels = unique(taa_clusters))
-      #taa_clusters
-      taa_clusters=taa_clusters[-which(ctype == "Archetype")]
-      taa_clusters = factor(
+      # taa_clusters=taa_clusters[-which(ctype=="Archetype")]
+      # length(taa_clusters)
+      # taa_clusters= factor(taa_clusters, levels = unique(taa_clusters))
+      # taa_clusters
+      taa_clusters <- taa_clusters[-which(ctype == "Archetype")]
+      taa_clusters <- factor(
         taa_clusters,
         levels = unique(taa_clusters)
       )
-      
-      #ctype=ctype[-which(ctype=="Archetype")]
-      ctype = factor(
-        ctype[-which(ctype=="Archetype")],
+
+      # ctype=ctype[-which(ctype=="Archetype")]
+      ctype <- factor(
+        ctype[-which(ctype == "Archetype")],
         levels = levels(ctype)[-length(levels(ctype))]
-        )
-      
+      )
+
       df <- table(ctype, taa_clusters)
-      
+
       df
 
       df_melt <- reshape2::melt(df, id.vars = "aa_clusters", variable.name = "ctype", value.name = "count")
@@ -444,7 +444,7 @@ for (k in c("7", "12")) {
           title = "Heatmap of Cell Type Distribution Across Clusters", subtitle = paste(namePathw, "Tirosh", sep = " "),
           x = "Archetype", y = "Cell Type"
         ) +
-        #scale_x_continuous(labels=levels(taa_clusters), breaks = 1:length(levels(taa_clusters)))+
+        # scale_x_continuous(labels=levels(taa_clusters), breaks = 1:length(levels(taa_clusters)))+
         theme(axis.text.x = element_text(hjust = 1))
       plt_hm
 
@@ -459,4 +459,3 @@ for (k in c("7", "12")) {
     # Heatmap
   } # end i pathways
 } # end k
-

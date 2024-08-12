@@ -64,23 +64,23 @@ if (FALSE) {
   params$kappas <- 4:8
 }
 
-if(TRUE){
+if (TRUE) {
   params$debug <- TRUE
   debug <- TRUE
-  params$kappas <- c(7,12)
+  params$kappas <- c(7, 12)
   params$method <- "archetypal"
   params$init_method <- "furthestsum"
 }
 ################### END FIXING PARAMETERS FOR PRESENTATION
 
-for(i in 1:(length(pathways)+1)){
+for (i in 1:(length(pathways) + 1)) {
   # CREATE OBJECT -----
-  message("INITT with pathw ",i)
+  message("INITT with pathw ", i)
   obj <- new(params$classname)
-  if(i>length(pathways)){
+  if (i > length(pathways)) {
     params$pathw <- NULL
     params$hvf <- TRUE
-  }else{
+  } else {
     params$pathw <- i
   }
   obj <- do.call(obj_updateParams, c(list(obj = obj), params))
@@ -88,7 +88,7 @@ for(i in 1:(length(pathways)+1)){
   # LOADING DATA -----
   message("LOG: main | Loading Data")
   obj <- obj_loadData(obj)
-  saveRDS(obj@se, file.path(params$path_outdata,paste(namePathw[i],".RdS")))
+  saveRDS(obj@se, file.path(params$path_outdata, paste(namePathw[i], ".RdS")))
 
   message("LOG: main | Visualize Data")
   # obj_visualizeData(obj)
@@ -112,8 +112,8 @@ for(i in 1:(length(pathways)+1)){
   obj@other$genenames <- rownames(obj@se)
   obj@other$cellnames <- colnames(obj@se)
 
-  saveRDS(obj@other, file = file.path(obj@params$path_outdata, paste0(namePathw[i],"_metadata.Rds")))
-  saveRDS(obj@archetypes, file.path(params$path_outdata,paste(namePathw[i],"_AA.Rds")))
+  saveRDS(obj@other, file = file.path(obj@params$path_outdata, paste0(namePathw[i], "_metadata.Rds")))
+  saveRDS(obj@archetypes, file.path(params$path_outdata, paste(namePathw[i], "_AA.Rds")))
 }
 stop()
 

@@ -247,4 +247,3 @@ source("/app/Rmd/class_Myocardial.R")
 source("/app/Rmd/class_archetypes.R")
 source("/app/Rmd/class_archetypal.R")
 # source("/app/Rmd/class_Other.R")
-

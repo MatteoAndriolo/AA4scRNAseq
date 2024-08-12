@@ -110,12 +110,12 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
 
     # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
     unique_tt <- unique(tt)
-    num_clusters <- length(unique_tt) - 1  # excluding "NA"
+    num_clusters <- length(unique_tt) - 1 # excluding "NA"
     palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_tt[unique_tt != "NA"]))
-    
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-      ggtitle("UMAP labelled by archetype if weight>0.6") + 
-      scale_color_manual(values = palette)  
+
+    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") +
+      ggtitle("UMAP labelled by archetype if weight>0.6") +
+      scale_color_manual(values = palette)
 
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archetypes.png")), tplot)
 
@@ -131,12 +131,12 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
     )
 
     # Plot UMAP with archetypes
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-            ggtitle("UMAP labelled by AA_clusters") + 
-            scale_color_manual(values = palette) +
-            geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) + 
-            geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
-            
+    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") +
+      ggtitle("UMAP labelled by AA_clusters") +
+      scale_color_manual(values = palette) +
+      geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) +
+      geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
+
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archLabelaAndArch.png")), tplot)
   }
   obj@se$AA_clusters <- NULL
@@ -146,7 +146,7 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
   return(obj)
 })
 
-plotWithSeOrg <- function(obj,k){
+plotWithSeOrg <- function(obj, k) {
   # Get ARCHETYPES - archetypes -> names_archetypes
   archetypes <- obj@archetypes$aa.bests[[k]]$BY
   names_archetypes <- paste0("Archetype", 1:nrow(archetypes))
@@ -164,15 +164,15 @@ plotWithSeOrg <- function(obj,k){
 
   # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
 
-  num_clusters <- length(unique_aaclusters) - 1  # excluding null
+  num_clusters <- length(unique_aaclusters) - 1 # excluding null
   palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_aaclusters[unique_tt != "NA"]))
-  
-  plotname=paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archLabels_org.png"))
-  tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") + 
-    ggtitle(paste0("UMAP labelled by archetype if weight>", treshold)) + 
-    scale_color_manual(values = palette)  
 
-  ggsave(filename = file.path(obj@params$path_figures, plotname ), tplot)
+  plotname <- paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_archLabels_org.png")
+  tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") +
+    ggtitle(paste0("UMAP labelled by archetype if weight>", treshold)) +
+    scale_color_manual(values = palette)
+
+  ggsave(filename = file.path(obj@params$path_figures, plotname), tplot)
 
   umap_coordinates_org <- Embeddings(obj@se.org, "umap")
   archetypes_umap_org <- t(weights %*% umap_coordinates_org)
@@ -184,14 +184,14 @@ plotWithSeOrg <- function(obj,k){
   )
 
   # Plot UMAP with archetypes
-  tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") + 
-          ggtitle("UMAP labelled by AA_clusters") + 
-          scale_color_manual(values = palette) +
-          geom_point(data = archetypes_df_org, aes(x = x, y = y), color = "black", size = 3) + 
-          geom_text(data = archetypes_df_org, aes(x = x, y = y, label = label), vjust = -1, color = "red")
-          
+  tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") +
+    ggtitle("UMAP labelled by AA_clusters") +
+    scale_color_manual(values = palette) +
+    geom_point(data = archetypes_df_org, aes(x = x, y = y), color = "black", size = 3) +
+    geom_text(data = archetypes_df_org, aes(x = x, y = y, label = label), vjust = -1, color = "red")
+
   ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_archLabelaAndArch_org.png")), tplot)
-  
+
   # USING AL DATA
   # archetypes=as.data.frame(t(archetypes))
   tm <- GetAssayData(obj@se)
@@ -216,7 +216,7 @@ plotWithSeOrg <- function(obj,k){
   ctype_colors <- scales::hue_pal()(length(unique(emb$ctypes)))
 
 
-  #plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
+  # plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
   #  geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
   #  geom_point(data = subset(emb, ctypes %in% rownames(archetypes)), color = archetype_color, size = 4) +
   #  geom_text(
@@ -263,7 +263,7 @@ plotWithSeOrg <- function(obj,k){
   }
   combined_plot <- plot_grid(plotlist = plot_list, ncol = 2)
   ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", sprintf("%02d", as.numeric(k)), "_weights.png")), plot = combined_plot)
-  
+
   return(obj)
 }
 
@@ -295,18 +295,18 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
 
     # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
     unique_aaclusters <- unique(obj@se$AA_clusters)
-    num_clusters <- length(unique_aaclusters) - 1  # excluding "NA"
+    num_clusters <- length(unique_aaclusters) - 1 # excluding "NA"
     palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_aaclusters[unique_tt != "NA"]))
-    
-    tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") + 
-      ggtitle(paste0("UMAP labelled by archetype if weight>", treshold)) + 
-      scale_color_manual(values = palette)  
+
+    tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") +
+      ggtitle(paste0("UMAP labelled by archetype if weight>", treshold)) +
+      scale_color_manual(values = palette)
 
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_archLabels_org.png")), tplot)
 
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-      ggtitle(paste0("UMAP labelled by archetype if weight>", treshold)) + 
-      scale_color_manual(values = palette)  
+    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") +
+      ggtitle(paste0("UMAP labelled by archetype if weight>", treshold)) +
+      scale_color_manual(values = palette)
 
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_archLabels.png")), tplot)
 
@@ -324,12 +324,12 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     )
 
     # Plot UMAP with archetypes
-    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + 
-            ggtitle("UMAP labelled by AA_clusters") + 
-            scale_color_manual(values = palette) +
-            geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) + 
-            geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
-            
+    tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") +
+      ggtitle("UMAP labelled by AA_clusters") +
+      scale_color_manual(values = palette) +
+      geom_point(data = archetypes_df, aes(x = x, y = y), color = "black", size = 3) +
+      geom_text(data = archetypes_df, aes(x = x, y = y, label = label), vjust = -1, color = "red")
+
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_archLabelaAndArch.png")), tplot)
 
     #
@@ -343,14 +343,14 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     )
 
     # Plot UMAP with archetypes
-    tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") + 
-            ggtitle("UMAP labelled by AA_clusters") + 
-            scale_color_manual(values = palette) +
-            geom_point(data = archetypes_df_org, aes(x = x, y = y), color = "black", size = 3) + 
-            geom_text(data = archetypes_df_org, aes(x = x, y = y, label = label), vjust = -1, color = "red")
-            
+    tplot <- DimPlot(obj@se.org, reduction = "umap", group.by = "AA_clusters") +
+      ggtitle("UMAP labelled by AA_clusters") +
+      scale_color_manual(values = palette) +
+      geom_point(data = archetypes_df_org, aes(x = x, y = y), color = "black", size = 3) +
+      geom_text(data = archetypes_df_org, aes(x = x, y = y, label = label), vjust = -1, color = "red")
+
     ggsave(filename = file.path(obj@params$path_figures, paste0("UMAP_AA_", k, "_archLabelaAndArch_org.png")), tplot)
-    
+
     # USING AL DATA
     # archetypes=as.data.frame(t(archetypes))
     tm <- GetAssayData(obj@se)
@@ -375,7 +375,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     ctype_colors <- scales::hue_pal()(length(unique(emb$ctypes)))
 
 
-    #plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
+    # plot <- ggplot(emb, aes(x = umap_1, y = umap_2, color = ctypes)) +
     #  geom_point(data = subset(emb, !ctypes %in% rownames(archetypes)), size = 1) +
     #  geom_point(data = subset(emb, ctypes %in% rownames(archetypes)), color = archetype_color, size = 4) +
     #  geom_text(

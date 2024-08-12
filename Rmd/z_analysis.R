@@ -149,7 +149,7 @@ colors_text_Archetype <- c("white")
 size_text_Archetype <- 3
 
 
-red="tsne"
+red <- "tsne"
 plot_data <- as.data.frame(Embeddings(newse, reduction = red))
 colnames(plot_data) <- c("X1", "X2", "X3")
 plot_data$Label <- newse$ctype
@@ -192,7 +192,7 @@ p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = Label)) +
   scale_color_manual(values = c(colors_types, colors_Archetype)) +
   theme_minimal()
 p3
-prefixName=paste(c(name[pathw], red, ifelse(treshold > 0, paste(treshold, "."), "")), sep=".") 
+prefixName <- paste(c(name[pathw], red, ifelse(treshold > 0, paste(treshold, "."), "")), sep = ".")
 ggsave(
   file.path("data/Melanoma/", paste0(prefixName, ".X1.vs.X2.png")),
   p1,
@@ -206,7 +206,7 @@ ggsave(
   height = 6
 )
 ggsave(
-  file.path("data/Melanoma/", paste0(prefixName, "X2.vs.X3.png"))
+  file.path("data/Melanoma/", paste0(prefixName, "X2.vs.X3.png")),
   plot = p3,
   width = 8,
   height = 6

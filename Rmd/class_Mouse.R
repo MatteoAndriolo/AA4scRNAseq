@@ -36,7 +36,7 @@ setMethod(
 
 
       if (obj@params$test) {
-         if (debug) message("DEBUG: obj_loadData | TEST selected -> reducing dataset")
+        if (debug) message("DEBUG: obj_loadData | TEST selected -> reducing dataset")
         if (!is.null(obj@params$patnw)) {
           tgenes <- nrow(obj@se)
         } else {
