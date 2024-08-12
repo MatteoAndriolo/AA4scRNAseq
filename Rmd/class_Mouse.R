@@ -36,7 +36,16 @@ setMethod(
 
 
       if (obj@params$test) {
-        stop("test not implemented")
+         if (debug) message("DEBUG: obj_loadData | TEST selected -> reducing dataset")
+        if (!is.null(obj@params$patnw)) {
+          tgenes <- nrow(obj@se)
+        } else {
+          tgenes <- min(obj@params$test_genes, nrow(obj@se))
+        }
+        tsamples <- min(obj@params$test_samples, ncol(obj@se))
+
+        obj@se <- obj@se[1:tgenes, 1:tsamples]
+        obj@se <- obj@se[Matrix::rowSums(obj@se) > 0, Matrix::colSums(obj@se) > 0]
       }
 
       if (obj@params$hvf) {
