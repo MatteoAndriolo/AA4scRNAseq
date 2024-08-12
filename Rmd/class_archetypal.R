@@ -183,7 +183,7 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
     newse <- SetAssayData(object = newse, layer = "scale.data", new.data = as.matrix(tm))
     newse <- RunPCA(newse, features = rownames(newse), layers = "counts", seed.use = obj@params$rseed)
     newse <- RunUMAP(newse, features = rownames(newse), seed.use = obj@params$rseed)
-    newse <- RunTSNE(newse, features = rownames(newse), seed.use = obj@params$rseed)
+    newse <- RunTSNE(newse, features = rownames(newse), seed.use = obj@params$rseed, check_duplicates = FALSE)
     ctype <- as.vector(obj@se$ctype)
     newse$ctype <- c(ctype, rep.int(99, nrow(archetypes)))
     rm(ctype)

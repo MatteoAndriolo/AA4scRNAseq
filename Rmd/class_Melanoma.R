@@ -54,14 +54,14 @@ setMethod(
       rownames(se) <- str_replace_all(rownames(se), "_", "-")
       obj@se <- CreateSeuratObject(counts = se, meta.data = metadata)
       ctype <- obj@se$non.malignant.cell.type..1.T.2.B.3.Macro.4.Endo..5.CAF.6.NK.
-      obj@se$ctype <- factor(ctype, levels=unique(ctype))
+      obj@se$ctype <- factor(ctype, levels = unique(ctype))
       if (debug) message("DEBUG: obj_loadData | Seurat object has dimension ", dim(se)[[1]], " ", dim(se)[[2]])
       obj@se <- SetAssayData(object = obj@se, layer = "scale.data", new.data = as.matrix(se))
       # obj@se <- ScaleData(obj@se, layer = "counts")
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed, check_duplicates = FALSE)
       # obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se))
       # obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se))
 
@@ -106,7 +106,7 @@ setMethod(
       obj@se <- obj@se[gene.flag, ]
       obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed, check_duplicates = FALSE)
       message("LOG: obj_loadData | pathw | new dimension of se is ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
     }
 

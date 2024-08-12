@@ -33,7 +33,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   rownames(obj@se) <- gene_names
   colnames(obj@se) <- cell_metadata$new.names
   obj@se <- AddMetaData(obj@se, metadata = cell_metadata)
-  obj@se$ctype <- factor(cell_metadata$Cell.type.annotation, levels=unique(cell_metadata$Cell.type.annotation))
+  obj@se$ctype <- factor(cell_metadata$Cell.type.annotation, levels = unique(cell_metadata$Cell.type.annotation))
   obj@se <- obj@se[Matrix::rowSums(GetAssayData(obj@se)) > 0, Matrix::colSums(GetAssayData(obj@se)) > 0]
   obj@se <- SetAssayData(obj@se, layer = "scale.data", new.data = as.matrix(GetAssayData(obj@se)))
   if (debug) message("DEBUG: Seurat object has dimension ", dim(obj@se)[[1]], " ", dim(obj@se)[[2]])
@@ -68,7 +68,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
   obj@se <- FindVariableFeatures(obj@se)
   obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
   obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
-  obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+  obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed, check_duplicates = FALSE)
 
   str(obj@se)
   obj@se.org <- obj@se
@@ -93,7 +93,7 @@ setMethod("obj_createSeuratObject", "Exp", function(obj, se, gene_names, cell_me
     obj@se <- FindVariableFeatures(obj@se)
     obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
     obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-    obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+    obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed, check_duplicates = FALSE)
   }
   str(obj@se)
 

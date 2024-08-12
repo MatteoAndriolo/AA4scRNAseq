@@ -28,7 +28,7 @@ setMethod(
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
       obj@se <- RunUMAP(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = VariableFeatures(obj@se), seed.use = obj@params$rseed, check_duplicates = FALSE)
 
 
       if (obj@params$test) {
@@ -78,7 +78,7 @@ setMethod(
       obj@se <- FindVariableFeatures(obj@se)
       obj@se <- RunPCA(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
       obj@se <- RunUMAP(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
-      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed)
+      obj@se <- RunTSNE(obj@se, features = rownames(obj@se), seed.use = obj@params$rseed, check_duplicates = FALSE)
     }
 
     message("LOG: obj_loadData | Completed Loading")
