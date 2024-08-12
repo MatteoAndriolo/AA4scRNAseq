@@ -76,6 +76,7 @@ obj <- do.call(obj_updateParams, c(list(obj = obj), params))
 message("LOG: main | Loading Data")
 obj <- obj_loadData(obj)
 
+
 message("LOG: main | Visualize Data")
 obj_visualizeData(obj)
 if (!is.null(obj@se.org)) {
@@ -106,6 +107,7 @@ obj@other$genenames <- rownames(obj@se)
 obj@other$cellnames <- colnames(obj@se)
 
 message("LOG: main | Saving objects to ", obj@params$path_outdata)
+SaveSeurat(obj@se, file = file.path(obj@params$path_outdata, paste0(params$pathw, ".Rds")))
 saveRDS(obj@other, file = file.path(obj@params$path_outdata, "metadata.Rds"))
 saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rds"))
 message("LOG: main | Saved Object")
