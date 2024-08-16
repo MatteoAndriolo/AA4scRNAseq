@@ -34,7 +34,7 @@ if (NOT_FINAL) {
   obj@params$hvf <- FALSE
   obj@params$pathw <- 1
 
-  obj@params$out_path <- "outPar/Mouse/0813_0758/FS1_1738962"
+  obj@params$out_path <- "outPar/Mouse/0813_0758/FS1_1738962/"
   obj@params$path_figures <- file.path(obj@params$out_path, "figures")
   obj@params$path_outdata <- file.path(obj@params$out_path, "data")
   insefile <- file.path(obj@params$path_outdata, "1.Rds")
@@ -82,7 +82,7 @@ addArchetypesToSeurat <- function(se, aa, k) {
 
   common <- intersect(rownames(se), rownames(archetype))
 
-  tempMat[common,] <- archetype[common,]
+  tempMat[common, ] <- archetype[common, ]
 
   tempMat <- as(tempMat, "dgCMatrix")
 
@@ -140,17 +140,17 @@ findClosestPoints <- function(se, se3D, aa, k) {
   weights <- as.data.frame(aa$aa.bests[[k]]$A)
   common <- intersect(rownames(se), rownames(archetype))
 
-  small_se <- se[common,]
+  small_se <- se[common, ]
 
   closestPoints <- sapply(1:num_archetypes, function(i) {
-    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, i]) ^ 2))
+    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, i])^2))
     which.min(distances)
   })
 
   while (any(duplicated(closestPoints))) {
     firstdup <- which(duplicated(closestPoints))[1]
     firstduppoints <- closestPoints[5]
-    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, 5]) ^ 2))
+    distances <- apply(GetAssayData(small_se), 2, function(cell) sum((cell[common] - archetype[, 5])^2))
     while (which.min(distances) %in% closestPoints) {
       distances[which.min(distances)] <- Inf
     }
@@ -162,7 +162,7 @@ findClosestPoints <- function(se, se3D, aa, k) {
   newCtype <- as.character(se$ctype)
   newCtype[closestPoints] <- "Archetype"
   newCtype <- factor(newCtype, levels = c(levels(se$ctype), "Archetype"))
-  weights[closestPoints,] <- diag(num_archetypes)
+  weights[closestPoints, ] <- diag(num_archetypes)
   rownames(weights) <- colnames(se)
   colnames(weights) <- paste0("Archetype", 1:num_archetypes, sep = "_")
 
@@ -208,6 +208,9 @@ for (k in c("7", "12")) {
   t <- obj@archetypes$aa.bests[[k]]$cluster.id.treshold
   t[t == "NA"] <- "NotAssigned"
   newse$aaclusters.treshold <- factor(t)
+  newse$aaweights <- apply(obj@archetypes$aa.bests[["7"]]$A, 1, max)
+
+
 
   if (NOT_FINAL) {
     t <- obj@archetypes$aa.bests[[k]]$cluster.id
@@ -283,11 +286,10 @@ for (k in c("7", "12")) {
 
 
   # for (red in c("umap", "tsne")) {
+  plot_data <- as.data.frame(Embeddings(newse, reduction = red))
+  colnames(plot_data) <- c("X1", "X2", "X3")
+  plot_data <- cbind(plot_data, as.data.frame(newse@meta.data))
   for (red in c("tsne")) {
-    plot_data <- as.data.frame(Embeddings(newse, reduction = red))
-    colnames(plot_data) <- c("X1", "X2", "X3")
-    plot_data <- cbind(plot_data, as.data.frame(newse@meta.data))
-
     message("reduction ", red)
 
     ##################################################
@@ -310,12 +312,8 @@ for (k in c("7", "12")) {
     # p1
 
     p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = ctype, size = ctype)) +
-      geom_point(aes(color = ctype, size = ctype),
-        data = subset(plot_data, ctype != "Archetype")
-      ) +
-      geom_point(aes(color = ctype, size = ctype),
-        data = subset(plot_data, ctype == "Archetype")
-      ) +
+      geom_point(data = subset(plot_data, ctype != "Archetype")) +
+      geom_point(data = subset(plot_data, ctype == "Archetype")) +
       geom_text(
         data = subset(plot_data, ctype == "Archetype"),
         aes(label = seq(1, num_archetypes)),
@@ -323,7 +321,7 @@ for (k in c("7", "12")) {
       ) +
       scale_color_manual(values = colorMapCTypes) +
       scale_size_manual(values = sizeMapCTypes) +
-      labs(color = "Cell types", size = "Cell types") +
+      labs(color = "Cell types", size = "Cell types", ) +
       theme_classic()
     # p2
 
@@ -374,6 +372,84 @@ for (k in c("7", "12")) {
       height = 18
     )
 
+
+    if (class(obj) == "Mouse") { # TIME
+      p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = ctype, size = ctype, shape = Time_points)) +
+        geom_point(data = subset(plot_data, ctype != "Archetype")) +
+        geom_point(data = subset(plot_data, ctype == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, ctype == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapCTypes) +
+        scale_size_manual(values = sizeMapCTypes) +
+        labs(color = "Cell types", size = "Cell types") +
+        theme_classic()
+
+      # p1
+
+      p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = ctype, size = ctype, shape = Time_points)) +
+        geom_point(data = subset(plot_data, ctype != "Archetype")) +
+        geom_point(data = subset(plot_data, ctype == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, ctype == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapCTypes) +
+        scale_size_manual(values = sizeMapCTypes) +
+        labs(color = "Cell types", size = "Cell types", ) +
+        theme_classic()
+      # p2
+
+      p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = ctype, size = ctype, shape = Time_points)) +
+        geom_point(aes(color = ctype, size = ctype),
+          data = subset(plot_data, ctype != "Archetype")
+        ) +
+        geom_point(aes(color = ctype, size = ctype),
+          data = subset(plot_data, ctype == "Archetype")
+        ) +
+        geom_text(
+          data = subset(plot_data, ctype == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapCTypes) +
+        scale_size_manual(values = sizeMapCTypes) +
+        labs(color = "Cell types", size = "Cell types") +
+        theme_classic()
+      # p3
+
+      combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
+      combined_plot
+
+      prefixName <- paste(namePathw, k, red, "time", sep = ".")
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".ct.X1.vs.X2.png")),
+        p1,
+        width = 8,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".ct.X1.vs.X3.png")),
+        p2,
+        width = 8,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".ct.X2.vs.X3.png")),
+        plot = p3,
+        width = 8,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".ct.png")),
+        combined_plot,
+        width = 8,
+        height = 18
+      )
+    }
 
 
     ##################################################
@@ -523,9 +599,172 @@ for (k in c("7", "12")) {
       width = 8,
       height = 18
     )
-    # end treshold
+
+    if (class(obj) == "Mouse") {
+      # No Treshold
+      p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters, size = aaclusters, shape=Time_points)) +
+        geom_point(data = subset(plot_data, aaclusters != "Archetype")) +
+        geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, aaclusters == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapArchetypes) +
+        scale_size_manual(values = sizeMapArchetypes) +
+        labs(color = "", size = "") +
+        theme_classic()
+
+      # p1
+
+      p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aaclusters, size = aaclusters, shape=Time_points)) +
+        geom_point(aes(color = aaclusters, size = aaclusters),
+          data = subset(plot_data, aaclusters != "Archetype")
+        ) +
+        geom_point(aes(color = aaclusters, size = aaclusters),
+          data = subset(plot_data, aaclusters == "Archetype")
+        ) +
+        geom_text(
+          data = subset(plot_data, aaclusters == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapArchetypes) +
+        scale_size_manual(values = sizeMapArchetypes) +
+        labs(color = "", size = "") +
+        theme_classic()
+      # p2
+
+      p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aaclusters, size = aaclusters, shape=Time_points)) +
+        geom_point(data = subset(plot_data, aaclusters != "Archetype")) +
+        geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, aaclusters == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapArchetypes) +
+        scale_size_manual(values = sizeMapArchetypes) +
+        labs(color = "", size = "") +
+        theme_classic()
+      # p3
+
+      combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
+      combined_plot
+
+      prefixName <- paste(namePathw, k, red,"time", ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+      ggsave(
+        file.path(obj@params$out_path, paste(prefixName, ".aa.X1.vs.X2.png")),
+        p1,
+        width = 9,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste(prefixName, ".aa.X1.vs.X3.png")),
+        p2,
+        width = 9,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste(prefixName, ".aa.X2.vs.X3.png")),
+        plot = p3,
+        width = 9,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".aa.comb.png")),
+        combined_plot,
+        width = 9,
+        height = 18
+      )
+      # Yes Treshold
+      p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters.treshold, size = aaclusters.treshold, shape=Time_points)) +
+        geom_point(data = subset(plot_data, aaclusters.treshold != "Archetype")) +
+        geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, aaclusters.treshold == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapArchetypes) +
+        scale_size_manual(values = sizeMapArchetypes) +
+        theme_classic()
+
+      # p1
+
+      p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aaclusters.treshold, size = aaclusters.treshold, shape=Time_points)) +
+        geom_point(data = subset(plot_data, aaclusters.treshold != "Archetype")) +
+        geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, aaclusters.treshold == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapArchetypes) +
+        scale_size_manual(values = sizeMapArchetypes) +
+        theme_classic()
+      # p2
+
+      p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aaclusters.treshold, size = aaclusters.treshold, shape=Time_points)) +
+        geom_point(data = subset(plot_data, aaclusters.treshold != "Archetype")) +
+        geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
+        geom_text(
+          data = subset(plot_data, aaclusters.treshold == "Archetype"),
+          aes(label = seq(1, num_archetypes)),
+          color = colors_text_Archetype, size = size_text_Archetype
+        ) +
+        scale_color_manual(values = colorMapArchetypes) +
+        scale_size_manual(values = sizeMapArchetypes) +
+        theme_classic()
+      # p3
+
+      combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
+
+      prefixName <- paste(namePathw, k, red,"time", ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+      ggsave(
+        file.path(obj@params$out_path, paste(prefixName, ".aa.X1.vs.X2.png")),
+        p1,
+        width = 8,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".aa.X1.vs.X3.png")),
+        p2,
+        width = 8,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste(prefixName, ".aa.X2.vs.X3.png")),
+        plot = p3,
+        width = 8,
+        height = 6
+      )
+      ggsave(
+        file.path(obj@params$out_path, paste0(prefixName, ".aa.comb.png")),
+        combined_plot,
+        width = 8,
+        height = 18
+      )
+    }
   }
   # end red
+  ggplot(plot_data, aes(x = aaweights)) +
+    geom_histogram(
+      binwidth = 0.05, # Adjust binwidth to change the number of bins
+      fill = "blue",
+      color = "black"
+    ) +
+    labs(
+      x = "Weights",
+      y = "Frequency"
+    ) +
+    scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
+    theme_classic()
+  ggsave(
+    file.path(obj@params$out_path, paste0(namePathw, k, "weights.png")),
+    width = 8,
+    height = 6
+  )
 
   # 3D Plot
   p3d <- plot_ly(
@@ -535,7 +774,7 @@ for (k in c("7", "12")) {
     colors = colorMapArchetypes,
     size = sizeMapArchetypes[plot_data$aaclusters.treshold],
     type = "scatter3d",
-    text = ~ifelse(aaclusters == "Archetype", seq(1, num_archetypes), ""),
+    text = ~ ifelse(aaclusters == "Archetype", seq(1, num_archetypes), ""),
     textposition = "top center",
     mode = "markers",
     marker = list(
@@ -554,22 +793,22 @@ for (k in c("7", "12")) {
   # SANKEY PLOT
   # Assuming newse$ctype and newse@misc$aa_clusters are vectors of the same length
   for (treshold in c(TRUE, FALSE)) {
-    taa_clusters <- as.character(newse$aaclusters)
-    taa_clusters <- plot_data$aaclusters
-    if (treshold) {
-      taa_clusters <- plot_data$aaclusters.treshold
-    }
+    # taa_clusters <- as.character(newse$aaclusters)
+    # taa_clusters <- plot_data$aaclusters
+    # if (treshold) {
+    #   taa_clusters <- plot_data$aaclusters.treshold
+    # }
 
     # Create a data frame with the required columns
-    if (!treshold) {
+    if (treshold) {
       data <- as.data.frame(list(
         type = plot_data$ctype,
-        archetype = plot_data$aaclusters
+        archetype = plot_data$aaclusters.treshold
       ))
     } else {
       data <- as.data.frame(list(
         type = plot_data$ctype,
-        archetype = plot_data$aaclusters.treshold
+        archetype = plot_data$aaclusters
       ))
     }
 
@@ -618,12 +857,11 @@ for (k in c("7", "12")) {
         axis.line.x = element_blank(),
         axis.ticks.x = element_blank()
       )
-
     pl
 
     prefixName <- paste(namePathw, k, ifelse(treshold > 0, "th", ""), sep = ".")
     ggsave(
-      file.path(obj@params$out_path, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep=".")),
+      file.path(obj@params$out_path, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
       pl,
       width = 8,
       height = 6
@@ -634,7 +872,7 @@ for (k in c("7", "12")) {
     # df <- table(data$type[-"Archetype"], data$archetype[-"Archetype"])
     df <- table(data$type, data$archetype)
     df <- df[, colnames(df) != "Archetype"]
-    df <- df[row.names(df) != "Archetype",]
+    df <- df[row.names(df) != "Archetype", ]
     df <- as.data.frame(df)
 
     # Heatmap with text inside
@@ -643,13 +881,12 @@ for (k in c("7", "12")) {
       geom_text(aes(label = Freq), vjust = 1) +
       scale_fill_gradient(low = "white", high = "blue") +
       theme_alluvial() +
-      labs(x="Cell types", y="Archetype")+
+      labs(x = "Cell types", y = "Archetype") +
       theme(axis.text.x = element_text(hjust = 1))
     plt_hm
 
     ggsave(
-      file.path(obj@params$out_path, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), "png", sep=".")),
-      plt_hm,
+      file.path(obj@params$out_path, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
       width = 8,
       height = 6
     )
