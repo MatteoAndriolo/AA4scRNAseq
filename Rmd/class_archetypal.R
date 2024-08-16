@@ -100,20 +100,26 @@ setMethod("obj_performArchetypal", "database", function(obj, kappas = NULL, k = 
 })
 
 # obj_assignArchetypalClusters -----
-setGeneric("obj_assignArchetypalClusters", function(obj) {
+setGeneric("obj_assignArchetypalClusters", function(obj, treshold = 0.5) {
   standardGeneric("obj_assignArchetypalClusters")
 })
 
-setMethod("obj_assignArchetypalClusters", "database", function(obj) {
+setMethod("obj_assignArchetypalClusters", "database", function(obj, treshold = 0.5) {
   message("LOG: obj_assignArchetypalClusters | creating aa_clusters metadata")
   #  obj@archetypes$aa.history[[as.character(k)]] <- history.restarts.k
   #  obj@archetypes$aa.bests[[as.character(k)]] <- history.restarts.k[[best]]
-  treshold <- 0.5
   t <- list()
   for (k in names(obj@archetypes$aa.bests)) {
     model <- obj@archetypes$aa.bests[[k]]
     weights <- as.data.frame(obj@archetypes$aa.bests[[k]]$A)
     # tt <- apply(weights, 1, which.max)
+    tt <- apply(weights, 1, function(row) {
+      max_val <- max(row)
+      return(which.max(row))
+    })
+    obj@archetypes$aa.bests[[k]]$cluster.id <- tt
+
+
     tt <- apply(weights, 1, function(row) {
       max_val <- max(row)
       if (max_val > treshold) {
@@ -122,14 +128,12 @@ setMethod("obj_assignArchetypalClusters", "database", function(obj) {
         return("NA")
       }
     })
-
-    obj@archetypes$aa.bests[[k]]$cluster.id <- tt
+    obj@archetypes$aa.bests[[k]]$cluster.id.treshold <- tt
     t[[k]] <- tt
-    # obj@se@meta.data$aa_clusters <- obj@archetypes$aa.bests[[k]]$cluster.id
-    obj@se$AA_clusters <- tt
-    obj@se.org$AA_clusters <- tt
 
     # tplot <- DimPlot(obj@se, reduction = "umap", group.by = "AA_clusters") + ggtitle("UMAP labelled by ")
+    obj@se$AA_clusters <- tt
+    obj@se.org$AA_clusters <- tt
     unique_tt <- unique(tt)
     num_clusters <- length(unique_tt) - 1 # excluding "NA"
     palette <- c("NA" = "grey", setNames(hue_pal()(num_clusters), unique_tt[unique_tt != "NA"]))
@@ -303,10 +307,10 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
   }
   binded <- do.call(rbind, analysis)
 
-  plot_times <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = time,)) +
+  plot_times <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = time, )) +
     geom_point() +
-  # geom_line() +
-  theme_minimal() +
+    # geom_line() +
+    theme_minimal() +
     labs(
       title = "Run Times",
       x = "#Archetypes",
@@ -317,10 +321,10 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_times.png"), plot = plot_times)
 
 
-  plot_sse <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = sse,)) +
+  plot_sse <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = sse, )) +
     geom_point() +
-  # geom_line() +
-  theme_minimal() +
+    # geom_line() +
+    theme_minimal() +
     labs(
       title = "Run sse",
       x = "#Archetypes",
@@ -330,10 +334,10 @@ setMethod("obj_visualizeArchetypal", "database", function(obj, treshold = 0.5) {
   plot_sse
   ggsave(filename = file.path(obj@params$path_figures, "UMAP_AA_sse.png"), plot = plot_sse)
 
-  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt,)) +
+  plot_varexpt <- ggplot(data = binded, aes(x = as.numeric(gsub("\\..*", "", rownames(binded))), y = varexpt, )) +
     geom_point() +
-  # geom_line() +
-  theme_minimal() +
+    # geom_line() +
+    theme_minimal() +
     labs(
       title = "Run varexpt",
       x = "#Archetypes",
