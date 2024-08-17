@@ -18,8 +18,8 @@ set.seed(2024)
 NOT_FINAL <- TRUE
 debug <- TRUE
 
-obj <- new("Melanoma")
 obj <- new("Mouse")
+obj <- new("Melanoma")
 
 if (NOT_FINAL) {
   plan("multicore", workers = 10)
@@ -237,25 +237,33 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
     # newse <- addArchetypesToSeurat(se, aa, "7")
     newse <- findClosestPoints(obj@se.org, obj@se, obj@archetypes, k)
     ################################################################################
+    newse$aaweights <- apply(obj@archetypes$aa.bests[[k]]$A, 1, max)
     newse$ctype <- factor(newse$ctype)
-    newse$aaclusters <- factor(obj@archetypes$aa.bests[[k]]$cluster.id)
-    t <- obj@archetypes$aa.bests[[k]]$cluster.id.treshold
-    t[t == "NA"] <- "NotAssigned"
-    newse$aaclusters.treshold <- factor(t)
-    newse$aaweights <- apply(obj@archetypes$aa.bests[["7"]]$A, 1, max)
-
-
-
-    if (NOT_FINAL) {
-      t <- obj@archetypes$aa.bests[[k]]$cluster.id
-      t[t == "NA"] <- "1"
-      newse$aaclusters <- factor(t)
-    }
-    if (NOT_FINAL) {
-      t <- obj@archetypes$aa.bests[[k]]$cluster.id
-      t[t == "NA"] <- "NotAssigned"
-      newse$aaclusters.treshold <- factor(t)
-    }
+    newse$aaclusters <- apply(obj@archetypes$aa.bests[[k]]$A, 1, function(row) {
+        return(which.max(row))
+    })
+    newse$aaclusters.treshold <- apply(obj@archetypes$aa.bests[[k]]$A, 1, function(row) {
+      max_val <- max(row)
+      if (max_val > 0.5) {
+        return(which.max(row))
+      } else {
+        return("NotAssigned")
+      }
+    })
+      
+    newse$aaclusters<- factor(newse$aaclusters)
+    newse$aaclusters.treshold <- factor(newse$aaclusters.treshold)
+    
+    # if (NOT_FINAL) {
+    #   t <- obj@archetypes$aa.bests[[k]]$cluster.id
+    #   t[t == "NA"] <- "1"
+    #   newse$aaclusters <- factor(t)
+    # }
+    # if (NOT_FINAL) {
+    #   t <- obj@archetypes$aa.bests[[k]]$cluster.id
+    #   t[t == "NA"] <- "NotAssigned"
+    #   newse$aaclusters.treshold <- factor(t)
+    # }
     all_colors <- rainbow(
       length(unique(newse$ctype)) + num_archetypes + 1
     )
@@ -1188,6 +1196,73 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           width = 8,
           height = 6
         )
+
+        if (class(obj) == "Melanoma") {
+          for (mal in c(0, 1, 2)) {
+            which.is.mal <- which(plot_data$malignant == mal)
+            if (treshold) {
+              data.t <- as.data.frame(list(
+                type = plot_data$ctype[which.is.mal],
+                archetype = plot_data$aaclusters.treshold[which.is.mal]
+              ))
+            } else {
+              data.t <- as.data.frame(list(
+                type = plot_data$ctype[which.is.mal],
+                archetype = plot_data$aaclusters[which.is.mal]
+              ))
+            }
+
+            data.t$archetype <- factor(
+              data.t$archetype[which.is.mal],
+              levels = c("1", "2", "3", "4", "5", "6", "7", "NotAssigned", "Archetype"),
+              labels = c("A1", "A2", "A3", "A4", "A5", "A6", "A7", "NotAssigned", "Archetype")
+            )
+
+            d <- data.t %>%
+              make_long(colnames(data.t)) %>%
+              filter(node != "Archetype") # %>% filter(next_node != "Archetype")
+
+
+            pl <- ggplot(d, aes(
+              x = x,
+              next_x = next_x,
+              node = node,
+              next_node = next_node,
+              fill = factor(node),
+              label = node
+            )) +
+              geom_sankey(
+                flow.alpha = 0.5,
+                node.color = "black",
+                show.legend = FALSE
+              ) +
+              geom_sankey_label(size = 3, color = "black", fill = "white") +
+              scale_fill_manual(
+                values = c(colorMapCTypes, colorMapArchetypesSankey)
+              ) +
+              scale_x_discrete(
+                labels = c("type" = "Cell Type", "archetype" = "Archetype")
+              ) +
+              theme_alluvial() +
+              theme(
+                axis.line.y = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.text.y = element_blank(),
+                axis.line.x = element_blank(),
+                axis.ticks.x = element_blank()
+              )
+            pl
+            
+            namesMalignant=c("Unknown","Non.Malignant", "Malignant")
+            prefixName <- paste(obj@other$namePathw, k, ifelse(treshold > 0, "th", ""), sep = ".")
+            ggsave(
+              file.path(obj@params$path_figures, paste(prefixName, "sankey", namesMalignant[mal+1], "png", sep = ".")),
+              pl,
+              width = 8,
+              height = 6
+            )
+          }
+        }
       }
 
       # HEATMAP
