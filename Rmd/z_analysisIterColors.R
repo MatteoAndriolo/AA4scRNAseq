@@ -21,10 +21,10 @@ gc()
 obj <- new("Mouse")
 obj <- new("Melanoma")
 
-plot_width <- 6
+plot_width <- 7
 plot_height <- 4
-plot_height_stack <- 12
-plot_dpi <- 200
+plot_height_stack <- 15
+plot_dpi <- 180
 
 if (NOT_FINAL) {
   plan("multicore", workers = 8)
@@ -113,7 +113,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
   
   obj@other$treshold <- 0.5
 
-
+  
 
   # Function Definitions ---------------------------------------------------------
   # addArchetypesToSeurat <- function(se, aa, k) {
@@ -242,7 +242,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
     red <- "tsne"
   }
 
-  for (k in c("7","9","12")) {
+  for (k in c("12","7","9")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -376,6 +376,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
           theme_classic()
 
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.png", sep = ".")),
           width = plot_width,
           height = plot_height
@@ -399,6 +400,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
           theme_classic()
 
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.malignant.png", sep = ".")),
           width = plot_width,
           height = plot_height
@@ -421,6 +423,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
           theme_classic()
 
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.time.png", sep = ".")),
           width = plot_width,
           height = plot_height
@@ -484,24 +487,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
           width = plot_width,
@@ -566,24 +573,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, "malignant", sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
           width = plot_width,
@@ -646,24 +657,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, "time", sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
           width = plot_width,
@@ -729,24 +744,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
           width = plot_width,
@@ -802,24 +821,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
           width = plot_width,
@@ -885,24 +908,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, "malignant" , sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
           width = plot_width,
@@ -960,24 +987,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, "malignant", sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
           width = plot_width,
@@ -1040,24 +1071,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, "time", sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
           width = plot_width,
@@ -1108,24 +1143,28 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, red, "time", sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
           width = plot_width,
           height = plot_height
         )
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
           width = plot_width,
@@ -1237,6 +1276,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         prefixName <- paste(obj@other$namePathw, k, sep = ".")
         ggsave(
+          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
           pl,
           width = plot_width,
@@ -1309,6 +1349,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
             namesMalignant=c("Unresolved","Non.Malignant", "Malignant")
             prefixName <- paste(obj@other$namePathw, k, sep = ".") # TODO REINSERT TH
             ggsave(
+          dpi = plot_dpi,
               file.path(obj@params$path_figures, paste(prefixName, "sankey",ifelse(treshold,"th",""), namesMalignant[mal+1], "png", sep = ".")),
               pl,
               width = plot_width,
@@ -1340,6 +1381,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
       plt_hm
 
       ggsave(
+          dpi = plot_dpi,
         file.path(obj@params$path_figures, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
         width = plot_width,
         height = plot_height
