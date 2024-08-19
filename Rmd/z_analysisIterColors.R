@@ -44,7 +44,7 @@ if(FALSE){
   pw="FS1"
 }
 
-for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
+for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
   # ,"HFS")){
   if (NOT_FINAL) {
     if (class(obj) == "Melanoma") {
@@ -113,7 +113,50 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
   
   obj@other$treshold <- 0.5
 
-  
+  ##################################################
+  # BEGIN WITH STATS
+  ##################################################
+  plot_data <- bind_rows(obj@archetypes$analysis, .id = "narch") %>%
+    mutate(narch = as.integer(narch))
+  head(plot_data)
+
+  # Plot times
+  # use plot_data$num_archetypes as x-axis
+  p <- ggplot(plot_data, aes(x = narch, y = time)) +
+    geom_point() +
+    labs(
+      x = "Number of archetypes",
+      y = "Time (s)"
+    ) +
+    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))+
+    theme_classic()
+
+  ggsave(file.path(obj@params$path_figures, "AA_time.png"), p, width = plot_width, height = plot_height)
+
+  # Plot SSE
+  p <- ggplot(plot_data, aes(x = narch, y = sse)) +
+    geom_point() +
+    labs(
+      x = "Number of archetypes",
+      y = "RSS"
+    ) +
+    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))+
+    theme_classic()
+
+  ggsave(file.path(obj@params$path_figures, "AA_rss.png"), p, width = plot_width, height = plot_height)
+
+  # Plot Varexpt
+  p <- ggplot(plot_data, aes(x = narch, y = varexpt)) +
+    geom_point() +
+    labs(
+      x = "Number of archetypes",
+      y = "Varexpt"
+    ) +
+    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))+
+    theme_classic()
+
+  ggsave(file.path(obj@params$path_figures, "AA_varexpt.png"), p, width = plot_width, height = plot_height)
+ 
 
   # Function Definitions ---------------------------------------------------------
   # addArchetypesToSeurat <- function(se, aa, k) {
@@ -242,7 +285,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
     red <- "tsne"
   }
 
-  for (k in c("12","7","9")) {
+  for (k in c("16", "12","7","9")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }

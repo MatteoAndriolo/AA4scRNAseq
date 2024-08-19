@@ -90,12 +90,12 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5", "HFS")) {
     geom_point() +
     labs(
       x = "Number of archetypes",
-      y = "SSE"
+      y = "RSS"
     ) +
     scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))
   theme_classic()
 
-  ggsave(file.path(obj@params$path_figures, "AA_sse.png"), p, width = 8, height = 6)
+  ggsave(file.path(obj@params$path_figures, "AA_rss.png"), p, width = 8, height = 6)
 
   # Plot Varexpt
   p <- ggplot(plot_data, aes(x = narch, y = varexpt)) +
