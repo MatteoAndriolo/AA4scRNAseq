@@ -44,7 +44,7 @@ if(FALSE){
   pw="FS1"
 }
 
-for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
+for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   # ,"HFS")){
   if (NOT_FINAL) {
     if (class(obj) == "Melanoma") {
@@ -116,6 +116,9 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
   ##################################################
   # BEGIN WITH STATS
   ##################################################
+  p <- ElbowPlot(obj@se)
+  ggsave(file.path(obj@params$path_figures, "ElbowPlot.png"), p, width = plot_width, height = plot_height)
+  
   plot_data <- bind_rows(obj@archetypes$analysis, .id = "narch") %>%
     mutate(narch = as.integer(narch))
   head(plot_data)
@@ -157,6 +160,22 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
 
   ggsave(file.path(obj@params$path_figures, "AA_varexpt.png"), p, width = plot_width, height = plot_height)
  
+  # Scree plot
+  min_plot_data <- plot_data %>%
+    group_by(narch) %>%
+    summarize(min_sse = min(sse))
+  
+  p <- ggplot(min_plot_data, aes(x = narch, y = min_sse)) +
+    geom_point() +
+    geom_line() +  # Connect the minimum points with a line
+    labs(
+      x = "Number of Archetypes",
+      y = "Minimum Residual Sum of Squares (RSS)"
+    ) +
+    scale_x_continuous(breaks = min(min_plot_data$narch):max(min_plot_data$narch)) +
+    theme_classic()
+  
+  ggsave(file.path(obj@params$path_figures, "AA_scree_plot.png"), p, width = plot_width, height = plot_height)
 
   # Function Definitions ---------------------------------------------------------
   # addArchetypesToSeurat <- function(se, aa, k) {
@@ -252,7 +271,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
       closestPoints[firstdup] <- which.min(distances)
     }
 
-    message("Closest points are: ", print(closestPoints))
+    message("Closest points are: ", paste(print(closestPoints),sep=","))
 
     newCtype <- as.character(se$ctype)
     newCtype[closestPoints] <- "Archetype"
@@ -273,6 +292,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
     se@misc$aa_clusters <- aa_clusters
     se@misc$aa_cluster_treshold.5 <- aa$aa.bests[[k]]$cluster.id.treshold.5
     se@misc$weights <- weights
+    se@misc$closestpoints <- closestPoints
 
     return(se)
   }
@@ -285,7 +305,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
     red <- "tsne"
   }
 
-  for (k in c("16", "12","7","9")) {
+  for (k in c("12","7","8", "16", "9")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -301,6 +321,15 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
     # newse <- addArchetypesToSeurat(se, aa, "7")
     newse <- findClosestPoints(obj@se.org, obj@se, obj@archetypes, k)
     ################################################################################
+    newse@misc$closestpoints
+    
+    a=newse@misc$closestpoints
+    b=rep(0,max(a))
+    b[a]=1:length(a)
+    newse@misc$archetypesNumbers = b[b>0]
+    rm(a,b)
+    
+    
     newse$aaweights <- apply(obj@archetypes$aa.bests[[k]]$A, 1, max)
     newse$ctype <- factor(newse$ctype)
     newse$aaclusters <- apply(obj@archetypes$aa.bests[[k]]$A, 1, function(row) {
@@ -483,7 +512,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -498,7 +527,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -516,7 +545,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -566,7 +595,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -582,7 +611,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -601,7 +630,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -653,7 +682,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -668,7 +697,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -686,7 +715,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           geom_text(
             data = subset(plot_data, ctype == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapCTypes) +
@@ -740,7 +769,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -759,7 +788,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -773,7 +802,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -822,7 +851,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -837,7 +866,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -851,7 +880,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -901,7 +930,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -921,7 +950,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -936,7 +965,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -985,7 +1014,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1001,7 +1030,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1016,7 +1045,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1067,7 +1096,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1086,7 +1115,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1100,7 +1129,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1147,7 +1176,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1161,7 +1190,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
@@ -1174,7 +1203,7 @@ for (pw in list("HFS","FS1", "FS2", "FS3", "FS4", "FS5")) {
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
             data = subset(plot_data, aaclusters.treshold == "Archetype"),
-            aes(label = seq(1, num_archetypes)),
+            aes(label = newse@misc$archetypesNumbers),
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
