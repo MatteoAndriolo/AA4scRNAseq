@@ -17,9 +17,9 @@ source("Rmd/class_Mouse.R")
 set.seed(2024)
 NOT_FINAL <- TRUE
 debug <- TRUE
-gc()
-obj <- new("Mouse")
+
 obj <- new("Melanoma")
+obj <- new("Mouse")
 
 plot_width <- 7
 plot_height <- 4
@@ -27,7 +27,7 @@ plot_height_stack <- 15
 plot_dpi <- 180
 
 if (NOT_FINAL) {
-  plan("multicore", workers = 8)
+  plan("multicore", workers = 10)
   obj@params$hvf <- FALSE
   obj@params$test <- FALSE
   obj@params$pathw <- NULL
