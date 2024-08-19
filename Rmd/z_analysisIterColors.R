@@ -106,8 +106,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   obj@params$path_figures
   obj@params$path_figures_small
   
-  if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures)
-  if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small)
+  if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures, recursive = TRUE )
+  if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small, recursive = TRUE )
   
   message("Saving in ", obj@params$path_figures)
   
