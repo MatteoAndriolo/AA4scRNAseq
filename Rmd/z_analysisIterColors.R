@@ -17,12 +17,12 @@ source("Rmd/class_Mouse.R")
 set.seed(2024)
 NOT_FINAL <- TRUE
 debug <- TRUE
-
+gc()
 obj <- new("Mouse")
 obj <- new("Melanoma")
 
 if (NOT_FINAL) {
-  plan("multicore", workers = 10)
+  plan("multicore", workers = 8)
   obj@params$hvf <- FALSE
   obj@params$test <- FALSE
   obj@params$pathw <- NULL
@@ -35,14 +35,18 @@ if (NOT_FINAL) {
 
 obj <- obj_loadData(obj, data_path = temp_data_path)
 
-for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
+if(FALSE){
+  pw="FS1"
+}
+
+for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
   # ,"HFS")){
   if (NOT_FINAL) {
     if (class(obj) == "Melanoma") {
       # obj@params$out_path <- "outPar/Melanoma/0813_0758/HFS_1738961"
       obj@params$out_path <- paste("outPar/Melanoma/0813_0758/", pw, "_1738961", sep = "")
     } else if (class(obj) == "Mouse") {
-      # obj@params$out_path <- "outPar/Mouse/0813_0758/HFS_1738#962"
+      # obj@params$out_path <- "outPar/Mouse/0813_0758/HFS_1738962"
       obj@params$out_path <- paste("outPar/Mouse/0813_0758/", pw, "_1738962", sep = "")
     }
 
@@ -62,7 +66,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
     inmdfile <- file.path(obj@params$path_outdata, "metadata.Rds")
 
     obj@se <- readRDS(insefile)
-    obj@archetypes <- readRDS(inaafile)
+    obj@archetypes <- readRDS(file.path(inaafile))
     obj@other <- readRDS(inmdfile)
   }
 
@@ -78,18 +82,30 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
       "TGF"
     )[[obj@params$pathw]]
   }
+  
+  
   obj@params$path_figures <- file.path(
     obj@params$out_path,
     paste(
       ifelse(class(obj) == "Melanoma", "MEL", "MOUSE"),
       "_",
-      ifelse(obj@other$namePathw == "HVF", "HVF", paste(obj@other$namePathw, obj@params$pathw, sep = "")),
+      ifelse(obj@other$namePathw == "HVF", "HVF", paste(obj@params$pathw, obj@other$namePathw,  sep = "")),
       sep = ""
     )
   )
   obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
+  
+  tt <- unlist(strsplit(obj@params$path_figures, "/"))
+  obj@params$path_figures <- file.path(tt[1],tt[2],tt[3],ifelse(class(obj) == "Melanoma", "Melanoma", "Mouse"),tt[length(tt)])
+  obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
+  obj@params$path_figures
+  obj@params$path_figures_small
+  
   if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures)
   if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small)
+  
+  message("Saving in ", obj@params$path_figures)
+  
   obj@other$treshold <- 0.5
 
 
@@ -216,11 +232,12 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
   # Main -------------------------------------------------------------------------
   if (FALSE) {
     k <- "7"
+    k <- "12"
     i <- 1
     red <- "tsne"
   }
 
-  for (k in c("7", "12")) {
+  for (k in c("7","9","12")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -228,7 +245,6 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
     num_archetypes <- as.integer(k)
 
     message("Pathw ", obj@other$namePathw, " with k ", k)
-    if (!dir.exists(obj@params$out_path)) dir.create(obj@params$out_path)
 
     # se3D <- readRDS(file.path(in_path, paste0(obj@other$namePathw, ".Rds")))
     # aa <- readRDS(file.path(in_path, paste0(obj@other$namePathw, "_AA.Rds")))
@@ -252,21 +268,12 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
     })
       
     newse$aaclusters<- factor(newse$aaclusters)
-    newse$aaclusters.treshold <- factor(newse$aaclusters.treshold)
+    newse$aaclusters.treshold <- factor(newse$aaclusters.treshold, levels=(c(levels(newse$aaclusters), "NotAssigned")))
     
-    # if (NOT_FINAL) {
-    #   t <- obj@archetypes$aa.bests[[k]]$cluster.id
-    #   t[t == "NA"] <- "1"
-    #   newse$aaclusters <- factor(t)
-    # }
-    # if (NOT_FINAL) {
-    #   t <- obj@archetypes$aa.bests[[k]]$cluster.id
-    #   t[t == "NA"] <- "NotAssigned"
-    #   newse$aaclusters.treshold <- factor(t)
-    # }
-    all_colors <- rainbow(
-      length(unique(newse$ctype)) + num_archetypes + 1
-    )
+    # head(newse$aaclusters)
+    # table(newse$aaclusters)
+    # head(newse$aaclusters.treshold)
+    # table(newse$aaclusters.treshold)
 
     levels(newse$aaclusters) <- c(levels(newse$aaclusters), "Archetype")
     newse$aaclusters[newse$ctype == "Archetype"] <- "Archetype"
@@ -277,6 +284,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
     newse$aaclusters.treshold <- factor(newse$aaclusters.treshold)
 
     # CTYPES styling
+    all_colors <- rainbow(
+      length(unique(newse$ctype)) + num_archetypes + 1
+    )
     all_colorsCTypes <- all_colors[1:(length(unique(newse$ctype)) - 1)]
     colorMapCTypes <- setNames(
       c(all_colorsCTypes, "black"),
@@ -314,16 +324,17 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
     if (class(obj) == "Mouse") {
       newse$Time_points <- factor(newse$Time_points)
       shapeMapTimePoints <- setNames(
-        c(15, 16, 17, 18),
+        c(15, 17, 3, 8),
         levels(newse$Time_points)
       )
     }
     if (class(obj) == "Melanoma") {
       newse$malignant <- factor(newse$malignant.1.no.2.yes.0.unresolved.)
       shapeMapMalignant <- setNames(
-        c(16, 17, 18),
+        c(15, 17, 3),
         levels(newse$malignant)
       )
+      legendMalignant="Cell is malignant"
     }
 
 
@@ -334,6 +345,12 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
       plot_data <- as.data.frame(Embeddings(newse, reduction = red))
       colnames(plot_data) <- c("X1", "X2", "X3")
       plot_data <- cbind(plot_data, as.data.frame(newse@meta.data))
+      
+      plot_data$ctype=factor(plot_data$ctype, levels= sort(levels(plot_data$ctype)))
+    
+      # head(plot_data$ctype)
+      # head(plot_data$aaclusters)
+      # head(plot_data$aaclusters.treshold)
 
       ##################################################
       # Histogram
@@ -355,7 +372,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
 
         ggsave(
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.png", sep = ".")),
-          width = 8,
+          width = 9,
           height = 6
         )
       }
@@ -369,16 +386,16 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           labs(
             x = "Weights",
             y = "Frequency",
-            fill = "",
+            fill = legendMalignant,
             group = ""
           ) +
           scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
-          scale_fill_discrete(labels = c("0" = "Unknown", "1" = "Non malignant", "2" = "Malignant")) +
+          scale_fill_discrete(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant")) +
           theme_classic()
 
         ggsave(
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.malignant.png", sep = ".")),
-          width = 8,
+          width = 9,
           height = 6
         )
       }
@@ -392,7 +409,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           labs(
             x = "Weights",
             y = "Frequency",
-            fill = "",
+            fill = "Time point",
             group = ""
           ) +
           scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
@@ -400,7 +417,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
 
         ggsave(
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.time.png", sep = ".")),
-          width = 8,
+          width = 9,
           height = 6
         )
       }
@@ -464,25 +481,25 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
-          width = 8,
+          width = 9,
           height = 18
         )
       }
@@ -499,7 +516,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Cell types", size = "Cell types", shape=legendMalignant) +
           theme_classic()
 
         # p1
@@ -514,7 +532,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types", ) +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Cell types", size = "Cell types", shape=legendMalignant) +
           theme_classic()
         # p2
 
@@ -532,7 +551,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Cell types", size = "Cell types", shape="Is malignant") +
           theme_classic()
         # p3
 
@@ -543,25 +563,25 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
-          width = 8,
+          width = 9,
           height = 18
         )
       }
@@ -579,9 +599,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types") +
+          labs(color = "Cell types", size = "Cell types", shape="Time point") +
           theme_classic()
-
+        
         # p1
 
         p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = ctype, size = ctype, shape = Time_points)) +
@@ -594,7 +614,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types", ) +
+          labs(color = "Cell types", size = "Cell types", shape="Time point" ) +
           theme_classic()
         # p2
 
@@ -612,7 +632,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types") +
+          labs(color = "Cell types", size = "Cell types", shape="Time point" ) +
           theme_classic()
         # p3
 
@@ -623,25 +643,25 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
-          width = 8,
+          width = 9,
           height = 18
         )
       }
@@ -661,8 +681,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "") +
           theme_classic()
 
         # p1
@@ -680,8 +700,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "") +
           theme_classic()
         # p2
 
@@ -694,15 +714,15 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "") +
           theme_classic()
-        # p3
+        p3
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
         combined_plot
 
-        prefixName <- paste(obj@other$namePathw, k, red, ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, sep = ".")
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
@@ -722,7 +742,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures, paste0(prefixName, ".aa.comb.png")),
+          file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
           width = 9,
           height = 18
@@ -739,7 +759,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "") +
           theme_classic()
 
         # p1
@@ -753,7 +774,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "") +
           theme_classic()
         # p2
 
@@ -766,35 +788,36 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "") +
           theme_classic()
         # p3
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
 
-        prefixName <- paste(obj@other$namePathw, k, red, ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, sep = ".")
         ggsave(
-          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
+          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.X1.vs.X3.png")),
+          file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
+          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures, paste0(prefixName, ".aa.comb.png")),
+          file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
-          width = 8,
+          width = 9,
           height = 18
         )
       }
@@ -811,8 +834,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape=legendMalignant) +
           theme_classic()
 
         # p1
@@ -830,8 +854,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape=legendMalignant) +
           theme_classic()
         # p2
 
@@ -844,15 +869,16 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "",shape=legendMalignant) +
           theme_classic()
         # p3
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
         combined_plot
 
-        prefixName <- paste(obj@other$namePathw, k, red, "malignant", ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, "malignant" , sep = ".")
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
@@ -872,7 +898,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures, paste0(prefixName, ".aa.comb.png")),
+          file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
           width = 9,
           height = 18
@@ -888,7 +914,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "",shape=legendMalignant) +
           theme_classic()
 
         # p1
@@ -902,7 +930,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "",shape=legendMalignant) +
           theme_classic()
         # p2
 
@@ -915,35 +945,37 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "",shape=legendMalignant) +
           theme_classic()
         # p3
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
 
-        prefixName <- paste(obj@other$namePathw, k, red, "malignant", ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, "malignant", sep = ".")
         ggsave(
-          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
+          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.X1.vs.X3.png")),
+          file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
+          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures, paste0(prefixName, ".aa.comb.png")),
+          file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
-          width = 8,
+          width = 9,
           height = 18
         )
       }
@@ -960,8 +992,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "", shape="Time point") +
           theme_classic()
 
         # p1
@@ -979,8 +1011,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes,guide="none") +
+          labs(color = "Archetype", size = "", shape="Time point") +
           theme_classic()
         # p2
 
@@ -993,15 +1025,15 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes) +
-          labs(color = "", size = "") +
+          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          labs(color = "Archetype", size = "", shape="Time point") +
           theme_classic()
         # p3
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
         combined_plot
 
-        prefixName <- paste(obj@other$namePathw, k, red, "time", ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, "time", sep = ".")
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
@@ -1021,7 +1053,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures, paste0(prefixName, ".aa.comb.png")),
+          file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
           width = 9,
           height = 18
@@ -1069,29 +1101,29 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
 
-        prefixName <- paste(obj@other$namePathw, k, red, "time", ifelse(obj@other$treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, "time", sep = ".")
         ggsave(
-          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
+          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.X1.vs.X3.png")),
+          file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
+          file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
-          width = 8,
+          width = 9,
           height = 6
         )
         ggsave(
-          file.path(obj@params$path_figures, paste0(prefixName, ".aa.comb.png")),
+          file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
-          width = 8,
+          width = 9,
           height = 18
         )
       }
@@ -1142,20 +1174,29 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
 
       data$archetype <- factor(
         data$archetype,
-        levels = c("1", "2", "3", "4", "5", "6", "7", "NotAssigned", "Archetype"),
-        labels = c("A1", "A2", "A3", "A4", "A5", "A6", "A7", "NotAssigned", "Archetype")
+        levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
+        labels = c(paste0("A",as.character(1:num_archetypes)) , "NotAssigned", "Archetype")
       )
 
       d <- data %>%
         make_long(colnames(data)) %>%
         filter(node != "Archetype") # %>% filter(next_node != "Archetype")
 
+      if(treshold){
+        d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+        d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+      }else{
+        d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
+        d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
+      }
 
       colorMapArchetypesSankey <- setNames(
         colorMapArchetypes,
         c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned", "Archetype")
       )
 
+      table(d$next_node)
+      table(d$node)
       # END SETUP #################################
       # BASE SANKEY
       if (TRUE) {
@@ -1164,7 +1205,7 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           next_x = next_x,
           node = node,
           next_node = next_node,
-          fill = factor(node),
+          fill = node,
           label = node
         )) +
           geom_sankey(
@@ -1189,11 +1230,11 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
           )
         pl
 
-        prefixName <- paste(obj@other$namePathw, k, ifelse(treshold > 0, "th", ""), sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, sep = ".")
         ggsave(
           file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
           pl,
-          width = 8,
+          width = 9,
           height = 6
         )
 
@@ -1214,14 +1255,21 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
 
             data.t$archetype <- factor(
               data.t$archetype[which.is.mal],
-              levels = c("1", "2", "3", "4", "5", "6", "7", "NotAssigned", "Archetype"),
-              labels = c("A1", "A2", "A3", "A4", "A5", "A6", "A7", "NotAssigned", "Archetype")
+              levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
+              labels = c(paste0("A",as.character(1:num_archetypes)) , "NotAssigned", "Archetype")
             )
 
             d <- data.t %>%
               make_long(colnames(data.t)) %>%
               filter(node != "Archetype") # %>% filter(next_node != "Archetype")
 
+            if(treshold){
+              d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+              d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+            }else{
+              d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
+              d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
+            }
 
             pl <- ggplot(d, aes(
               x = x,
@@ -1253,12 +1301,12 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
               )
             pl
             
-            namesMalignant=c("Unknown","Non.Malignant", "Malignant")
-            prefixName <- paste(obj@other$namePathw, k, ifelse(treshold > 0, "th", ""), sep = ".")
+            namesMalignant=c("Unresolved","Non.Malignant", "Malignant")
+            prefixName <- paste(obj@other$namePathw, k, sep = ".") # TODO REINSERT TH
             ggsave(
-              file.path(obj@params$path_figures, paste(prefixName, "sankey", namesMalignant[mal+1], "png", sep = ".")),
+              file.path(obj@params$path_figures, paste(prefixName, "sankey",ifelse(treshold,"th",""), namesMalignant[mal+1], "png", sep = ".")),
               pl,
-              width = 8,
+              width = 9,
               height = 6
             )
           }
@@ -1272,6 +1320,9 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
       df <- df[, colnames(df) != "Archetype"]
       df <- df[row.names(df) != "Archetype", ]
       df <- as.data.frame(df)
+      if (!treshold) {
+        df <- df[df$Var2 != "NotAssigned", ]
+      }
 
       # Heatmap with text inside
       plt_hm <- ggplot(df, aes(x = Var1, y = Var2)) +
@@ -1279,13 +1330,13 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
         geom_text(aes(label = Freq), vjust = 1) +
         scale_fill_gradient(low = "white", high = "blue") +
         theme_alluvial() +
-        labs(x = "Cell types", y = "Archetype") +
+        labs(x = "Cell types", y = "Archetype", fill = "Count") +
         theme(axis.text.x = element_text(hjust = 1))
       plt_hm
 
       ggsave(
         file.path(obj@params$path_figures, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
-        width = 8,
+        width = 9,
         height = 6
       )
     }
@@ -1296,3 +1347,4 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5")) {
   # end k
 }
 # end pathways and hvf
+
