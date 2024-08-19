@@ -116,7 +116,28 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   ##################################################
   # BEGIN WITH STATS
   ##################################################
-  p <- ElbowPlot(obj@se)
+  ndims = 20
+    data.use <- Stdev(object = obj@se, reduction = "pca")
+    if (length(x = data.use) == 0) {
+      stop(paste("No standard deviation info stored for", 
+                 "pca"))
+    }
+    if (ndims > length(x = data.use)) {
+      warning("The object only has information for ", length(x = data.use), 
+              " reductions")
+      ndims <- length(x = data.use)
+    }
+    stdev <- "Standard Deviation"
+    p <- ggplot(data = data.frame(dims = 1:ndims, stdev = data.use[1:ndims]), aes(x=dims, y=stdev)) + 
+      geom_point() +
+      labs(x = gsub(pattern = "_$", replacement = "", x = Key(object = obj@se[["pca"]])), 
+           y = stdev) +
+      scale_x_continuous(breaks = 1:ndims) +
+      theme_classic()
+    p
+  
+  # p <- ElbowPlot(obj@se)
+    
   ggsave(file.path(obj@params$path_figures, "ElbowPlot.png"), p, width = plot_width, height = plot_height)
   
   plot_data <- bind_rows(obj@archetypes$analysis, .id = "narch") %>%
