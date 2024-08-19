@@ -21,6 +21,11 @@ gc()
 obj <- new("Mouse")
 obj <- new("Melanoma")
 
+plot_width <- 6
+plot_height <- 4
+plot_height_stack <- 12
+plot_dpi <- 200
+
 if (NOT_FINAL) {
   plan("multicore", workers = 8)
   obj@params$hvf <- FALSE
@@ -372,8 +377,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         ggsave(
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.png", sep = ".")),
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
       }
 
@@ -395,8 +400,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         ggsave(
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.malignant.png", sep = ".")),
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
       }
 
@@ -417,8 +422,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
         ggsave(
           file.path(obj@params$path_figures, paste(obj@other$namePathw, k, "weights.time.png", sep = ".")),
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
       }
 
@@ -481,26 +486,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
 
@@ -563,26 +568,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
 
@@ -643,26 +648,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".ct.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".ct.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
 
@@ -726,26 +731,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
       # Yes Threshold
@@ -799,26 +804,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
 
@@ -882,26 +887,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
 
         # Yes Treshold
@@ -957,26 +962,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
 
@@ -1037,26 +1042,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
         # Yes Treshold
         p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points)) +
@@ -1105,26 +1110,26 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X1.vs.X2.png")),
           p1,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste0(prefixName, ".aa.th.X1.vs.X3.png")),
           p2,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.th.X2.vs.X3.png")),
           plot = p3,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
         ggsave(
           file.path(obj@params$path_figures, paste0(prefixName, ".aa.th.png")),
           combined_plot,
-          width = 9,
-          height = 18
+          width = plot_width,
+          height = plot_height_stack
         )
       }
     }
@@ -1234,8 +1239,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
         ggsave(
           file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
           pl,
-          width = 9,
-          height = 6
+          width = plot_width,
+          height = plot_height
         )
 
         if (class(obj) == "Melanoma") {
@@ -1306,8 +1311,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
             ggsave(
               file.path(obj@params$path_figures, paste(prefixName, "sankey",ifelse(treshold,"th",""), namesMalignant[mal+1], "png", sep = ".")),
               pl,
-              width = 9,
-              height = 6
+              width = plot_width,
+              height = plot_height
             )
           }
         }
@@ -1336,8 +1341,8 @@ for (pw in list("FS1", "FS2", "FS3", "FS4", "FS5","HFS")) {
 
       ggsave(
         file.path(obj@params$path_figures, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
-        width = 9,
-        height = 6
+        width = plot_width,
+        height = plot_height
       )
     }
     # end treshold 2
