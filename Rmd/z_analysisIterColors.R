@@ -182,12 +182,12 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     geom_point() +
     labs(
       x = "Number of archetypes",
-      y = "Varexpt"
+      y = "Variability Explained"
     ) +
     scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch)) +
     theme_classic()
 
-  ggsave(file.path(obj@params$path_figures, "AA_varexpt.png"), p, width = plot_width, height = plot_height)
+  ggsave(file.path(obj@params$path_figures, "AA_varexpl.png"), p, width = plot_width, height = plot_height)
 
   # Scree plot
   min_plot_data <- plot_data %>%
