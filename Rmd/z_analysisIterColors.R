@@ -76,43 +76,43 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   }
 
   ##################################################
-  if(TRUE){ #
-  if (obj@params$hvf) {
-    obj@other$namePathw <- "HVF"
-  } else {
-    obj@other$namePathw <- list(
-      "GLYK",
-      "MAPK",
-      "CANCER",
-      "MTOR",
-      "TGF"
-    )[[obj@params$pathw]]
-  }
+  if (TRUE) { #
+    if (obj@params$hvf) {
+      obj@other$namePathw <- "HVF"
+    } else {
+      obj@other$namePathw <- list(
+        "GLYK",
+        "MAPK",
+        "CANCER",
+        "MTOR",
+        "TGF"
+      )[[obj@params$pathw]]
+    }
 
 
-  obj@params$path_figures <- file.path(
-    obj@params$out_path,
-    paste(
-      ifelse(class(obj) == "Melanoma", "MEL", "MOUSE"),
-      "_",
-      ifelse(obj@other$namePathw == "HVF", "HVF", paste(obj@params$pathw, obj@other$namePathw, sep = "")),
-      sep = ""
+    obj@params$path_figures <- file.path(
+      obj@params$out_path,
+      paste(
+        ifelse(class(obj) == "Melanoma", "MEL", "MOUSE"),
+        "_",
+        ifelse(obj@other$namePathw == "HVF", "HVF", paste(obj@params$pathw, obj@other$namePathw, sep = "")),
+        sep = ""
+      )
     )
-  )
-  obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
+    obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
 
-  tt <- unlist(strsplit(obj@params$path_figures, "/"))
-  obj@params$path_figures <- file.path(tt[1], tt[2], tt[3], ifelse(class(obj) == "Melanoma", "Melanoma", "Mouse"), tt[length(tt)])
-  obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
-  obj@params$path_figures
-  obj@params$path_figures_small
+    tt <- unlist(strsplit(obj@params$path_figures, "/"))
+    obj@params$path_figures <- file.path(tt[1], tt[2], tt[3], ifelse(class(obj) == "Melanoma", "Melanoma", "Mouse"), tt[length(tt)])
+    obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
+    obj@params$path_figures
+    obj@params$path_figures_small
 
-  if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures, recursive = TRUE)
-  if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small, recursive = TRUE)
+    if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures, recursive = TRUE)
+    if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small, recursive = TRUE)
 
-  message("Saving in ", obj@params$path_figures)
+    message("Saving in ", obj@params$path_figures)
 
-  obj@other$treshold <- 0.5
+    obj@other$treshold <- 0.5
   }
 
   ##################################################
@@ -170,12 +170,29 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     geom_point() +
     labs(
       x = "Number of archetypes",
-      y = "RSS"
+      y = "Residual Sum of Squares (RSS)"
     ) +
     scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch)) +
     theme_classic()
 
   ggsave(file.path(obj@params$path_figures, "AA_rss.png"), p, width = plot_width, height = plot_height)
+
+  # Scree plot
+  min_plot_data <- plot_data %>%
+    group_by(narch) %>%
+    summarize(min_sse = min(sse))
+
+  p <- ggplot(min_plot_data, aes(x = narch, y = min_sse)) +
+    geom_point() +
+    geom_line() + # Connect the minimum points with a line
+    labs(
+      x = "Number of Archetypes",
+      y = "Residual Sum of Squares (RSS)"
+    ) +
+    scale_x_continuous(breaks = min(min_plot_data$narch):max(min_plot_data$narch)) +
+    theme_classic()
+
+  ggsave(file.path(obj@params$path_figures, "AA_scree_plot.png"), p, width = plot_width, height = plot_height)
 
   # Plot Varexpt
   p <- ggplot(plot_data, aes(x = narch, y = varexpt)) +
@@ -189,22 +206,21 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
 
   ggsave(file.path(obj@params$path_figures, "AA_varexpl.png"), p, width = plot_width, height = plot_height)
 
-  # Scree plot
   min_plot_data <- plot_data %>%
     group_by(narch) %>%
-    summarize(min_sse = min(sse))
+    summarize(min_varexpt = min(varexpt))
 
-  p <- ggplot(min_plot_data, aes(x = narch, y = min_sse)) +
+  p <- ggplot(min_plot_data, aes(x = narch, y = min_varexpt)) +
     geom_point() +
-    geom_line() + # Connect the minimum points with a line
     labs(
       x = "Number of Archetypes",
-      y = "Minimum Residual Sum of Squares (RSS)"
+      y = "Variability Explained"
     ) +
     scale_x_continuous(breaks = min(min_plot_data$narch):max(min_plot_data$narch)) +
     theme_classic()
 
-  ggsave(file.path(obj@params$path_figures, "AA_scree_plot.png"), p, width = plot_width, height = plot_height)
+  ggsave(file.path(obj@params$path_figures, "AA_scree_varexpl.png"), p, width = plot_width, height = plot_height)
+
 
   # Function Definitions ---------------------------------------------------------
   # addArchetypesToSeurat <- function(se, aa, k) {
@@ -443,11 +459,11 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       legendMalignant <- "Cell is malignant"
     }
 
-    if(FALSE){
-      red="tsne"
+    if (FALSE) {
+      red <- "tsne"
     }
     for (red in c("umap", "tsne")) {
-    # for (red in c("tsne")) {
+      # for (red in c("tsne")) {
       message("reduction ", red)
 
       plot_data <- as.data.frame(Embeddings(newse, reduction = red))
@@ -1302,7 +1318,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         )
     }
 
-    if(FALSE){
+    if (FALSE) {
       treshold <- TRUE
     }
     ##################################################
@@ -1384,8 +1400,8 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         ggsave(
           file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
           pl,
-          width = plot_width-1,
-          height = plot_height+1
+          width = plot_width - 1,
+          height = plot_height + 1
         )
 
         if (class(obj) == "Melanoma") {
@@ -1462,7 +1478,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             )
           }
         }
-        
+
         if (class(obj) == "Mouse") {
           for (tp in levels(plot_data$Time_points)) {
             which.is.tp <- which(plot_data$Time_points == tp)
