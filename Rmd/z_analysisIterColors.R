@@ -76,6 +76,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   }
 
   ##################################################
+  if(TRUE){ #
   if (obj@params$hvf) {
     obj@other$namePathw <- "HVF"
   } else {
@@ -112,6 +113,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   message("Saving in ", obj@params$path_figures)
 
   obj@other$treshold <- 0.5
+  }
 
   ##################################################
   # BEGIN WITH STATS
@@ -332,7 +334,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     red <- "tsne"
   }
 
-  for (k in c("12", "7", "8", "16", "9")) {
+  for (k in c("12", "7", "8")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -441,9 +443,11 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       legendMalignant <- "Cell is malignant"
     }
 
-
-    # for (red in c("umap", "tsne")) {
-    for (red in c("tsne")) {
+    if(FALSE){
+      red="tsne"
+    }
+    for (red in c("umap", "tsne")) {
+    # for (red in c("tsne")) {
       message("reduction ", red)
 
       plot_data <- as.data.frame(Embeddings(newse, reduction = red))
@@ -1298,6 +1302,9 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         )
     }
 
+    if(FALSE){
+      treshold <- TRUE
+    }
     ##################################################
     # SANKEY PLOT
     ##################################################
@@ -1375,11 +1382,10 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
 
         prefixName <- paste(obj@other$namePathw, k, sep = ".")
         ggsave(
-          dpi = plot_dpi,
           file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
           pl,
-          width = plot_width,
-          height = plot_height
+          width = plot_width-1,
+          height = plot_height+1
         )
 
         if (class(obj) == "Melanoma") {
@@ -1456,6 +1462,80 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             )
           }
         }
+        
+        if (class(obj) == "Mouse") {
+          for (tp in levels(plot_data$Time_points)) {
+            which.is.tp <- which(plot_data$Time_points == tp)
+            if (treshold) {
+              data.t <- as.data.frame(list(
+                type = plot_data$ctype[which.is.tp],
+                archetype = plot_data$aaclusters.treshold[which.is.tp]
+              ))
+            } else {
+              data.t <- as.data.frame(list(
+                type = plot_data$ctype[which.is.tp],
+                archetype = plot_data$aaclusters[which.is.tp]
+              ))
+            }
+
+            data.t$archetype <- factor(
+              data.t$archetype[which.is.tp],
+              levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
+              labels = c(paste0("A", as.character(1:num_archetypes)), "NotAssigned", "Archetype")
+            )
+
+            d <- data.t %>%
+              make_long(colnames(data.t)) %>%
+              filter(node != "Archetype") # %>% filter(next_node != "Archetype")
+
+            if (treshold) {
+              d$node <- factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+              d$next_node <- factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+            } else {
+              d$node <- factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
+              d$next_node <- factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
+            }
+
+            pl <- ggplot(d, aes(
+              x = x,
+              next_x = next_x,
+              node = node,
+              next_node = next_node,
+              fill = factor(node),
+              label = node
+            )) +
+              geom_sankey(
+                flow.alpha = 0.5,
+                node.color = "black",
+                show.legend = FALSE
+              ) +
+              geom_sankey_label(size = 3, color = "black", fill = "white") +
+              scale_fill_manual(
+                values = c(colorMapCTypes, colorMapArchetypesSankey)
+              ) +
+              scale_x_discrete(
+                labels = c("type" = "Cell Type", "archetype" = "Archetype")
+              ) +
+              theme_alluvial() +
+              theme(
+                axis.line.y = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.text.y = element_blank(),
+                axis.line.x = element_blank(),
+                axis.ticks.x = element_blank()
+              )
+            pl
+
+            prefixName <- paste(obj@other$namePathw, k, sep = ".") # TODO REINSERT TH
+            ggsave(
+              dpi = plot_dpi,
+              file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold, "th", ""), tp, "png", sep = ".")),
+              pl,
+              width = plot_width,
+              height = plot_height
+            )
+          }
+        }
       }
 
       # HEATMAP
@@ -1473,7 +1553,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       plt_hm <- ggplot(df, aes(x = Var1, y = Var2)) +
         geom_tile(aes(fill = Freq), color = "white") +
         geom_text(aes(label = Freq), vjust = 1) +
-        scale_fill_gradient(low = "white", high = "blue") +
+        scale_fill_gradient(low = "white", high = "grey") +
         theme_alluvial() +
         labs(x = "Cell types", y = "Archetype", fill = "Count") +
         theme(axis.text.x = element_text(hjust = 1))
