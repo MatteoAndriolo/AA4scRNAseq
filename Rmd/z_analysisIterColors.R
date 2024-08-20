@@ -41,7 +41,7 @@ if (NOT_FINAL) {
 obj <- obj_loadData(obj, data_path = temp_data_path)
 
 if (FALSE) {
-  pw <- "FS1"
+  pw <- "HFS"
 }
 
 for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
@@ -345,6 +345,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   # Main -------------------------------------------------------------------------
   if (FALSE) {
     k <- "7"
+    k <- "8"
     k <- "12"
     i <- 1
     red <- "tsne"
@@ -1319,7 +1320,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     }
 
     if (FALSE) {
-      treshold <- TRUE
+      treshold <- FALSE
     }
     ##################################################
     # SANKEY PLOT
@@ -1404,26 +1405,15 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           height = plot_height + 1
         )
 
+        if(FALSE){
+          mal=0
+          mal=1
+          mal=2
+        }
         if (class(obj) == "Melanoma") {
           for (mal in c(0, 1, 2)) {
             which.is.mal <- which(plot_data$malignant == mal)
-            if (treshold) {
-              data.t <- as.data.frame(list(
-                type = plot_data$ctype[which.is.mal],
-                archetype = plot_data$aaclusters.treshold[which.is.mal]
-              ))
-            } else {
-              data.t <- as.data.frame(list(
-                type = plot_data$ctype[which.is.mal],
-                archetype = plot_data$aaclusters[which.is.mal]
-              ))
-            }
-
-            data.t$archetype <- factor(
-              data.t$archetype[which.is.mal],
-              levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
-              labels = c(paste0("A", as.character(1:num_archetypes)), "NotAssigned", "Archetype")
-            )
+            data.t <- data[which.is.mal,]
 
             d <- data.t %>%
               make_long(colnames(data.t)) %>%
@@ -1481,24 +1471,9 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
 
         if (class(obj) == "Mouse") {
           for (tp in levels(plot_data$Time_points)) {
+            
             which.is.tp <- which(plot_data$Time_points == tp)
-            if (treshold) {
-              data.t <- as.data.frame(list(
-                type = plot_data$ctype[which.is.tp],
-                archetype = plot_data$aaclusters.treshold[which.is.tp]
-              ))
-            } else {
-              data.t <- as.data.frame(list(
-                type = plot_data$ctype[which.is.tp],
-                archetype = plot_data$aaclusters[which.is.tp]
-              ))
-            }
-
-            data.t$archetype <- factor(
-              data.t$archetype[which.is.tp],
-              levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
-              labels = c(paste0("A", as.character(1:num_archetypes)), "NotAssigned", "Archetype")
-            )
+            data.t <- data[which.is.tp,]
 
             d <- data.t %>%
               make_long(colnames(data.t)) %>%
