@@ -40,11 +40,11 @@ if (NOT_FINAL) {
 
 obj <- obj_loadData(obj, data_path = temp_data_path)
 
-if(FALSE){
-  pw="FS1"
+if (FALSE) {
+  pw <- "FS1"
 }
 
-for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
+for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   # ,"HFS")){
   if (NOT_FINAL) {
     if (class(obj) == "Melanoma") {
@@ -87,59 +87,65 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       "TGF"
     )[[obj@params$pathw]]
   }
-  
-  
+
+
   obj@params$path_figures <- file.path(
     obj@params$out_path,
     paste(
       ifelse(class(obj) == "Melanoma", "MEL", "MOUSE"),
       "_",
-      ifelse(obj@other$namePathw == "HVF", "HVF", paste(obj@params$pathw, obj@other$namePathw,  sep = "")),
+      ifelse(obj@other$namePathw == "HVF", "HVF", paste(obj@params$pathw, obj@other$namePathw, sep = "")),
       sep = ""
     )
   )
   obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
-  
+
   tt <- unlist(strsplit(obj@params$path_figures, "/"))
-  obj@params$path_figures <- file.path(tt[1],tt[2],tt[3],ifelse(class(obj) == "Melanoma", "Melanoma", "Mouse"),tt[length(tt)])
+  obj@params$path_figures <- file.path(tt[1], tt[2], tt[3], ifelse(class(obj) == "Melanoma", "Melanoma", "Mouse"), tt[length(tt)])
   obj@params$path_figures_small <- file.path(obj@params$path_figures, "small")
   obj@params$path_figures
   obj@params$path_figures_small
-  
-  if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures, recursive = TRUE )
-  if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small, recursive = TRUE )
-  
+
+  if (!dir.exists(obj@params$path_figures)) dir.create(obj@params$path_figures, recursive = TRUE)
+  if (!dir.exists(obj@params$path_figures_small)) dir.create(obj@params$path_figures_small, recursive = TRUE)
+
   message("Saving in ", obj@params$path_figures)
-  
+
   obj@other$treshold <- 0.5
 
   ##################################################
   # BEGIN WITH STATS
   ##################################################
-  ndims = 20
-    data.use <- Stdev(object = obj@se, reduction = "pca")
-    if (length(x = data.use) == 0) {
-      stop(paste("No standard deviation info stored for", 
-                 "pca"))
-    }
-    if (ndims > length(x = data.use)) {
-      warning("The object only has information for ", length(x = data.use), 
-              " reductions")
-      ndims <- length(x = data.use)
-    }
-    stdev <- "Standard Deviation"
-    p <- ggplot(data = data.frame(dims = 1:ndims, stdev = data.use[1:ndims]), aes(x=dims, y=stdev)) + 
-      geom_point() +
-      labs(x = gsub(pattern = "_$", replacement = "", x = Key(object = obj@se[["pca"]])), 
-           y = stdev) +
-      scale_x_continuous(breaks = 1:ndims) +
-      theme_classic()
-    p
-  
+  ndims <- 20
+  data.use <- Stdev(object = obj@se, reduction = "pca")
+  if (length(x = data.use) == 0) {
+    stop(paste(
+      "No standard deviation info stored for",
+      "pca"
+    ))
+  }
+  if (ndims > length(x = data.use)) {
+    warning(
+      "The object only has information for ", length(x = data.use),
+      " reductions"
+    )
+    ndims <- length(x = data.use)
+  }
+  stdev <- "Standard Deviation"
+  p <- ggplot(data = data.frame(dims = 1:ndims, stdev = data.use[1:ndims]), aes(x = dims, y = stdev)) +
+    geom_point() +
+    labs(
+      x = gsub(pattern = "_$", replacement = "", x = Key(object = obj@se[["pca"]])),
+      y = stdev
+    ) +
+    scale_x_continuous(breaks = 1:ndims) +
+    theme_classic()
+  p
+
   # p <- ElbowPlot(obj@se)
-    
+
   ggsave(file.path(obj@params$path_figures, "ElbowPlot.png"), p, width = plot_width, height = plot_height)
-  
+
   plot_data <- bind_rows(obj@archetypes$analysis, .id = "narch") %>%
     mutate(narch = as.integer(narch))
   head(plot_data)
@@ -152,7 +158,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       x = "Number of archetypes",
       y = "Time (s)"
     ) +
-    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))+
+    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch)) +
     theme_classic()
 
   ggsave(file.path(obj@params$path_figures, "AA_time.png"), p, width = plot_width, height = plot_height)
@@ -164,7 +170,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       x = "Number of archetypes",
       y = "RSS"
     ) +
-    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))+
+    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch)) +
     theme_classic()
 
   ggsave(file.path(obj@params$path_figures, "AA_rss.png"), p, width = plot_width, height = plot_height)
@@ -176,26 +182,26 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       x = "Number of archetypes",
       y = "Varexpt"
     ) +
-    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch))+
+    scale_x_continuous(breaks = min(plot_data$narch):max(plot_data$narch)) +
     theme_classic()
 
   ggsave(file.path(obj@params$path_figures, "AA_varexpt.png"), p, width = plot_width, height = plot_height)
- 
+
   # Scree plot
   min_plot_data <- plot_data %>%
     group_by(narch) %>%
     summarize(min_sse = min(sse))
-  
+
   p <- ggplot(min_plot_data, aes(x = narch, y = min_sse)) +
     geom_point() +
-    geom_line() +  # Connect the minimum points with a line
+    geom_line() + # Connect the minimum points with a line
     labs(
       x = "Number of Archetypes",
       y = "Minimum Residual Sum of Squares (RSS)"
     ) +
     scale_x_continuous(breaks = min(min_plot_data$narch):max(min_plot_data$narch)) +
     theme_classic()
-  
+
   ggsave(file.path(obj@params$path_figures, "AA_scree_plot.png"), p, width = plot_width, height = plot_height)
 
   # Function Definitions ---------------------------------------------------------
@@ -292,7 +298,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       closestPoints[firstdup] <- which.min(distances)
     }
 
-    message("Closest points are: ", paste(print(closestPoints),sep=","))
+    message("Closest points are: ", paste(print(closestPoints), sep = ","))
 
     newCtype <- as.character(se$ctype)
     newCtype[closestPoints] <- "Archetype"
@@ -326,7 +332,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     red <- "tsne"
   }
 
-  for (k in c("12","7","8", "16", "9")) {
+  for (k in c("12", "7", "8", "16", "9")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -343,18 +349,18 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     newse <- findClosestPoints(obj@se.org, obj@se, obj@archetypes, k)
     ################################################################################
     newse@misc$closestpoints
-    
-    a=newse@misc$closestpoints
-    b=rep(0,max(a))
-    b[a]=1:length(a)
-    newse@misc$archetypesNumbers = b[b>0]
-    rm(a,b)
-    
-    
+
+    a <- newse@misc$closestpoints
+    b <- rep(0, max(a))
+    b[a] <- 1:length(a)
+    newse@misc$archetypesNumbers <- b[b > 0]
+    rm(a, b)
+
+
     newse$aaweights <- apply(obj@archetypes$aa.bests[[k]]$A, 1, max)
     newse$ctype <- factor(newse$ctype)
     newse$aaclusters <- apply(obj@archetypes$aa.bests[[k]]$A, 1, function(row) {
-        return(which.max(row))
+      return(which.max(row))
     })
     newse$aaclusters.treshold <- apply(obj@archetypes$aa.bests[[k]]$A, 1, function(row) {
       max_val <- max(row)
@@ -364,10 +370,10 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         return("NotAssigned")
       }
     })
-      
-    newse$aaclusters<- factor(newse$aaclusters)
-    newse$aaclusters.treshold <- factor(newse$aaclusters.treshold, levels=(c(levels(newse$aaclusters), "NotAssigned")))
-    
+
+    newse$aaclusters <- factor(newse$aaclusters)
+    newse$aaclusters.treshold <- factor(newse$aaclusters.treshold, levels = (c(levels(newse$aaclusters), "NotAssigned")))
+
     # head(newse$aaclusters)
     # table(newse$aaclusters)
     # head(newse$aaclusters.treshold)
@@ -432,7 +438,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         c(15, 17, 3),
         levels(newse$malignant)
       )
-      legendMalignant="Cell is malignant"
+      legendMalignant <- "Cell is malignant"
     }
 
 
@@ -443,9 +449,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       plot_data <- as.data.frame(Embeddings(newse, reduction = red))
       colnames(plot_data) <- c("X1", "X2", "X3")
       plot_data <- cbind(plot_data, as.data.frame(newse@meta.data))
-      
-      plot_data$ctype=factor(plot_data$ctype, levels= sort(levels(plot_data$ctype)))
-    
+
+      plot_data$ctype <- factor(plot_data$ctype, levels = sort(levels(plot_data$ctype)))
+
       # head(plot_data$ctype)
       # head(plot_data$aaclusters)
       # head(plot_data$aaclusters.treshold)
@@ -621,8 +627,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Cell types", size = "Cell types", shape=legendMalignant) +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Cell types", size = "Cell types", shape = legendMalignant) +
           theme_classic()
 
         # p1
@@ -637,8 +643,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Cell types", size = "Cell types", shape=legendMalignant) +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Cell types", size = "Cell types", shape = legendMalignant) +
           theme_classic()
         # p2
 
@@ -656,8 +662,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Cell types", size = "Cell types", shape="Is malignant") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Cell types", size = "Cell types", shape = "Is malignant") +
           theme_classic()
         # p3
 
@@ -708,9 +714,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types", shape="Time point") +
+          labs(color = "Cell types", size = "Cell types", shape = "Time point") +
           theme_classic()
-        
+
         # p1
 
         p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = ctype, size = ctype, shape = Time_points)) +
@@ -723,7 +729,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types", shape="Time point" ) +
+          labs(color = "Cell types", size = "Cell types", shape = "Time point") +
           theme_classic()
         # p2
 
@@ -741,7 +747,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
-          labs(color = "Cell types", size = "Cell types", shape="Time point" ) +
+          labs(color = "Cell types", size = "Cell types", shape = "Time point") +
           theme_classic()
         # p3
 
@@ -794,7 +800,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
           labs(color = "Archetype", size = "") +
           theme_classic()
 
@@ -813,7 +819,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
           labs(color = "Archetype", size = "") +
           theme_classic()
         # p2
@@ -827,7 +833,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
           labs(color = "Archetype", size = "") +
           theme_classic()
         p3
@@ -876,7 +882,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
           labs(color = "Archetype", size = "") +
           theme_classic()
 
@@ -891,7 +897,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
           labs(color = "Archetype", size = "") +
           theme_classic()
         # p2
@@ -905,7 +911,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
           labs(color = "Archetype", size = "") +
           theme_classic()
         # p3
@@ -955,9 +961,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Archetype", size = "", shape=legendMalignant) +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape = legendMalignant) +
           theme_classic()
 
         # p1
@@ -975,9 +981,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Archetype", size = "", shape=legendMalignant) +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape = legendMalignant) +
           theme_classic()
         # p2
 
@@ -990,16 +996,16 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Archetype", size = "",shape=legendMalignant) +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape = legendMalignant) +
           theme_classic()
         # p3
 
         combined_plot <- plot_grid(p1, p2, p3, ncol = 1)
         combined_plot
 
-        prefixName <- paste(obj@other$namePathw, k, red, "malignant" , sep = ".")
+        prefixName <- paste(obj@other$namePathw, k, red, "malignant", sep = ".")
         ggsave(
           dpi = plot_dpi,
           file.path(obj@params$path_figures_small, paste(prefixName, ".aa.X1.vs.X2.png")),
@@ -1039,9 +1045,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Archetype", size = "",shape=legendMalignant) +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape = legendMalignant) +
           theme_classic()
 
         # p1
@@ -1055,9 +1061,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Archetype", size = "",shape=legendMalignant) +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape = legendMalignant) +
           theme_classic()
         # p2
 
@@ -1070,9 +1076,9 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          scale_shape_manual(labels=c("0"="Unresolved", "1"="Non malignant", "2"="Malignant"), values = shapeMapMalignant) +
-          labs(color = "Archetype", size = "",shape=legendMalignant) +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(labels = c("0" = "Unresolved", "1" = "Non malignant", "2" = "Malignant"), values = shapeMapMalignant) +
+          labs(color = "Archetype", size = "", shape = legendMalignant) +
           theme_classic()
         # p3
 
@@ -1121,8 +1127,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          labs(color = "Archetype", size = "", shape="Time point") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          labs(color = "Archetype", size = "", shape = "Time point") +
           theme_classic()
 
         # p1
@@ -1140,8 +1146,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes,guide="none") +
-          labs(color = "Archetype", size = "", shape="Time point") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          labs(color = "Archetype", size = "", shape = "Time point") +
           theme_classic()
         # p2
 
@@ -1154,8 +1160,8 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             color = colors_text_Archetype, size = size_text_Archetype
           ) +
           scale_color_manual(values = colorMapArchetypes) +
-          scale_size_manual(values = sizeMapArchetypes, guide="none") +
-          labs(color = "Archetype", size = "", shape="Time point") +
+          scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          labs(color = "Archetype", size = "", shape = "Time point") +
           theme_classic()
         # p3
 
@@ -1312,19 +1318,19 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       data$archetype <- factor(
         data$archetype,
         levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
-        labels = c(paste0("A",as.character(1:num_archetypes)) , "NotAssigned", "Archetype")
+        labels = c(paste0("A", as.character(1:num_archetypes)), "NotAssigned", "Archetype")
       )
 
       d <- data %>%
         make_long(colnames(data)) %>%
         filter(node != "Archetype") # %>% filter(next_node != "Archetype")
 
-      if(treshold){
-        d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
-        d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
-      }else{
-        d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
-        d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
+      if (treshold) {
+        d$node <- factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+        d$next_node <- factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+      } else {
+        d$node <- factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
+        d$next_node <- factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
       }
 
       colorMapArchetypesSankey <- setNames(
@@ -1394,19 +1400,19 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
             data.t$archetype <- factor(
               data.t$archetype[which.is.mal],
               levels = c(as.character(1:num_archetypes), "NotAssigned", "Archetype"),
-              labels = c(paste0("A",as.character(1:num_archetypes)) , "NotAssigned", "Archetype")
+              labels = c(paste0("A", as.character(1:num_archetypes)), "NotAssigned", "Archetype")
             )
 
             d <- data.t %>%
               make_long(colnames(data.t)) %>%
               filter(node != "Archetype") # %>% filter(next_node != "Archetype")
 
-            if(treshold){
-              d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
-              d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
-            }else{
-              d$node=factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
-              d$next_node = factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
+            if (treshold) {
+              d$node <- factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+              d$next_node <- factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = ""), "NotAssigned"))
+            } else {
+              d$node <- factor(d$node, levels = c(levels(plot_data$ctype)[-length(levels(plot_data$ctype))], paste0("A", 1:num_archetypes, sep = "")))
+              d$next_node <- factor(d$next_node, levels = c(paste0("A", 1:num_archetypes, sep = "")))
             }
 
             pl <- ggplot(d, aes(
@@ -1438,12 +1444,12 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
                 axis.ticks.x = element_blank()
               )
             pl
-            
-            namesMalignant=c("Unresolved","Non.Malignant", "Malignant")
+
+            namesMalignant <- c("Unresolved", "Non.Malignant", "Malignant")
             prefixName <- paste(obj@other$namePathw, k, sep = ".") # TODO REINSERT TH
             ggsave(
-          dpi = plot_dpi,
-              file.path(obj@params$path_figures, paste(prefixName, "sankey",ifelse(treshold,"th",""), namesMalignant[mal+1], "png", sep = ".")),
+              dpi = plot_dpi,
+              file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold, "th", ""), namesMalignant[mal + 1], "png", sep = ".")),
               pl,
               width = plot_width,
               height = plot_height
@@ -1474,7 +1480,7 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       plt_hm
 
       ggsave(
-          dpi = plot_dpi,
+        dpi = plot_dpi,
         file.path(obj@params$path_figures, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
         width = plot_width,
         height = plot_height
@@ -1487,4 +1493,3 @@ for (pw in list("HFS")){ # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   # end k
 }
 # end pathways and hvf
-
