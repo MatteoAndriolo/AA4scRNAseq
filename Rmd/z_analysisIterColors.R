@@ -18,8 +18,8 @@ set.seed(2024)
 NOT_FINAL <- TRUE
 debug <- TRUE
 
-obj <- new("Melanoma")
 obj <- new("Mouse")
+obj <- new("Melanoma")
 
 plot_width <- 7
 plot_height <- 4
@@ -351,7 +351,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     red <- "tsne"
   }
 
-  for (k in c("12", "7", "8")) {
+  for (k in c("8","12", "7")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -1405,15 +1405,15 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           height = plot_height + 1
         )
 
-        if(FALSE){
-          mal=0
-          mal=1
-          mal=2
+        if (FALSE) {
+          mal <- 0
+          mal <- 1
+          mal <- 2
         }
         if (class(obj) == "Melanoma") {
           for (mal in c(0, 1, 2)) {
             which.is.mal <- which(plot_data$malignant == mal)
-            data.t <- data[which.is.mal,]
+            data.t <- data[which.is.mal, ]
 
             d <- data.t %>%
               make_long(colnames(data.t)) %>%
@@ -1471,9 +1471,8 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
 
         if (class(obj) == "Mouse") {
           for (tp in levels(plot_data$Time_points)) {
-            
             which.is.tp <- which(plot_data$Time_points == tp)
-            data.t <- data[which.is.tp,]
+            data.t <- data[which.is.tp, ]
 
             d <- data.t %>%
               make_long(colnames(data.t)) %>%
@@ -1556,11 +1555,46 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         width = plot_width,
         height = plot_height
       )
-    }
-    # end treshold 2
 
+
+      if (class(obj) == "Melanoma") {
+        for (mal in c(0, 1, 2)) {
+          which.is.mal <- which(plot_data$malignant == mal)
+          data.t <- data[which.is.mal, ]
+
+          df <- table(data.t$type, data.t$archetype)
+          df <- df[, colnames(df) != "Archetype"]
+          df <- df[row.names(df) != "Archetype", ]
+          df <- as.data.frame(df)
+          if (!treshold) {
+            df <- df[df$Var2 != "NotAssigned", ]
+          }
+
+          # Heatmap with text inside
+          plt_hm <- ggplot(df, aes(x = Var1, y = Var2)) +
+            geom_tile(aes(fill = Freq), color = "white") +
+            geom_text(aes(label = Freq), vjust = 1) +
+            scale_fill_gradient(low = "white", high = "grey") +
+            theme_alluvial() +
+            labs(x = "Cell types", y = "Archetype", fill = "Count") +
+            theme(axis.text.x = element_text(hjust = 1))
+          plt_hm
+
+          namesMalignant <- c("Unresolved", "Non.Malignant", "Malignant")
+          prefixName <- paste(obj@other$namePathw, k, sep = ".") # TODO REINSERT TH
+          ggsave(
+            dpi = plot_dpi,
+            file.path(obj@params$path_figures, paste(prefixName, "heatmap", ifelse(treshold > 0, "th", ""), namesMalignant[mal + 1], "png", sep = ".")),
+            width = plot_width,
+            height = plot_height
+          )
+        }
+      }
+      # end treshold 2
+    }
     # Heatmap
   }
   # end k
 }
 # end pathways and hvf
+
