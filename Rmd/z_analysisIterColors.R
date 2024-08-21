@@ -351,7 +351,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     red <- "tsne"
   }
 
-  for (k in c("8","12", "7")) {
+  for (k in c("8", "12", "7")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -446,18 +446,29 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     # Other Styling
     if (class(obj) == "Mouse") {
       newse$Time_points <- factor(newse$Time_points)
+      newse$Time_points.shapes <- as.matrix(newst$Time_points)
+      newst$Time_points.shapes[which(newst$ctype == "Archetype")] <- "Archetype"
+      newst$Time_points.shapes <- factor(newst$Time_points.shapes)
+
       shapeMapTimePoints <- setNames(
-        c(15, 17, 3, 8),
-        levels(newse$Time_points)
+        c(15, 17, 3, 8, 16),
+        levels(newse$Time_points.shapes)
       )
     }
     if (class(obj) == "Melanoma") {
-      newse$malignant <- factor(newse$malignant.1.no.2.yes.0.unresolved.)
-      shapeMapMalignant <- setNames(
-        c(15, 17, 3),
-        levels(newse$malignant)
-      )
+      newse$malignant <- as.matrix(newse$malignant.1.no.2.yes.0.unresolved.)
+      newse$malignant[which(newse$ctype == "Archetype")] <- "Archetype"
+      newse$malignant <- factor(newse$malignant)
+
       legendMalignant <- "Cell is malignant"
+
+
+      newse$malignant.archetypes <- as.matrix(newse$malignant)
+
+      shapeMapMalignant <- setNames(
+        c(15, 17, 3, 16),
+        levels(newse$malignant.archetypes)
+      )
     }
 
     if (FALSE) {
@@ -725,7 +736,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       # Mouse - Time_points shape
       if (class(obj) == "Mouse") {
         # TIME
-        p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = ctype, size = ctype, shape = Time_points)) +
+        p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = ctype, size = ctype, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, ctype != "Archetype")) +
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
@@ -735,12 +746,13 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
+          scale_shape_manual(values = shapeMapTimePoints) +
           labs(color = "Cell types", size = "Cell types", shape = "Time point") +
           theme_classic()
 
         # p1
 
-        p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = ctype, size = ctype, shape = Time_points)) +
+        p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = ctype, size = ctype, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, ctype != "Archetype")) +
           geom_point(data = subset(plot_data, ctype == "Archetype")) +
           geom_text(
@@ -750,11 +762,12 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
+          scale_shape_manual(values = shapeMapTimePoints) +
           labs(color = "Cell types", size = "Cell types", shape = "Time point") +
           theme_classic()
         # p2
 
-        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = ctype, size = ctype, shape = Time_points)) +
+        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = ctype, size = ctype, shape = Time_points.shape)) +
           geom_point(aes(color = ctype, size = ctype),
             data = subset(plot_data, ctype != "Archetype")
           ) +
@@ -768,6 +781,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapCTypes) +
           scale_size_manual(values = sizeMapCTypes) +
+          scale_shape_manual(values = shapeMapTimePoints) +
           labs(color = "Cell types", size = "Cell types", shape = "Time point") +
           theme_classic()
         # p3
@@ -1139,7 +1153,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
       # Mouse - Time_points shape - Yes and No Treshold
       if (class(obj) == "Mouse") {
         # No Threshold
-        p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters, size = aaclusters, shape = Time_points)) +
+        p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters, size = aaclusters, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, aaclusters != "Archetype")) +
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
@@ -1149,12 +1163,13 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapArchetypes) +
           scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(values = shapeMapTimePoints) +
           labs(color = "Archetype", size = "", shape = "Time point") +
           theme_classic()
 
         # p1
 
-        p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aaclusters, size = aaclusters, shape = Time_points)) +
+        p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aaclusters, size = aaclusters, shape = Time_points.shape)) +
           geom_point(aes(color = aaclusters, size = aaclusters),
             data = subset(plot_data, aaclusters != "Archetype")
           ) +
@@ -1168,11 +1183,12 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapArchetypes) +
           scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(values = shapeMapTimePoints) +
           labs(color = "Archetype", size = "", shape = "Time point") +
           theme_classic()
         # p2
 
-        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aaclusters, size = aaclusters, shape = Time_points)) +
+        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aaclusters, size = aaclusters, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, aaclusters != "Archetype")) +
           geom_point(data = subset(plot_data, aaclusters == "Archetype")) +
           geom_text(
@@ -1182,6 +1198,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapArchetypes) +
           scale_size_manual(values = sizeMapArchetypes, guide = "none") +
+          scale_shape_manual(values = shapeMapTimePoints) +
           labs(color = "Archetype", size = "", shape = "Time point") +
           theme_classic()
         # p3
@@ -1219,7 +1236,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           height = plot_height_stack
         )
         # Yes Treshold
-        p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points)) +
+        p1 <- ggplot(plot_data, aes(x = X1, y = X2, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, aaclusters.treshold != "Archetype")) +
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
@@ -1229,11 +1246,12 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapArchetypes) +
           scale_size_manual(values = sizeMapArchetypes) +
+          scale_shape_manual(values = shapeMapTimePoints) +
           theme_classic()
 
         # p1
 
-        p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points)) +
+        p2 <- ggplot(plot_data, aes(x = X1, y = X3, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, aaclusters.treshold != "Archetype")) +
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
@@ -1243,10 +1261,11 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapArchetypes) +
           scale_size_manual(values = sizeMapArchetypes) +
+          scale_shape_manual(values = shapeMapTimePoints) +
           theme_classic()
         # p2
 
-        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points)) +
+        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = aaclusters.treshold, size = aaclusters.treshold, shape = Time_points.shape)) +
           geom_point(data = subset(plot_data, aaclusters.treshold != "Archetype")) +
           geom_point(data = subset(plot_data, aaclusters.treshold == "Archetype")) +
           geom_text(
@@ -1256,6 +1275,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           ) +
           scale_color_manual(values = colorMapArchetypes) +
           scale_size_manual(values = sizeMapArchetypes) +
+          scale_shape_manual(values = shapeMapTimePoints) +
           theme_classic()
         # p3
 
@@ -1597,4 +1617,3 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   # end k
 }
 # end pathways and hvf
-
