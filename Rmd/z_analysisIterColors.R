@@ -18,8 +18,8 @@ set.seed(2024)
 NOT_FINAL <- TRUE
 debug <- TRUE
 
-obj <- new("Mouse")
 obj <- new("Melanoma")
+obj <- new("Mouse")
 
 plot_width <- 7
 plot_height <- 4
@@ -351,7 +351,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     red <- "tsne"
   }
 
-  for (k in c("8", "12", "7")) {
+  for (k in c("8", "12", "14")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -447,13 +447,13 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     # Other Styling
     if (class(obj) == "Mouse") {
       newse$Time_points <- factor(newse$Time_points)
-      newse$Time_points.shapes <- as.matrix(newst$Time_points)
-      newst$Time_points.shapes[which(newst$ctype == "Archetype")] <- "Archetype"
-      newst$Time_points.shapes <- factor(newst$Time_points.shapes)
+      newse$Time_points.shape <- as.matrix(newse$Time_points)
+      newse$Time_points.shape[which(newse$ctype == "Archetype")] <- "Archetype"
+      newse$Time_points.shape <- factor(newse$Time_points.shape)
 
       shapeMapTimePoints <- setNames(
         c(15, 17, 3, 8, 16),
-        levels(newse$Time_points.shapes)
+        levels(newse$Time_points.shape)
       )
     }
     if (class(obj) == "Melanoma") {

@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
 #SBATCH --time=30:00
-#SBATCH --mem=50G
+#SBATCH --mem=100G
 
 container="containers/img/myrubuntu.sif"
 command="Rscript /app/Rmd/z_analysisIterColors.R "
