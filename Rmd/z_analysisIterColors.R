@@ -72,6 +72,15 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
 
     obj@se <- readRDS(insefile)
     obj@archetypes <- readRDS(file.path(inaafile))
+    obj@archetypes$aa.bests[[]]
+    for(i in names(obj@archetypes$aa.bests)){
+      if(i != "8")      {
+      obj@archetypes$aa.bests[[i]] <- NULL
+      }
+    }
+    saveRDS(obj@archetypes, file.path("mousehvf8.Rds"))
+    exit()
+      
     obj@other <- readRDS(inmdfile)
   }
 
