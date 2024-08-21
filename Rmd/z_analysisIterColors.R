@@ -370,7 +370,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     newse@misc$closestpoints
 
     a <- newse@misc$closestpoints
-    b <- rep(0, max(a))
+    b <- rep(0, max(a)*2)
     b[a] <- 1:length(a)
     newse@misc$archetypesNumbers <- b[b > 0]
     rm(a, b)
@@ -410,6 +410,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     all_colors <- rainbow(
       length(unique(newse$ctype)) + num_archetypes + 1
     )
+    
     all_colorsCTypes <- all_colors[1:(length(unique(newse$ctype)) - 1)]
     colorMapCTypes <- setNames(
       c(all_colorsCTypes, "black"),
@@ -1346,6 +1347,13 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     # SANKEY PLOT
     ##################################################
     for (treshold in c(TRUE, FALSE)) {
+      if(as.integer(k)<10){
+      wsankey=5
+      hsankey=5
+      }else{
+        wsankey=5
+        hsankey=6
+      }
       # Create a data frame with the required columns
       if (treshold) {
         data <- as.data.frame(list(
@@ -1421,8 +1429,8 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
         ggsave(
           file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold > 0, "th", ""), "png", sep = ".")),
           pl,
-          width = plot_width - 1,
-          height = plot_height + 1
+          width = wsankey ,
+          height =hsankey 
         )
 
         if (FALSE) {
@@ -1483,8 +1491,8 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
               dpi = plot_dpi,
               file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold, "th", ""), namesMalignant[mal + 1], "png", sep = ".")),
               pl,
-              width = plot_width,
-              height = plot_height
+              width = wsankey,
+              height = hsankey
             )
           }
         }
@@ -1541,8 +1549,8 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
               dpi = plot_dpi,
               file.path(obj@params$path_figures, paste(prefixName, "sankey", ifelse(treshold, "th", ""), tp, "png", sep = ".")),
               pl,
-              width = plot_width,
-              height = plot_height
+              width = wsankey,
+              height =hsankey 
             )
           }
         }
