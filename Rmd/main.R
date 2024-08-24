@@ -40,7 +40,7 @@ if (k != 0) {
 debug <- params$debug
 debug <- TRUE
 params$method <- "archetypal"
-params$init_method <- "furthestsum"
+# params$init_method <- "furthestsum"
 
 if (params$pathw == 0) {
   params$pathw <- NULL
@@ -110,6 +110,14 @@ message("LOG: main | Saving objects to ", obj@params$path_outdata)
 SaveSeurat(obj@se, file = file.path(obj@params$path_outdata, paste0(params$pathw, ".Rds")))
 saveRDS(obj@other, file = file.path(obj@params$path_outdata, "metadata.Rds"))
 saveRDS(obj@archetypes, file = file.path(obj@params$path_outdata, "archetypes.Rds"))
+
+small_archetypes <- obj@archetypes
+small_archetypes$aa.history <- NULL
+for(nm in names(small_archetypes$aa.bests)) {
+  small_archetypes$aa.bests[[nm]]$Y <- NULL
+  small_archetypes$aa.bests[[nm]]$data_tables <- NULL
+}
+saveRDS(small_archetypes, file = file.path(obj@params$path_outdata, "small_archetypes.Rds"))
 message("LOG: main | Saved Object")
 
 
