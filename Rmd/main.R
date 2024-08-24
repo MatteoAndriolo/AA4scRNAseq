@@ -30,7 +30,7 @@ params$path_outdata <- file.path(params$out_path, "data")
 
 if (k != 0) {
   params$kappas <- k
-} else if (!(is.na(mink) | is.na(maxk))) {
+} else if (!(is.na(mink) || is.na(maxk))) {
   params$kappas <- mink:maxk
 } else {
   stop("ERROR: main | No k or mink&maxk provided")
