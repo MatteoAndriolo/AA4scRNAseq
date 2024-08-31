@@ -121,6 +121,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   ##################################################
   # BEGIN WITH STATS
   ##################################################
+  if(FASLE){
   ndims <- 20
   data.use <- Stdev(object = obj@se, reduction = "pca")
   if (length(x = data.use) == 0) {
@@ -223,18 +224,9 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     theme_classic()
 
   ggsave(file.path(obj@params$path_figures, "AA_scree_varexpl.png"), p, width = plot_width, height = plot_height)
-
-
+  }
 
   # Function definition ---------------------------------------------------------
-  if (FALSE) {
-    se <- obj@se.org
-    tse <- se
-    newse <- SetAssayData(object = se, layer = "scale.data", new.data = as.matrix(se@assays$RNA@data))
-    se <- newse
-    se3D <- obj@se
-    aa <- obj@archetypes
-  }
   findClosestPoints <- function(se, se3D, aa, k) {
     if (length(colnames(se)) != length(colnames(se3D))) {
       se <- se[, colnames(se3D)]
@@ -291,15 +283,8 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
   }
 
   # Main -------------------------------------------------------------------------
-  if (FALSE) {
-    k <- "7"
-    k <- "8"
-    k <- "12"
-    i <- 1
-    red <- "tsne"
-  }
-
-  for (k in c("8", "12", "14")) {
+  k="8"
+  for (k in c("8", "12")) {
     for (i in 1:20) {
       message("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     }
@@ -354,24 +339,24 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     newse$aaclusters.treshold[newse$ctype == "Archetype"] <- "Archetype"
     newse$aaclusters.treshold <- factor(newse$aaclusters.treshold)
 
-    # CTYPES styling
-    all_colors <- rainbow(
-      length(unique(newse$ctype)) + num_archetypes + 1
-    )
-
-    all_colorsCTypes <- all_colors[1:(length(unique(newse$ctype)) - 1)]
-    colorMapCTypes <- setNames(
-      c(all_colorsCTypes, "black"),
-      levels(newse$ctype)
-    )
+    ##################################################
+    # 19 COLORS
+    if(FALSE){
+      all_colors <- rainbow(
+        length(unique(newse$ctype)) + num_archetypes + 1
+      )
+  
+      all_colorsCTypes <- all_colors[1:(length(unique(newse$ctype)) - 1)]
+      colorMapCTypes <- setNames(
+        c(all_colorsCTypes, "black"),
+        levels(newse$ctype)
+      )
+   
 
     sizeMapCTypes <- setNames(
       c(rep(1, length(levels(newse$ctype)) - 1), 4),
       levels(newse$ctype)
     )
-    size_text_Archetype <- 3
-
-
 
     # ARCHETYPES colors
     all_colorsArchetypes <- all_colors[
@@ -379,20 +364,34 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
     ]
     colorMapArchetypes <- setNames(
       c(all_colorsArchetypes, "grey", "black"),
-      c(paste0("Archetype", 1:num_archetypes, sep = "_"), "NotAssigned", "Archetype")
-    )
-    colorMapArchetypes <- setNames(
-      c(all_colorsArchetypes, "grey", "black"),
       c(as.character(1:num_archetypes), "NotAssigned", "Archetype")
     )
     sizeMapArchetypes <- setNames(
       c(rep(1, num_archetypes + 1), 4),
       c(as.character(1:num_archetypes), "NotAssigned", "Archetype")
+    
     )
+  }
 
-    colors_text_Archetype <- c("white")
 
+    ##################################################
+    # 8 COLORS
+    
+    # CTYPES styling
+    color_type = rainbow(length(unique(newse$ctype))-1)
+    colorMapType <- setNames(
+      c(color_type, "black"),
+      levels(newse$ctype)
+    )
+    color_archetype= rainbow(as.integer(k))
+    colorMapArchetype <- setNames(
+      c(color_archetype, "grey", "black"),
+      c(paste0("Archetype", 1:num_archetypes, sep = "_"), "NotAssigned", "Archetype")
+    )
+    
     # Other Styling
+    size_text_Archetype <- 3
+    colors_text_Archetype <- c("white")
     if (class(obj) == "Mouse") {
       newse$Time_points <- factor(newse$Time_points)
       newse$Time_points.shape <- as.matrix(newse$Time_points)
@@ -642,7 +641,7 @@ for (pw in list("HFS")) { # ,"FS1", "FS2", "FS3", "FS4", "FS5")) {
           theme_classic()
         # p2
 
-        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = ctype, size = ctype, shape = malignant)) +
+        p3 <- ggplot(plot_data, aes(x = X2, y = X3, color = ctype, size = ctype,shape = malignant)) +
           geom_point(aes(color = ctype, size = ctype),
             data = subset(plot_data, ctype != "Archetype")
           ) +
