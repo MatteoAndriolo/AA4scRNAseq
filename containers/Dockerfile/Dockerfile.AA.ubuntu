@@ -1,5 +1,5 @@
 FROM ubuntu
-COPY .Rprofile /home/rstudio/.Rprofile
+# COPY.Rprofile /home/rstudio/.Rprofile
 ENV DEBIAN_FRONTEND=noninteractive
 
 
